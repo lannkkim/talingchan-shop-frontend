@@ -1,5 +1,6 @@
 export interface Type {
-  type_id: number;
+  product_type_id: number;
+  code: string;
   name: string;
   status: string;
 }

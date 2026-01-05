@@ -58,16 +58,16 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   }, [data]);
 
   const sortedCards = useMemo(() => {
-    return [...allCards].sort((a, b) => a.cards_id - b.cards_id);
+    return [...allCards].sort((a, b) => a.card_id - b.card_id);
   }, [allCards]);
 
   const handleToggleSelect = (card: CardType) => {
     if (!selectable || !onSelect) return;
     
     if (multiple) {
-      const isSelected = selectedCards.find((c) => c.cards_id === card.cards_id);
+      const isSelected = selectedCards.find((c) => c.card_id === card.card_id);
       if (isSelected) {
-        onSelect(selectedCards.filter((c) => c.cards_id !== card.cards_id));
+        onSelect(selectedCards.filter((c) => c.card_id !== card.card_id));
       } else {
         onSelect([...selectedCards, card]);
       }
@@ -97,9 +97,9 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     <div className="space-y-6">
       <Row gutter={[16, 24]}>
         {sortedCards.map((card) => {
-          const isSelected = !!selectedCards.find((c) => c.cards_id === card.cards_id);
+          const isSelected = !!selectedCards.find((c) => c.card_id === card.card_id);
           return (
-            <Col key={card.cards_id} xs={12} sm={8} md={6}>
+            <Col key={card.card_id} xs={12} sm={8} md={6}>
               <div 
                 className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${
                   selectable ? "cursor-pointer" : ""

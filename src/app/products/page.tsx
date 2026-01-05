@@ -8,7 +8,7 @@ import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, M
 import { PlusOutlined, ShoppingOutlined, EyeOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
-import { ProductList } from "@/types/product";
+import { Product } from "@/types/product";
 
 const { Content } = Layout;
 const { Text, Title } = Typography;
@@ -19,7 +19,7 @@ export default function ProductsPage() {
     queryFn: getProducts,
   });
 
-  const [selectedProduct, setSelectedProduct] = React.useState<ProductList | null>(null);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -34,17 +34,17 @@ export default function ProductsPage() {
       title: "Product Name",
       dataIndex: "name",
       key: "name",
-      render: (text: string, record: ProductList) => (
+    render: (text: string, record: Product) => (
         <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
-          {record.detail && <Text type="secondary">{record.detail}</Text>}
+          {record.description && <Text type="secondary">{record.description}</Text>}
         </Space>
       ),
     },
     {
       title: "Price",
       key: "price",
-      render: (_: any, record: ProductList) => {
+      render: (_: any, record: Product) => {
         const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
         return activePrice ? (
           <Text strong>฿{Number(activePrice.price).toLocaleString()}</Text>
@@ -53,26 +53,29 @@ export default function ProductsPage() {
     },
     {
       title: "Type",
-      dataIndex: "type",
+      dataIndex: "product_type",
       key: "type",
       render: (type: any) => type ? <Tag color="blue">{type.name}</Tag> : <Tag>N/A</Tag>,
     },
     {
       title: "Cards",
       key: "cards",
-      render: (_: any, record: ProductList) => {
-        const displayText = record.product_card?.slice(0, 5);
-        const remaining = (record.product_card?.length || 0) - 5;
+      render: (_: any, record: Product) => {
+        const displayText = record.product_stock_card?.slice(0, 5);
+        const remaining = (record.product_stock_card?.length || 0) - 5;
         
         return (
           <div className="space-y-1">
-            {displayText?.map(pc => (
-              <div key={pc.product_card_id} className="text-sm">
-                <Text>{pc.cards?.name || `Card #${pc.card_id}`}</Text>
-                {pc.cards?.rare && <Tag className="ml-2 mr-0" color="gold">{pc.cards.rare}</Tag>}
-                <Text type="secondary" className="ml-2">x{pc.quantity}</Text>
-              </div>
-            ))}
+            {displayText?.map(pc => {
+              const card = pc.stock_card?.cards;
+              return (
+                <div key={pc.product_stock_card_id} className="text-sm">
+                  <Text>{card?.name || `Card #${pc.stock_card?.card_id}`}</Text>
+                  {card?.rare && <Tag className="ml-2 mr-0" color="gold">{card.rare}</Tag>}
+                  <Text type="secondary" className="ml-2">x{pc.quantity}</Text>
+                </div>
+              );
+            })}
             {remaining > 0 && (
               <Text type="secondary" className="text-xs block pt-1">
                 + {remaining} more cards...
@@ -91,7 +94,7 @@ export default function ProductsPage() {
     {
       title: "Price Valid Until",
       key: "price_valid_until",
-      render: (_: any, record: ProductList) => {
+      render: (_: any, record: Product) => {
         const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
         return activePrice?.price_period_ended ? (
           <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
@@ -109,7 +112,7 @@ export default function ProductsPage() {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: ProductList) => (
+      render: (_: any, record: Product) => (
         <Button 
           icon={<EyeOutlined />} 
           onClick={() => {
@@ -163,7 +166,7 @@ export default function ProductsPage() {
           <Table 
             columns={columns} 
             dataSource={products} 
-            rowKey="product_list_id"
+            rowKey="product_id"
             pagination={{ pageSize: 10 }}
           />
         )}
@@ -182,31 +185,34 @@ export default function ProductsPage() {
               <Row gutter={24}>
                 {/* Left Column: Cards List */}
                 <Col span={12} className="border-r border-gray-100">
-                  <Title level={5} className="mb-4">Cards ({selectedProduct.product_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
+                  <Title level={5} className="mb-4">Cards ({selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
                   <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
-                    {selectedProduct.product_card?.map(pc => (
-                      <div key={pc.product_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
-                        <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                           <Image // Using next/image requires width/height or fill
-                            src={getCardImageUrl(pc.cards?.image_name)}
-                            alt={pc.cards?.name || "Card"}
-                            fill
-                            className="object-contain"
-                            sizes="48px"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Text strong className="block truncate" title={pc.cards?.name}>{pc.cards?.name}</Text>
-                          <div className="flex items-center gap-2 mt-1">
-                            {pc.cards?.rare && <Tag className="m-0 text-[10px]" color="gold">{pc.cards.rare}</Tag>}
-                            <Text type="secondary" className="text-xs">{pc.cards?.type}</Text>
+                    {selectedProduct.product_stock_card?.map(pc => {
+                      const card = pc.stock_card?.cards;
+                      return (
+                        <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
+                          <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                             <Image // Using next/image requires width/height or fill
+                              src={getCardImageUrl(card?.image_name)}
+                              alt={card?.name || "Card"}
+                              fill
+                              className="object-contain"
+                              sizes="48px"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Text strong className="block truncate" title={card?.name}>{card?.name}</Text>
+                            <div className="flex items-center gap-2 mt-1">
+                              {card?.rare && <Tag className="m-0 text-[10px]" color="gold">{card.rare}</Tag>}
+                              <Text type="secondary" className="text-xs">{card?.type}</Text>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <Tag color="blue">x{pc.quantity}</Tag>
                           </div>
                         </div>
-                        <div className="flex-shrink-0">
-                          <Tag color="blue">x{pc.quantity}</Tag>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </Col>
 
@@ -216,7 +222,7 @@ export default function ProductsPage() {
                   <Space orientation="vertical" size="middle" className="w-full">
                     <div>
                       <Text type="secondary" className="block text-xs">Description</Text>
-                      <Text>{selectedProduct.detail || "-"}</Text>
+                      <Text>{selectedProduct.description || "-"}</Text>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
@@ -232,7 +238,7 @@ export default function ProductsPage() {
                          </div>
                          <div className="flex justify-between items-center">
                             <Text type="secondary">Product Type</Text>
-                            <Tag color="blue">{selectedProduct.type?.name || "N/A"}</Tag>
+                            <Tag color="blue">{selectedProduct.product_type?.name || "N/A"}</Tag>
                          </div>
                          <div className="flex justify-between items-center">
                             <Text type="secondary">Status</Text>

@@ -54,12 +54,12 @@ export default function AddProductPage() {
       const payload: CreateProductInput = {
         name: values.name,
         detail: values.detail,
-        type_id: selectedType.type_id,
+        product_type_id: selectedType.product_type_id,
         started_at: values.started_at?.toISOString(),
         ended_at: values.ended_at?.toISOString(),
         cards: selectedCards.map(c => ({
-          card_id: c.cards_id,
-          quantity: values[`quantity_${c.cards_id}`] || 1,
+          card_id: c.card_id,
+          quantity: values[`quantity_${c.card_id}`] || 1,
         })),
         price: values.price ? {
           price: values.price,
@@ -89,11 +89,11 @@ export default function AddProductPage() {
         ))
       ) : (
         types.map((type) => (
-          <Col key={type.type_id} xs={24} sm={12} md={8}>
+          <Col key={type.product_type_id} xs={24} sm={12} md={8}>
             <Card 
               hoverable 
               className={`text-center h-full transition-all duration-300 border-2 ${
-                selectedType?.type_id === type.type_id ? "border-blue-500 bg-blue-50/30 ring-2 ring-blue-100" : "border-transparent"
+                selectedType?.product_type_id === type.product_type_id ? "border-blue-500 bg-blue-50/30 ring-2 ring-blue-100" : "border-transparent"
               }`}
               onClick={() => {
                 setSelectedType(type);
@@ -107,7 +107,7 @@ export default function AddProductPage() {
                   {type.name === "แยกใบ" ? "Create a listing for a single specific card." : "Create a collection or deck with multiple cards."}
                 </Paragraph>
                 <Button 
-                  type={selectedType?.type_id === type.type_id ? "primary" : "default"}
+                  type={selectedType?.product_type_id === type.product_type_id ? "primary" : "default"}
                   className="mt-6"
                 >
                   Select This Type
@@ -192,7 +192,7 @@ export default function AddProductPage() {
                   className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200"
                 >
                   <Form.Item 
-                    name={`quantity_${card.cards_id}`} 
+                    name={`quantity_${card.card_id}`} 
                     initialValue={1} 
                     className="!mb-0"
                     rules={[{ required: true, message: '' }]}

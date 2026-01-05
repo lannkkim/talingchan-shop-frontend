@@ -1,10 +1,10 @@
 import axiosInstance from "@/lib/axios";
-import { ProductList } from "@/types/product";
+import { Product } from "@/types/product";
 
 export interface CreateProductInput {
   name: string;
   detail?: string;
-  type_id?: number;
+  product_type_id?: number;
   user_id?: number;
   started_at?: string;
   ended_at?: string;
@@ -18,15 +18,13 @@ export interface CreateProductInput {
   };
 }
 
-export const getProducts = async (): Promise<ProductList[]> => {
-  const response = await axiosInstance.get<ProductList[]>(
-    "/api/v1/product-lists/"
-  );
+export const getProducts = async (): Promise<Product[]> => {
+  const response = await axiosInstance.get<Product[]>("/api/v1/product-lists/");
   return response.data;
 };
 
-export const getProductById = async (id: number): Promise<ProductList> => {
-  const response = await axiosInstance.get<ProductList>(
+export const getProductById = async (id: number): Promise<Product> => {
+  const response = await axiosInstance.get<Product>(
     `/api/v1/product-lists/${id}`
   );
   return response.data;
@@ -34,8 +32,8 @@ export const getProductById = async (id: number): Promise<ProductList> => {
 
 export const createProduct = async (
   data: CreateProductInput
-): Promise<ProductList> => {
-  const response = await axiosInstance.post<ProductList>(
+): Promise<Product> => {
+  const response = await axiosInstance.post<Product>(
     "/api/v1/product-lists/",
     data
   );

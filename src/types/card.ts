@@ -1,5 +1,5 @@
 export interface Card {
-  cards_id: number;
+  card_id: number;
   name: string;
   type: string;
   print: string;
