@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
-import { Layout, Typography, Menu } from "antd";
-import { AppstoreOutlined, ShoppingOutlined } from "@ant-design/icons";
+import React, { useState } from "react";
+import { Layout, Typography, Menu, Button, Dropdown } from "antd";
+import type { MenuProps } from "antd";
+import { AppstoreOutlined, ShoppingOutlined, DatabaseOutlined, LoginOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginModal from "@/components/auth/LoginModal";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -17,6 +20,8 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, subtitle }: PageHeaderProps) {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const menuItems = [
     {
@@ -29,10 +34,24 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
       icon: <ShoppingOutlined />,
       label: <Link href="/products">Products</Link>,
     },
+    {
+      key: "/stock",
+      icon: <DatabaseOutlined />,
+      label: <Link href="/stock">Stock</Link>,
+    },
   ];
 
   // Determine selected key based on pathname
-  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : "";
+  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+
+  const userMenu: MenuProps['items'] = [
+    {
+      key: 'logout',
+      label: 'Logout',
+      icon: <LogoutOutlined />,
+      onClick: logout,
+    },
+  ];
 
   return (
     <Header className="sticky top-0 z-20 !bg-gray-50 border-b border-gray-200 px-4 md:px-8 h-auto py-0">
@@ -61,14 +80,30 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <Menu
-          mode="horizontal"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          className="border-0 !bg-gray-50 flex-1 justify-end"
-        />
+        {/* Navigation Menu + Auth */}
+        <div className="flex items-center flex-1 justify-end gap-4">
+             <Menu
+              mode="horizontal"
+              selectedKeys={[selectedKey]}
+              items={menuItems}
+              className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
+            />
+            
+            {isAuthenticated ? (
+                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+                     <Button type="text" icon={<UserOutlined />} className="flex items-center">
+                        <span className="hidden md:inline">{user?.username}</span>
+                     </Button>
+                </Dropdown>
+            ) : (
+                <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
+                    Login
+                </Button>
+            )}
+        </div>
       </div>
+      
+      <LoginModal visible={modalVisible} onClose={() => setModalVisible(false)} />
     </Header>
   );
 }
