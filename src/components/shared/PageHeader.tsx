@@ -3,7 +3,14 @@
 import React, { useState } from "react";
 import { Layout, Typography, Menu, Button, Dropdown } from "antd";
 import type { MenuProps } from "antd";
-import { AppstoreOutlined, ShoppingOutlined, DatabaseOutlined, LoginOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  ShoppingOutlined,
+  DatabaseOutlined,
+  LoginOutlined,
+  LogoutOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +32,11 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
 
   const menuItems = [
     {
+      key: "/market",
+      icon: <ShoppingOutlined />,
+      label: <Link href="/market">Market</Link>,
+    },
+    {
       key: "/cards",
       icon: <AppstoreOutlined />,
       label: <Link href="/cards">Cards</Link>,
@@ -42,12 +54,20 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
   ];
 
   // Determine selected key based on pathname
-  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+  const selectedKey = pathname.startsWith("/market")
+    ? "/market"
+    : pathname.startsWith("/products")
+    ? "/products"
+    : pathname.startsWith("/cards")
+    ? "/cards"
+    : pathname.startsWith("/stock")
+    ? "/stock"
+    : "";
 
-  const userMenu: MenuProps['items'] = [
+  const userMenu: MenuProps["items"] = [
     {
-      key: 'logout',
-      label: 'Logout',
+      key: "logout",
+      label: "Logout",
       icon: <LogoutOutlined />,
       onClick: logout,
     },
@@ -59,15 +79,15 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex-shrink-0 -ml-3">
-            <Image 
-              src="/images/icon/logo.png" 
-              alt="Logo" 
-              width={60} 
+            <Image
+              src="/images/icon/logo.png"
+              alt="Logo"
+              width={60}
               height={60}
               className="hover:opacity-80 transition-opacity"
             />
           </Link>
-          
+
           <div className="hidden md:block">
             <Title level={4} className="!mb-0 !text-gray-800">
               {title}
@@ -82,28 +102,39 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
 
         {/* Navigation Menu + Auth */}
         <div className="flex items-center flex-1 justify-end gap-4">
-             <Menu
-              mode="horizontal"
-              selectedKeys={[selectedKey]}
-              items={menuItems}
-              className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
-            />
-            
-            {isAuthenticated ? (
-                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                     <Button type="text" icon={<UserOutlined />} className="flex items-center">
-                        <span className="hidden md:inline">{user?.username}</span>
-                     </Button>
-                </Dropdown>
-            ) : (
-                <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
-                    Login
-                </Button>
-            )}
+          <Menu
+            mode="horizontal"
+            selectedKeys={[selectedKey]}
+            items={menuItems}
+            className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
+          />
+
+          {isAuthenticated ? (
+            <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+              <Button
+                type="text"
+                icon={<UserOutlined />}
+                className="flex items-center"
+              >
+                <span className="hidden md:inline">{user?.username}</span>
+              </Button>
+            </Dropdown>
+          ) : (
+            <Button
+              type="primary"
+              icon={<LoginOutlined />}
+              onClick={() => setModalVisible(true)}
+            >
+              Login
+            </Button>
+          )}
         </div>
       </div>
-      
-      <LoginModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+
+      <LoginModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </Header>
   );
 }
