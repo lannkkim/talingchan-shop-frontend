@@ -2,14 +2,14 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTypes } from "@/services/type";
-import { createProduct, CreateProductInput } from "@/services/product";
+import { getTypes, getTransactionTypes, getSellTypes, getBuyTypes } from "@/services/type";
+import { createProduct, CreateProductInput, checkStock } from "@/services/product";
 import { Card as CardType } from "@/types/card";
 import CardSelector from "@/components/shared/CardSelector";
 import CardBrowser from "@/components/shared/CardBrowser";
 import { 
   Layout, Typography, Button, Steps, Card, Row, Col, 
-  Form, Input, InputNumber, DatePicker, App, Space, Result, Divider, Tag 
+  Form, Input, InputNumber, DatePicker, App, Space, Result, Divider, Tag, Radio 
 } from "antd";
 import { 
   ArrowLeftOutlined, ArrowRightOutlined, CheckOutlined, 
@@ -17,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { Header, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -35,6 +36,21 @@ export default function AddProductPage() {
     queryFn: getTypes,
   });
 
+  const { data: transactionTypes = [] } = useQuery({
+    queryKey: ["transactionTypes"],
+    queryFn: getTransactionTypes,
+  });
+
+  const { data: sellTypes = [] } = useQuery({
+    queryKey: ["sellTypes"],
+    queryFn: getSellTypes,
+  });
+
+  const { data: buyTypes = [] } = useQuery({
+    queryKey: ["buyTypes"],
+    queryFn: getBuyTypes,
+  });
+
   const mutation = useMutation({
     mutationFn: (data: CreateProductInput) => createProduct(data),
     onSuccess: () => {
@@ -51,14 +67,33 @@ export default function AddProductPage() {
     try {
       const values = await form.validateFields();
       
+      const transactionTypeSelection = values.transaction_type_selection; // "sell_order" or "buy_order"
+      
+      let transactionTypeId: number | undefined;
+      let sellTypeId: number | undefined;
+      let buyTypeId: number | undefined;
+
+      if (transactionTypeSelection === "sell_order") {
+        transactionTypeId = transactionTypes.find(t => t.code === "sell")?.transaction_type_id;
+        sellTypeId = sellTypes.find(t => t.code === "sell_order")?.sell_type_id;
+      } else if (transactionTypeSelection === "buy_order") {
+        transactionTypeId = transactionTypes.find(t => t.code === "buy")?.transaction_type_id;
+        buyTypeId = buyTypes.find(t => t.code === "buy_order")?.buy_type_id;
+      }
+
       const payload: CreateProductInput = {
         name: values.name,
         detail: values.detail,
-        product_type_id: selectedType.product_type_id,
+        type_id: selectedType.product_type_id,
+        // Transaction Types
+        transaction_type_id: transactionTypeId,
+        sell_type_id: sellTypeId,
+        buy_type_id: buyTypeId,
+        
         started_at: values.started_at?.toISOString(),
         ended_at: values.ended_at?.toISOString(),
         cards: selectedCards.map(c => ({
-          card_id: c.card_id,
+          stock_card_id: c.card_id,
           quantity: values[`quantity_${c.card_id}`] || 1,
         })),
         price: values.price ? {
@@ -120,6 +155,9 @@ export default function AddProductPage() {
     </Row>
   );
 
+  const { user } = useAuth();
+  const canSell = user?.permissions?.includes("product:create:sell");
+
   const renderConfiguration = () => {
     const isSingle = selectedType?.name === "แยกใบ";
     
@@ -135,6 +173,31 @@ export default function AddProductPage() {
                 <Col span={24}>
                   <Form.Item name="name" label="Product Name" rules={[{ required: true }]}>
                     <Input placeholder="e.g. Rare Dracomon Deck" size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item 
+                    name="transaction_type_selection" 
+                    label="Transaction Type" 
+                    initialValue={canSell ? "sell_order" : "buy_order"}
+                    rules={[{ required: true, message: "Please select a transaction type" }]}
+                  >
+                    <Radio.Group size="large" className="w-full">
+                      <Row gutter={16}>
+                        {canSell && (
+                          <Col span={12}>
+                            <Radio.Button value="sell_order" className="w-full text-center">
+                              Sell Order (ตั้งขาย)
+                            </Radio.Button>
+                          </Col>
+                        )}
+                        <Col span={canSell ? 12 : 24}>
+                          <Radio.Button value="buy_order" className="w-full text-center">
+                            Buy Order (ตั้งรับ)
+                          </Radio.Button>
+                        </Col>
+                      </Row>
+                    </Radio.Group>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -331,7 +394,7 @@ export default function AddProductPage() {
                   type="primary" 
                   size="large" 
                   icon={<ArrowRightOutlined />}
-                  onClick={() => {
+                  onClick={async () => {
                     if (currentStep === 1) {
                       if (!form.getFieldValue("name")) {
                         message.warning("Please enter a product name");
@@ -340,6 +403,23 @@ export default function AddProductPage() {
                       if (selectedCards.length === 0) {
                         message.warning("Please select at least one card");
                         return;
+                      }
+
+                      // Check Stock if Sell Order
+                      const transactionType = form.getFieldValue("transaction_type_selection");
+                      if (transactionType === "sell_order") {
+                        try {
+                          const stockCheckPayload = selectedCards.map(c => ({
+                            stock_card_id: c.card_id,
+                            quantity: form.getFieldValue(`quantity_${c.card_id}`) || 1,
+                          }));
+                          
+                          // Show loading somehow? For now blocking await is ok
+                          await checkStock(stockCheckPayload);
+                        } catch (err: any) {
+                          message.error(`Stock check failed: ${err.response?.data?.error || err.message}`);
+                          return; // Stop navigation
+                        }
                       }
                     }
                     setCurrentStep(currentStep + 1);

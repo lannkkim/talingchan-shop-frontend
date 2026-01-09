@@ -12,7 +12,7 @@ interface CardItemProps {
 const CardItem: React.FC<CardItemProps> = ({ card }) => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   const imageUrl = card.image_name
-    ? `${API_URL}/uploads/cards/${card.image_name.endsWith(".png") ? card.image_name : `${card.image_name}.png`}`
+    ? `${API_URL}/uploads/${card.image_name.endsWith(".png") ? card.image_name : `${card.image_name}.png`}`
     : "/images/card-placeholder.png";
 
   return (

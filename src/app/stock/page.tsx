@@ -60,7 +60,7 @@ export default function StockPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader title="My Stock" subtitle="Manage your inventory" />
+      <PageHeader title="My Stock"/>
       
       <div className="p-6 max-w-[1200px] mx-auto bg-white mt-6 rounded-lg shadow-sm border border-gray-100">
         <div className="flex items-center justify-end mb-6">

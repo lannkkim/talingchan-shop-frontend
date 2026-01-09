@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Layout, Typography, Menu, Button, Dropdown } from "antd";
+import { Layout, Typography, Menu, Button, Dropdown, Avatar } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -53,23 +53,28 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
     },
   ];
 
-  // Determine selected key based on pathname
-  const selectedKey = pathname.startsWith("/market")
-    ? "/market"
-    : pathname.startsWith("/products")
-    ? "/products"
-    : pathname.startsWith("/cards")
-    ? "/cards"
-    : pathname.startsWith("/stock")
-    ? "/stock"
-    : "";
+  // Add Admin Dashboard if user is admin
+  if (user?.role?.name === "admin") {
+      menuItems.push({
+          key: "/admin",
+          icon: <AppstoreOutlined />, // or DashboardOutlined
+          label: <Link href="/admin">Admin</Link>,
+      } as any);
+  }
 
-  const userMenu: MenuProps["items"] = [
+  // Determine selected key based on pathname
+  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+
+  const userMenu: MenuProps['items'] = [
     {
       key: "logout",
       label: "Logout",
       icon: <LogoutOutlined />,
-      onClick: logout,
+      danger: true,
+      onClick: async () => {
+         await logout();
+         // Optionally redirect or refresh
+      },
     },
   ];
 
@@ -102,32 +107,24 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
 
         {/* Navigation Menu + Auth */}
         <div className="flex items-center flex-1 justify-end gap-4">
-          <Menu
-            mode="horizontal"
-            selectedKeys={[selectedKey]}
-            items={menuItems}
-            className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
-          />
-
-          {isAuthenticated ? (
-            <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-              <Button
-                type="text"
-                icon={<UserOutlined />}
-                className="flex items-center"
-              >
-                <span className="hidden md:inline">{user?.username}</span>
-              </Button>
-            </Dropdown>
-          ) : (
-            <Button
-              type="primary"
-              icon={<LoginOutlined />}
-              onClick={() => setModalVisible(true)}
-            >
-              Login
-            </Button>
-          )}
+             <Menu
+              mode="horizontal"
+              selectedKeys={[selectedKey]}
+              items={menuItems}
+              className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
+            />
+            
+            {isAuthenticated ? (
+                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+                     <Button type="text" icon={<UserOutlined />} className="flex items-center">
+                        <span className="hidden md:inline">{user?.username}</span>
+                     </Button>
+                </Dropdown>
+            ) : (
+                <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
+                    Login
+                </Button>
+            )}
         </div>
       </div>
 

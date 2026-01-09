@@ -13,9 +13,17 @@ export interface Product {
   ended_at?: string;
   created_at?: string;
   product_type?: Type;
+  transaction_type?: TransactionType;
   // Relationships
   product_stock_card?: ProductStockCard[];
   price_period?: PricePeriod[];
+}
+
+export interface TransactionType {
+  transaction_type_id: number;
+  code: string;
+  name: string;
+  status: string;
 }
 
 export interface ProductStockCard {

@@ -5,7 +5,11 @@ export interface User {
   first_name?: string;
   last_name?: string;
   role_id?: number;
+  role?: {
+    name: string;
+  };
   is_active?: boolean;
+  permissions?: string[];
 }
 
 export interface AuthResponse {

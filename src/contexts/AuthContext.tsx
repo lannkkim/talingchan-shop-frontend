@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, LoginInput, RegisterInput } from "@/types/auth";
 import { login as loginService, register as registerService, logout as logoutService, refreshToken as refreshTokenService } from "@/services/auth";
 import { setAccessToken } from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Initialize session
   useEffect(() => {
@@ -33,18 +35,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Solution 2: Rely on localStorage for user info (display only), but trust token for auth. -> Acceptable for now.
         
         // Let's use stored user for display, and try refresh.
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-           setUser(JSON.parse(storedUser));
-        }
+        
 
-        const { token } = await refreshTokenService();
+        const { token, user } = await refreshTokenService();
         setAccessToken(token); // Set in memory
+        setUser(user);
       } catch (error) {
         // Refresh failed (no cookie or expired)
         // Clear everything
         setUser(null);
-        localStorage.removeItem("user");
+        
         setAccessToken(null);
       } finally {
         setLoading(false);
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { user: userData, token } = await loginService(input);
       setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      
       setAccessToken(token); // Set in memory
     } catch (error: any) {
       throw error;
@@ -69,22 +69,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
         const { user: userData, token } = await registerService(input);
         setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+        
         setAccessToken(token);
     } catch (error: any) {
         throw error;
     }
   };
 
-  const logout = async () => {
-    try {
-      await logoutService();
-    } finally {
-      setUser(null);
-      localStorage.removeItem("user");
-      setAccessToken(null);
-    }
-  };
+	const logout = async () => {
+		try {
+			await logoutService();
+		} finally {
+			setUser(null);
+			setAccessToken(null);
+			router.push("/");
+		}
+	};
 
   return (
     <AuthContext.Provider
