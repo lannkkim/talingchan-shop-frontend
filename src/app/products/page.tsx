@@ -4,7 +4,8 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import PageHeader from "@/components/shared/PageHeader";
-import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col } from "antd";
+import { useAuth } from "@/contexts/AuthContext";
+import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs } from "antd";
 import { PlusOutlined, ShoppingOutlined, EyeOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
@@ -126,6 +127,70 @@ export default function ProductsPage() {
     },
   ];
 
+  const [activeTab, setActiveTab] = React.useState("sell");
+  
+  const filteredProducts = React.useMemo(() => {
+    return products.filter((p: Product) => 
+      p.transaction_type?.code?.toLowerCase() === activeTab
+    );
+  }, [products, activeTab]);
+
+  const EmptyState = () => (
+    <Card className="text-center py-20 bg-gray-50 border-dashed border-2">
+      <Empty
+        image={<ShoppingOutlined style={{ fontSize: 64, color: "#d9d9d9" }} />}
+        description={
+          <Space orientation="vertical">
+            <Text strong>No products found</Text>
+            <Text type="secondary">Try changing tabs or add a new product</Text>
+            <Link href="/products/add">
+              <Button type="primary" ghost icon={<PlusOutlined />} className="mt-4">
+                Add Product Now
+              </Button>
+            </Link>
+          </Space>
+        }
+      />
+    </Card>
+  );
+
+  const { user } = useAuth();
+  const canSell = user?.permissions?.includes("product:create:sell");
+
+  const items = [
+    ...(canSell ? [{
+      key: 'sell',
+      label: 'Sell Order',
+      children: filteredProducts.length > 0 ? (
+        <Table 
+          columns={columns} 
+          dataSource={filteredProducts} 
+          rowKey="product_id"
+          pagination={{ pageSize: 10 }}
+        />
+      ) : <EmptyState />,
+    }] : []),
+    {
+      key: 'buy',
+      label: 'Buy Order',
+      children: filteredProducts.length > 0 ? (
+        <Table 
+          columns={columns} 
+          dataSource={filteredProducts} 
+          rowKey="product_id"
+          pagination={{ pageSize: 10 }}
+        />
+      ) : <EmptyState />,
+    },
+  ];
+
+  // Effect to ensure active tab is valid
+  React.useEffect(() => {
+    if (activeTab === 'sell' && !canSell) {
+      setActiveTab('buy');
+    }
+  }, [canSell, activeTab]);
+
   return (
     <Layout className="min-h-screen bg-white">
       <PageHeader 
@@ -145,30 +210,8 @@ export default function ProductsPage() {
           <Skeleton active paragraph={{ rows: 10 }} />
         ) : isError ? (
           <Empty description="Error loading products" />
-        ) : products.length === 0 ? (
-          <Card className="text-center py-20 bg-gray-50 border-dashed border-2">
-            <Empty
-              image={<ShoppingOutlined style={{ fontSize: 64, color: "#d9d9d9" }} />}
-              description={
-                <Space orientation="vertical">
-                  <Text strong>No products yet</Text>
-                  <Text type="secondary">Start by adding your first card or deck</Text>
-                  <Link href="/products/add">
-                    <Button type="primary" ghost icon={<PlusOutlined />} className="mt-4">
-                      Add Product Now
-                    </Button>
-                  </Link>
-                </Space>
-              }
-            />
-          </Card>
         ) : (
-          <Table 
-            columns={columns} 
-            dataSource={products} 
-            rowKey="product_id"
-            pagination={{ pageSize: 10 }}
-          />
+          <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
         )}
 
         {/* Product View Modal */}

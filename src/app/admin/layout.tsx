@@ -34,7 +34,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || !isAuthorized) {
     return (
-      <Spin size="large" tip="Verifying access..." fullscreen />
+      <div className="flex flex-col items-center justify-center p-20">
+        <Spin size="large" />
+        <div className="mt-4 text-gray-600 font-medium">Verifying access...</div>
+        <div className="mt-2 text-gray-500 text-sm border p-2 rounded bg-gray-50">
+          Loading: {loading ? "Yes" : "No"} <br/>
+          User: {user ? user.username : "None"} <br/>
+          Role: {user?.role ? user.role.name : "None"}
+        </div>
+      </div>
     );
   }
 

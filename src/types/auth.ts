@@ -9,6 +9,7 @@ export interface User {
     name: string;
   };
   is_active?: boolean;
+  permissions?: string[];
 }
 
 export interface AuthResponse {
