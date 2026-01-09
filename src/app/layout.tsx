@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const notoSans = localFont({
+  src: [
+    {
+      path: "../../public/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf",
+      style: "normal",
+    },
+    {
+      path: "../../public/Noto_Sans/NotoSans-Italic-VariableFont_wdth,wght.ttf",
+      style: "italic",
+    },
+  ],
+  display: "swap",
+  variable: "--font-noto-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const notoSansThai = localFont({
+  src: "../../public/Noto_Sans_Thai/NotoSansThai-VariableFont_wdth,wght.ttf",
+  display: "swap",
+  variable: "--font-noto-sans-thai",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +31,7 @@ export const metadata: Metadata = {
 import StyledComponentsRegistry from "@/lib/antd";
 import QueryProvider from "@/lib/query";
 
-import { App } from "antd";
+import { App, ConfigProvider } from "antd";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function RootLayout({
@@ -31,13 +42,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${notoSans.variable} ${notoSansThai.variable} antialiased`}
       >
         <QueryProvider>
           <StyledComponentsRegistry>
-            <AuthProvider>
-              <App>{children}</App>
-            </AuthProvider>
+            <ConfigProvider
+              theme={{
+                token: {
+                  fontFamily: `var(--font-noto-sans), var(--font-noto-sans-thai), sans-serif`,
+                },
+              }}
+            >
+              <AuthProvider>
+                <App>{children}</App>
+              </AuthProvider>
+            </ConfigProvider>
           </StyledComponentsRegistry>
         </QueryProvider>
       </body>
