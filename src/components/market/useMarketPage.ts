@@ -23,15 +23,15 @@ export function useMarketPage() {
 
   const getCardImageUrl = (imageName: string | null | undefined) => {
     return imageName
-      ? `${API_URL}/uploads/cards/${
-          imageName.endsWith(".png") ? imageName : `${imageName}.png`
-        }`
+      ? `${API_URL}/uploads/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
       : "/images/card-placeholder.png";
   };
 
   const getProductImage = (product: Product) => {
-    const firstCard = product.product_stock_card?.[0]?.stock_card?.cards;
-    return getCardImageUrl(firstCard?.image_name);
+    const cardWithImage = product.product_stock_card?.find(
+      (pc) => pc.stock_card?.cards?.image_name
+    );
+    return getCardImageUrl(cardWithImage?.stock_card?.cards?.image_name);
   };
 
   const getActivePrice = (product: Product) => {
