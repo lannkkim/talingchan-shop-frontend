@@ -10,6 +10,7 @@ import {
   LoginOutlined,
   LogoutOutlined,
   UserOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,9 +24,10 @@ const { Title } = Typography;
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  backUrl?: string;
 }
 
-export default function PageHeader({ title, subtitle }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps) {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
@@ -90,15 +92,21 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
       <div className="container mx-auto flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex-shrink-0 -ml-3">
-            <Image
-              src="/images/icon/logo.png"
-              alt="Logo"
-              width={60}
-              height={60}
-              className="hover:opacity-80 transition-opacity"
-            />
-          </Link>
+          {backUrl ? (
+             <Link href={backUrl} className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2">
+                 <ArrowLeftOutlined style={{ fontSize: '20px' }} />
+             </Link>
+          ) : (
+            <Link href="/" className="flex-shrink-0 -ml-3">
+              <Image
+                src="/images/icon/logo.png"
+                alt="Logo"
+                width={60}
+                height={60}
+                className="hover:opacity-80 transition-opacity"
+              />
+            </Link>
+          )}
 
           <div className="hidden md:block">
             <Title level={4} className="!mb-0 !text-gray-800">

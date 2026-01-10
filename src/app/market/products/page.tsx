@@ -5,9 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import { Product } from "@/types/product";
 import { Card, Spin, Typography, Row, Col, Divider, Layout, Tag, Modal, Button, Space } from "antd";
+import { LineChartOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import PageHeader from "@/components/shared/PageHeader";
-import { useState, Suspense } from "react";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { getCardImageUrl } from "@/utils/image";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -15,7 +18,6 @@ const { Content } = Layout;
 function AllMarketProductsContent() {
   const searchParams = useSearchParams();
   const typeCode = searchParams.get("type"); // 'single' or 'deck'
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -37,11 +39,6 @@ function AllMarketProductsContent() {
     return firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name || null;
   };
 
-  const getCardImageUrl = (imageName: string | null | undefined) => {
-    return imageName
-      ? `${API_URL}/uploads/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
-      : "/images/card-placeholder.png";
-  };
 
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
@@ -165,8 +162,18 @@ function AllMarketProductsContent() {
                               <Text type="secondary" className="text-xs">{card?.type}</Text>
                             </div>
                           </div>
-                          <div className="flex-shrink-0">
-                            <Tag color="blue">x{pc.quantity}</Tag>
+                          <div className="flex-shrink-0 text-right">
+                            <Tag color="blue" className="mb-1">x{pc.quantity}</Tag>
+                            {pc.market_price != null && (
+                              <div className="text-[10px] text-gray-500 whitespace-nowrap">
+                                ราคาเริ่มต้น: <span className="text-blue-500 font-medium">฿{pc.market_price.toLocaleString()}</span>
+                              </div>
+                            )}
+                            {card?.card_id && (
+                                <Link href={`/market/cards/${btoa(String(card.card_id))}`}>
+                                    <Button type="link" size="small" className="p-0 h-auto text-[10px]" icon={<LineChartOutlined />}>Stats</Button>
+                                </Link>
+                            )}
                           </div>
                         </div>
                       );

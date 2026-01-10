@@ -19,7 +19,7 @@ export default function CardCarouselSection({
   cards,
   isLoading,
   getCardImageUrl,
-  title = "Featured Cards",
+  title = "ประมูล",
   coverImage,
 }: CardCarouselSectionProps) {
   return (
@@ -43,11 +43,12 @@ export default function CardCarouselSection({
 
       <div className="flex gap-4 px-4">
         {/* Fixed Cover Image */}
-        {coverImage && (
+        {coverImage 
+        && (
           <Card
             className="flex-shrink-0 w-[300px] overflow-hidden border border-gray-200 shadow-lg bg-white"
             cover={
-              <div className="relative h-[300px] bg-gray-100">
+              <div>
                 <Image
                   src={coverImage}
                   alt={title}
@@ -59,10 +60,6 @@ export default function CardCarouselSection({
             }
             styles={{ body: { padding: "12px" } }}
           >
-            <Text className="text-lg font-bold text-gray-800 line-clamp-1">
-              {title}
-            </Text>
-            <Text className="text-sm text-gray-500 block mt-1">Collection</Text>
           </Card>
         )}
 

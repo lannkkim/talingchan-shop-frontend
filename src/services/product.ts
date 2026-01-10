@@ -29,6 +29,7 @@ export interface ProductFilter {
   product_type_code?: string;
   limit?: number;
   user_id?: number;
+  card_id?: number;
 }
 
 export const getProducts = async (

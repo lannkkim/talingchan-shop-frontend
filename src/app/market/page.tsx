@@ -6,15 +6,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Product } from "@/types/product";
 import { getProducts } from "@/services/product";
 import { Card, Spin, Typography, Row, Col, Divider, ConfigProvider, Layout, Tag, Modal, Button, Space } from "antd";
-import { ShoppingOutlined } from "@ant-design/icons";
+import { ShoppingOutlined, LineChartOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
+import { getCardImageUrl } from "@/utils/image";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 export default function MarketPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -64,11 +64,6 @@ export default function MarketPage() {
     return firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name || null;
   };
 
-  const getCardImageUrl = (imageName: string | null | undefined) => {
-    return imageName
-      ? `${API_URL}/uploads/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
-      : "/images/card-placeholder.png";
-  };
 
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
@@ -234,8 +229,16 @@ export default function MarketPage() {
                                   <Text type="secondary" className="text-xs">{card?.type}</Text>
                                 </div>
                               </div>
-                              <div className="flex-shrink-0">
-                                <Tag color="blue">x{pc.quantity}</Tag>
+                              <div className="flex-shrink-0 text-right">
+                                <Tag color="blue" className="mb-1">x{pc.quantity}</Tag>
+                                {pc.market_price != null && (
+                                  <div className="text-[10px] text-gray-500 whitespace-nowrap">
+                                    ราคาเริ่มต้น: <span className="text-blue-500 font-medium">฿{pc.market_price.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                <Link href={`/market/cards/${btoa(String(card?.card_id))}`}>
+                                  <Button type="link" size="small" className="p-0 h-auto text-[10px]" icon={<LineChartOutlined />}>ข้อมูลตลาด</Button>
+                                </Link>
                               </div>
                             </div>
                           );
