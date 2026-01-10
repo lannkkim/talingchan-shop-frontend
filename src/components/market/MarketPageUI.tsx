@@ -43,37 +43,39 @@ export default function MarketPageUI({
         {/* Hero Banner Component */}
         <HeroBanner />
         {/* Product Carousel Component */}
-        <ProductCarouselSection
-          products={products}
-          isLoading={isLoadingProducts}
-          carouselRef={carouselRef}
-          handleScroll={handleScroll}
-          getProductImage={getProductImage}
-          getActivePrice={getActivePrice}
-        />
+        <div className="mt-8">
+          <ProductCarouselSection
+            products={products}
+            isLoading={isLoadingProducts}
+            carouselRef={carouselRef}
+            handleScroll={handleScroll}
+            getProductImage={getProductImage}
+            getActivePrice={getActivePrice}
+          />
+        </div>
         
         {/* Card Carousel Component */}
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="Featured Cards"
-          coverImage="/images/market_cover.png"
+          title="ประมูล"
+          coverImage="/images/auction.png"
 
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="New Arrivals"
-          coverImage="/images/market_cover.png"
+          title="การ์ดแยกใบ"
+          coverImage="/images/single_card.png"
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="Trending Now"
-          coverImage="/images/market_cover.png"
+          title="การ์ดเด็ค"
+          coverImage="/images/deck_card.png"
 
         />
         {/* Category Grid Component */}

@@ -355,8 +355,14 @@ export default function ProductsPage() {
                               <Text type="secondary" className="text-xs">{card?.type}</Text>
                             </div>
                           </div>
-                          <div className="flex-shrink-0">
-                            <Tag color="blue">x{pc.quantity}</Tag>
+                          <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                            <Tag color="blue" className="m-0">x{pc.quantity}</Tag>
+                            {/* Assuming market_price is available or user wants to see it if it exists */}
+                            {pc.market_price && pc.market_price > 0 && (
+                                <Text className="text-xs text-gray-500">
+                                   Start <span className="text-blue-600 font-bold">฿{Number(pc.market_price).toLocaleString()}</span>
+                                </Text>
+                            )}
                           </div>
                         </div>
                       );

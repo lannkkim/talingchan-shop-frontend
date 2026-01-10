@@ -45,8 +45,10 @@ export interface ProductStockCard {
   product_stock_card_id: number;
   product_id: number;
   stock_card_id: number;
+  card_id?: number;
   quantity: number;
   status: string;
+  market_price?: number;
   stock_card?: StockCard;
   card?: Card;
 }
