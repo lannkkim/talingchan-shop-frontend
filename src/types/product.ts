@@ -1,5 +1,16 @@
 import { Card } from "./card";
 import { Type } from "./type";
+import { User } from "./auth";
+
+export interface Shop {
+  shop_id: number;
+  user_id: number;
+  name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  is_stock_check_enabled?: boolean;
+}
 
 export interface Product {
   product_id: number;
@@ -9,6 +20,7 @@ export interface Product {
   title?: string; // Optional alias if needed
   product_type_id?: number;
   user_id?: number;
+  is_admin_shop?: boolean;
   started_at?: string;
   ended_at?: string;
   created_at?: string;
@@ -17,6 +29,9 @@ export interface Product {
   // Relationships
   product_stock_card?: ProductStockCard[];
   price_period?: PricePeriod[];
+  users?: User & { shop?: Shop };
+  market_min_price?: number;
+  total_quantity?: number;
 }
 
 export interface TransactionType {
@@ -33,6 +48,7 @@ export interface ProductStockCard {
   quantity: number;
   status: string;
   stock_card?: StockCard;
+  card?: Card;
 }
 
 export interface StockCard {

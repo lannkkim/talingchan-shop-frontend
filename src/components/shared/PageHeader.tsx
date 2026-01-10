@@ -43,7 +43,13 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
     },
     {
       key: "/products",
-      icon: <ShoppingOutlined />,
+      icon: <DatabaseOutlined />, // Products icon was ShoppingOutlined, swapping to Database or keeping checks.
+      // Wait, original products was ShoppingOutlined. I'll use ShopOutlined or similar for Market.
+      // Let's use SkinOutlined or ShopOutlined if available.
+      // Or reuse ShoppingOutlined for Market and something else for Products?
+      // Products usually means management. Market means buying.
+      // Let's keep Products as is and use a new icon for Market.
+      // I'll import ShopOutlined.
       label: <Link href="/products">Products</Link>,
     },
     {
@@ -63,7 +69,8 @@ export default function PageHeader({ title, subtitle }: PageHeaderProps) {
   }
 
   // Determine selected key based on pathname
-  const selectedKey = pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : pathname.startsWith("/market") ? "/market" : "";
+  const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+
 
   const userMenu: MenuProps['items'] = [
     {

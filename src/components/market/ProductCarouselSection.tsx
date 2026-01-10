@@ -40,7 +40,7 @@ export default function ProductCarouselSection({
                   <Skeleton active paragraph={{ rows: 2 }} className="mt-4" />
                 </Card>
               ))
-            : products.map((product, index) => (
+            : products && products.map((product, index) => (
                 <Link
                   href={`/products/${product.product_id}`}
                   key={product.product_id}
@@ -80,11 +80,25 @@ export default function ProductCarouselSection({
                     <Text className="text-sm text-gray-700 line-clamp-2 h-10">
                       {product.name}
                     </Text>
-                    {getActivePrice(product) && (
-                      <Text strong className="text-blue-600 mt-2 block">
-                        ฿{getActivePrice(product)?.toLocaleString()}
-                      </Text>
-                    )}
+                    <div className="flex flex-col mt-2">
+                      <div className="flex justify-between items-baseline">
+                        {getActivePrice(product) && (
+                          <Text strong className="text-blue-600">
+                            ฿{getActivePrice(product)?.toLocaleString()}
+                          </Text>
+                        )}
+                        {product.total_quantity !== undefined && (
+                          <Text type="secondary" className="text-[10px] font-medium">
+                            Qty: {product.total_quantity}
+                          </Text>
+                        )}
+                      </div>
+                      {product.market_min_price !== undefined && product.market_min_price > 0 && (
+                        <Text type="secondary" className="text-[10px] leading-tight mt-0.5">
+                          Market Starts at <span className="text-blue-500 font-medium">฿{product.market_min_price.toLocaleString()}</span>
+                        </Text>
+                      )}
+                    </div>
                   </Card>
                 </Link>
               ))}
