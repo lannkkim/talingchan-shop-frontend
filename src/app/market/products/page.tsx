@@ -7,12 +7,12 @@ import { Product } from "@/types/product";
 import { Card, Spin, Typography, Row, Col, Divider, Layout, Tag, Modal, Button, Space } from "antd";
 import Image from "next/image";
 import PageHeader from "@/components/shared/PageHeader";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
-export default function AllMarketProductsPage() {
+function AllMarketProductsContent() {
   const searchParams = useSearchParams();
   const typeCode = searchParams.get("type"); // 'single' or 'deck'
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -206,5 +206,22 @@ export default function AllMarketProductsPage() {
         </Modal>
       </Content>
     </Layout>
+  );
+}
+
+export default function AllMarketProductsPage() {
+  return (
+    <Suspense fallback={
+      <Layout className="min-h-screen bg-white">
+        <PageHeader title="กำลังโหลด..." />
+        <Content className="p-4 md:p-8 container mx-auto">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <Spin size="large" />
+          </div>
+        </Content>
+      </Layout>
+    }>
+      <AllMarketProductsContent />
+    </Suspense>
   );
 }
