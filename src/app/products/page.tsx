@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getProducts } from "@/services/product";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getMyProducts, deleteProduct, updateProduct } from "@/services/product";
 import PageHeader from "@/components/shared/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs } from "antd";
-import { PlusOutlined, ShoppingOutlined, EyeOutlined } from "@ant-design/icons";
+import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs, Form, Input, App, Tooltip } from "antd";
+import { PlusOutlined, ShoppingOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, StopOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
@@ -14,20 +14,88 @@ import { Product } from "@/types/product";
 const { Content } = Layout;
 const { Text, Title } = Typography;
 
+const EmptyState = () => (
+    <Card className="text-center py-20 bg-gray-50 border-dashed border-2">
+      <Empty
+        image={<ShoppingOutlined style={{ fontSize: 64, color: "#d9d9d9" }} />}
+        description={
+          <Space orientation="vertical">
+            <Text strong>No products found</Text>
+            <Text type="secondary">Try changing tabs or add a new product</Text>
+            <Link href="/products/add">
+              <Button type="primary" ghost icon={<PlusOutlined />} className="mt-4">
+                Add Product Now
+              </Button>
+            </Link>
+          </Space>
+        }
+      />
+    </Card>
+);
+
 export default function ProductsPage() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [form] = Form.useForm();
+  const { modal, message: msg } = App.useApp();
+  
   const { data: products = [], isLoading, isError } = useQuery({
-    queryKey: ["products"],
-    queryFn: getProducts,
+    queryKey: ["products", "me", user?.users_id],
+    queryFn: () => getMyProducts(),
+    enabled: !!user?.users_id,
+  });
+
+  const canSell = React.useMemo(() => 
+    user?.permissions?.includes("product:create:sell") || false,
+  [user]);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteProduct(id),
+    onSuccess: () => {
+      msg.success("Product deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["products", "me"] });
+    },
+    onError: (error: { response?: { data?: { error?: string } } }) => {
+      msg.error(error.response?.data?.error || "Failed to delete product");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Product> }) => updateProduct(id, data),
+    onSuccess: () => {
+      msg.success("Product updated successfully");
+      setIsEditModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["products", "me"] });
+    },
+    onError: (error: { response?: { data?: { error?: string } } }) => {
+      msg.error(error.response?.data?.error || "Failed to update product");
+    },
   });
 
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   const getCardImageUrl = (imageName: string | null | undefined) => {
     return imageName
-      ? `${API_URL}/uploads/cards/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
+      ? `${API_URL}/uploads/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
       : "/images/card-placeholder.png";
+  };
+
+  const handleDelete = (id: number) => {
+    modal.confirm({
+      title: 'Are you sure you want to delete this product?',
+      icon: <ExclamationCircleOutlined />,
+      content: 'This action cannot be undone.',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk() {
+        deleteMutation.mutate(id);
+      },
+    });
   };
 
   const columns = [
@@ -45,7 +113,7 @@ export default function ProductsPage() {
     {
       title: "Price",
       key: "price",
-      render: (_: any, record: Product) => {
+      render: (_: unknown, record: Product) => {
         const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
         return activePrice ? (
           <Text strong>฿{Number(activePrice.price).toLocaleString()}</Text>
@@ -56,22 +124,22 @@ export default function ProductsPage() {
       title: "Type",
       dataIndex: "product_type",
       key: "type",
-      render: (type: any) => type ? <Tag color="blue">{type.name}</Tag> : <Tag>N/A</Tag>,
+      render: (type: { name: string } | null) => type ? <Tag color="blue">{type.name}</Tag> : <Tag>N/A</Tag>,
     },
     {
       title: "Cards",
       key: "cards",
-      render: (_: any, record: Product) => {
+      render: (_: unknown, record: Product) => {
         const displayText = record.product_stock_card?.slice(0, 5);
         const remaining = (record.product_stock_card?.length || 0) - 5;
         
         return (
           <div className="space-y-1">
             {displayText?.map(pc => {
-              const card = pc.stock_card?.cards;
+              const card = pc.stock_card?.cards || pc.card;
               return (
                 <div key={pc.product_stock_card_id} className="text-sm">
-                  <Text>{card?.name || `Card #${pc.stock_card?.card_id}`}</Text>
+                  <Text>{card?.name || `Card #${pc.stock_card?.card_id || pc.product_stock_card_id}`}</Text>
                   {card?.rare && <Tag className="ml-2 mr-0" color="gold">{card.rare}</Tag>}
                   <Text type="secondary" className="ml-2">x{pc.quantity}</Text>
                 </div>
@@ -95,7 +163,7 @@ export default function ProductsPage() {
     {
       title: "Price Valid Until",
       key: "price_valid_until",
-      render: (_: any, record: Product) => {
+      render: (_: unknown, record: Product) => {
         const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
         return activePrice?.price_period_ended ? (
           <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
@@ -113,16 +181,73 @@ export default function ProductsPage() {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: Product) => (
-        <Button 
-          icon={<EyeOutlined />} 
-          onClick={() => {
-            setSelectedProduct(record);
-            setIsModalOpen(true);
-          }}
-        >
-          View
-        </Button>
+      width: 180,
+      render: (_: unknown, record: Product) => (
+        <Space>
+          <Tooltip title="View Details">
+            <Button 
+              shape="circle"
+              icon={<EyeOutlined />} 
+              onClick={() => {
+                setSelectedProduct(record);
+                setIsModalOpen(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Edit Product">
+            <Button 
+              shape="circle"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setEditingProduct(record);
+                form.setFieldsValue({
+                  name: record.name,
+                  description: record.description,
+                });
+                setIsEditModalOpen(true);
+              }}
+            />
+          </Tooltip>
+          {record.status === "active" ? (
+            <Tooltip title="Close Listing">
+              <Button 
+                shape="circle"
+                danger
+                icon={<StopOutlined />}
+                onClick={() => {
+                  modal.confirm({
+                    title: 'Close this listing?',
+                    content: 'This will hide the product from the market.',
+                    onOk: () => updateMutation.mutate({ id: record.product_id, data: { status: "inactive" } }),
+                  });
+                }}
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="Re-open Listing">
+              <Button 
+                shape="circle"
+                style={{ color: '#52c41a', borderColor: '#52c41a' }}
+                icon={<PlayCircleOutlined />}
+                onClick={() => {
+                  modal.confirm({
+                    title: 'Re-open this listing?',
+                    content: 'This will show the product on the market again.',
+                    onOk: () => updateMutation.mutate({ id: record.product_id, data: { status: "active" } }),
+                  });
+                }}
+              />
+            </Tooltip>
+          )}
+          <Tooltip title="Delete Product">
+            <Button 
+              shape="circle"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.product_id)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -135,27 +260,7 @@ export default function ProductsPage() {
     );
   }, [products, activeTab]);
 
-  const EmptyState = () => (
-    <Card className="text-center py-20 bg-gray-50 border-dashed border-2">
-      <Empty
-        image={<ShoppingOutlined style={{ fontSize: 64, color: "#d9d9d9" }} />}
-        description={
-          <Space orientation="vertical">
-            <Text strong>No products found</Text>
-            <Text type="secondary">Try changing tabs or add a new product</Text>
-            <Link href="/products/add">
-              <Button type="primary" ghost icon={<PlusOutlined />} className="mt-4">
-                Add Product Now
-              </Button>
-            </Link>
-          </Space>
-        }
-      />
-    </Card>
-  );
 
-  const { user } = useAuth();
-  const canSell = user?.permissions?.includes("product:create:sell");
 
   const items = [
     ...(canSell ? [{
@@ -231,7 +336,7 @@ export default function ProductsPage() {
                   <Title level={5} className="mb-4">Cards ({selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
                   <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
                     {selectedProduct.product_stock_card?.map(pc => {
-                      const card = pc.stock_card?.cards;
+                      const card = pc.stock_card?.cards || pc.card;
                       return (
                         <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
                           <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
@@ -311,6 +416,39 @@ export default function ProductsPage() {
             </div>
           )}
         </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        title="Edit Product"
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        onOk={() => form.submit()}
+        confirmLoading={updateMutation.isPending}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={(values) => {
+            if (editingProduct) {
+              updateMutation.mutate({ id: editingProduct.product_id, data: values });
+            }
+          }}
+        >
+          <Form.Item
+            name="name"
+            label="Product Name"
+            rules={[{ required: true, message: 'Please enter product name' }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Description"
+          >
+            <Input.TextArea rows={4} />
+          </Form.Item>
+        </Form>
+      </Modal>
       </Content>
     </Layout>
   );

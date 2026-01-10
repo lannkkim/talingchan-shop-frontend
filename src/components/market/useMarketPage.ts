@@ -7,15 +7,19 @@ import { Product } from "@/types/product";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export function useMarketPage() {
-  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+  const { data: productsRaw, isLoading: isLoadingProducts } = useQuery<
+    Product[]
+  >({
     queryKey: ["products"],
-    queryFn: getProducts,
+    queryFn: () => getProducts(),
   });
+  const products = productsRaw || [];
 
-  const { data: cards = [], isLoading: isLoadingCards } = useQuery({
+  const { data: cardsRaw, isLoading: isLoadingCards } = useQuery({
     queryKey: ["cards", "market"],
     queryFn: () => getCards(1, 20),
   });
+  const cards = cardsRaw || [];
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -23,15 +27,19 @@ export function useMarketPage() {
 
   const getCardImageUrl = (imageName: string | null | undefined) => {
     return imageName
-      ? `${API_URL}/uploads/${imageName.endsWith(".png") ? imageName : `${imageName}.png`}`
+      ? `${API_URL}/uploads/${
+          imageName.endsWith(".png") ? imageName : `${imageName}.png`
+        }`
       : "/images/card-placeholder.png";
   };
 
   const getProductImage = (product: Product) => {
-    const cardWithImage = product.product_stock_card?.find(
-      (pc) => pc.stock_card?.cards?.image_name
-    );
-    return getCardImageUrl(cardWithImage?.stock_card?.cards?.image_name);
+    const firstStock = product.product_stock_card?.[0];
+    if (!firstStock) return "/images/card-placeholder.png";
+
+    const imageName =
+      firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name;
+    return getCardImageUrl(imageName);
   };
 
   const getActivePrice = (product: Product) => {

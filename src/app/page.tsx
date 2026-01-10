@@ -1,9 +1,23 @@
 "use client";
 
-import PageHeader from "@/components/shared/PageHeader";
-import { Layout, ConfigProvider } from "antd";
+import { useMarketPage } from "@/components/market/useMarketPage";
+import MarketPageUI from "@/components/market/MarketPageUI";
+import { ConfigProvider } from "antd";
+import { Product } from "@/types/product";
 
 export default function LandingPage() {
+  const {
+    products,
+    isLoadingProducts,
+    cards,
+    isLoadingCards,
+    carouselRef,
+    handleScroll,
+    getCardImageUrl,
+    getProductImage,
+    getActivePrice,
+  } = useMarketPage();
+
   return (
     <ConfigProvider
       theme={{
@@ -13,9 +27,17 @@ export default function LandingPage() {
         },
       }}
     >
-      <Layout className="min-h-screen bg-white">
-        <PageHeader title="แลนดิ้ง" />
-      </Layout>
+      <MarketPageUI
+        products={products}
+        isLoadingProducts={isLoadingProducts}
+        cards={cards}
+        isLoadingCards={isLoadingCards}
+        carouselRef={carouselRef}
+        handleScroll={handleScroll}
+        getCardImageUrl={getCardImageUrl}
+        getProductImage={getProductImage}
+        getActivePrice={getActivePrice}
+      />
     </ConfigProvider>
   );
 }

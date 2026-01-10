@@ -21,14 +21,52 @@ export interface CreateProductInput {
   };
 }
 
-export const getProducts = async (): Promise<Product[]> => {
-  const response = await axiosInstance.get<Product[]>("/api/v1/products/");
-  return response.data;
+export interface ProductFilter {
+  status?: string;
+  is_admin_shop?: boolean;
+  exclude_ended?: boolean;
+  include_shop?: boolean;
+  product_type_code?: string;
+  limit?: number;
+  user_id?: number;
+}
+
+export const getProducts = async (
+  filter?: ProductFilter
+): Promise<Product[]> => {
+  const { data } = await axiosInstance.get("/api/v1/products/", {
+    params: filter,
+  });
+  return data;
+};
+
+export const getMyProducts = async (
+  filter?: ProductFilter
+): Promise<Product[]> => {
+  const { data } = await axiosInstance.get("/api/v1/products/me", {
+    params: filter,
+  });
+  return data;
 };
 
 export const getProductById = async (id: number): Promise<Product> => {
   const response = await axiosInstance.get<Product>(`/api/v1/products/${id}`);
   return response.data;
+};
+
+export const updateProduct = async (
+  id: number,
+  data: Partial<Product>
+): Promise<Product> => {
+  const { data: responseData } = await axiosInstance.put(
+    `/api/v1/products/${id}`,
+    data
+  );
+  return responseData;
+};
+
+export const deleteProduct = async (id: number): Promise<void> => {
+  await axiosInstance.delete(`/api/v1/products/${id}`);
 };
 
 export const createProduct = async (
