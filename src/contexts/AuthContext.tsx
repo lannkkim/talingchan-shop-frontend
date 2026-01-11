@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  Suspense,
+} from "react";
 import { User, LoginInput, RegisterInput } from "@/types/auth";
 import {
   login as loginService,
@@ -22,7 +28,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// Inner component that uses useSearchParams (needs Suspense boundary)
+function AuthProviderInner({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -36,18 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const loginSuccess = searchParams.get("login_success");
 
       try {
-        // Try to verify session by refreshing token silently
-        // Note: Backend doesn't have /me, so we rely on refresh returning a token.
-        // But refreshing requires a cookie. If cookie exists, we get a token.
-        // We also need to restore the User object.
-        // Problem: /refresh-token currently only returns `{ token }`. It does NOT return the User object.
-        // Solution 1: Update backend /refresh-token to return user too. -> Best.
-        // Solution 2: Rely on localStorage for user info (display only), but trust token for auth. -> Acceptable for now.
-
-        // Let's use stored user for display, and try refresh.
-
         const { token, user } = await refreshTokenService();
-        setAccessToken(token); // Set in memory
+        setAccessToken(token);
         setUser(user);
 
         // Clean up URL if this was a social login callback
@@ -56,9 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         // Refresh failed (no cookie or expired)
-        // Clear everything
         setUser(null);
-
         setAccessToken(null);
 
         // Still clean up URL if login_success was present
@@ -77,8 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { user: userData, token } = await loginService(input);
       setUser(userData);
-
-      setAccessToken(token); // Set in memory
+      setAccessToken(token);
     } catch (error: any) {
       throw error;
     }
@@ -88,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { user: userData, token } = await registerService(input);
       setUser(userData);
-
       setAccessToken(token);
     } catch (error: any) {
       throw error;
@@ -118,6 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
     </AuthContext.Provider>
+  );
+}
+
+// Exported AuthProvider wraps inner component in Suspense
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <AuthProviderInner>{children}</AuthProviderInner>
+    </Suspense>
   );
 }
 
