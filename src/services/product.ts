@@ -19,6 +19,7 @@ export interface CreateProductInput {
     price: number;
     price_period_ended?: string;
   };
+  quantity?: number;
 }
 
 export interface ProductFilter {

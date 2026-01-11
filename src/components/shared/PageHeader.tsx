@@ -14,7 +14,7 @@ import {
 } from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/auth/LoginModal";
 
@@ -29,8 +29,18 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+
+  React.useEffect(() => {
+    if (searchParams.get("login") === "true") {
+      setModalVisible(true);
+      // Optional: Clean URL
+      // router.replace(pathname); 
+    }
+  }, [searchParams]);
 
   const menuItems = [
     {
@@ -75,6 +85,11 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
 
 
   const userMenu: MenuProps['items'] = [
+    {
+      key: "profile",
+      label: <Link href="/profile">Profile</Link>,
+      icon: <UserOutlined />,
+    },
     {
       key: "logout",
       label: "Logout",

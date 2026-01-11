@@ -38,7 +38,19 @@ export default function MarketPage() {
     }),
   });
 
-  // Query for User/Community Market Products - Decks
+  // Query for User/Community Market Products - Bundles (Single Type Set)
+  const { data: bundleProducts = [], isLoading: loadingBundle } = useQuery({
+    queryKey: ["products", "market", "bundle"],
+    queryFn: () => getProducts({
+      status: "active",
+      is_admin_shop: false,
+      product_type_code: "bundle",
+      limit: 10,
+      include_shop: true,
+    }),
+  });
+
+  // Query for User/Community Market Products - Decks (Multi Type Set)
   const { data: deckProducts = [], isLoading: loadingDeck } = useQuery({
     queryKey: ["products", "market", "deck"],
     queryFn: () => getProducts({
@@ -50,7 +62,7 @@ export default function MarketPage() {
     }),
   });
 
-  const loading = loadingAdmin || loadingSingle || loadingDeck;
+  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck;
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -180,7 +192,22 @@ export default function MarketPage() {
 
             <div className="mb-10">
               <div className="flex justify-between items-center">
-                <Title level={3}>โครงการ์ด</Title>
+                <Title level={3}>ชุดประเภทเดี่ยว</Title>
+                <Link href="/market/products?type=bundle">
+                  <Button type="link">ดูเพิ่มเติม</Button>
+                </Link>
+              </div>
+              <Divider className="my-3" />
+              {bundleProducts && bundleProducts.length > 0 ? (
+                <Row gutter={[16, 24]}>{bundleProducts.map((p: Product) => renderProductCard(p))}</Row>
+              ) : (
+                <Text type="secondary">No bundle products available.</Text>
+              )}
+            </div>
+
+            <div className="mb-10">
+              <div className="flex justify-between items-center">
+                <Title level={3}>ชุดหลายประเภท</Title>
                 <Link href="/market/products?type=deck">
                   <Button type="link">ดูเพิ่มเติม</Button>
                 </Link>
@@ -290,10 +317,10 @@ export default function MarketPage() {
                           ) : (
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">
-                                 {selectedProduct.users?.shop?.name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
+                                 {selectedProduct.users?.shop?.shop_profile?.shop_name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
                                </div>
                                <div>
-                                 <Text strong className="block">{selectedProduct.users?.shop?.name || selectedProduct.users?.username || "Community Member"}</Text>
+                                 <Text strong className="block">{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Community Member"}</Text>
                                  <Text type="secondary" className="text-xs">
                                    Seller: {selectedProduct.users?.first_name} {selectedProduct.users?.last_name}
                                  </Text>

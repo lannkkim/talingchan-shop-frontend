@@ -4,9 +4,13 @@ export interface User {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
+  image?: string;
   role_id?: number;
   role?: {
     name: string;
+    description?: string;
+    roles_id?: number;
   };
   is_active?: boolean;
   permissions?: string[];

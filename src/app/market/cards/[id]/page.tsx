@@ -101,7 +101,7 @@ export default function CardMarketStatsPage() {
       render: (_: unknown, record: Product) => (
         <Space>
            {record.is_admin_shop ? <Tag color="blue">Official</Tag> : <ShopOutlined />}
-           <Text>{record.users?.shop?.name || record.users?.username || "Seller"}</Text>
+           <Text>{record.users?.shop?.shop_profile?.shop_name || record.users?.username || "Seller"}</Text>
         </Space>
       ),
     },

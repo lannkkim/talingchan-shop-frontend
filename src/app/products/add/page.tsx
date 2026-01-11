@@ -28,8 +28,30 @@ export default function AddProductPage() {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedType, setSelectedType] = useState<any>(null);
+  const [mainTypeSelection, setMainTypeSelection] = useState<"single" | "set" | null>(null);
   const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
   const [form] = Form.useForm();
+  
+  const isSingle = selectedType?.name === "แยกใบ";
+  const isBundle = selectedType?.name === "ประเภทเดี่ยว"; // Bundle (Set of Single Type)
+
+  React.useEffect(() => {
+    if (selectedCards.length > 0) {
+      const card = selectedCards[0];
+      
+      if (isSingle) {
+        // Single Type: Auto-fill name and lock it
+        const autoName = `${card.name} ${card.rare}`.trim();
+        form.setFieldValue("name", autoName);
+      } else if (isBundle) {
+        // Bundle Type: Auto-fill name but keep editable
+        // Get current quantity for this card
+        const qty = form.getFieldValue(`quantity_${card.card_id}`) || 1;
+        const autoName = `ชุด ${card.name} ${card.rare} ${qty} ใบ`.trim();
+        form.setFieldValue("name", autoName);
+      }
+    }
+  }, [selectedCards, isSingle, isBundle, form]);
 
   const { data: types = [], isLoading: loadingTypes } = useQuery({
     queryKey: ["types"],
@@ -100,6 +122,7 @@ export default function AddProductPage() {
           price: values.price,
           price_period_ended: values.price_period_ended?.toISOString(),
         } : undefined,
+        quantity: values.quantity, // Add product quantity
       };
 
       mutation.mutate(payload);
@@ -114,52 +137,93 @@ export default function AddProductPage() {
     { title: "Review", icon: <FileTextOutlined /> },
   ];
 
-  const renderTypeSelection = () => (
-    <Row gutter={[24, 24]} className="mt-8">
-      {loadingTypes ? (
-        [...Array(3)].map((_, i) => (
-          <Col key={i} xs={24} sm={12} md={8}>
-            <Card loading />
-          </Col>
-        ))
-      ) : (
-        types.map((type) => (
-          <Col key={type.product_type_id} xs={24} sm={12} md={8}>
-            <Card 
-              hoverable 
-              className={`text-center h-full transition-all duration-300 border-2 ${
-                selectedType?.product_type_id === type.product_type_id ? "border-blue-500 bg-blue-50/30 ring-2 ring-blue-100" : "border-transparent"
-              }`}
-              onClick={() => {
-                setSelectedType(type);
+  const renderTypeSelection = () => {
+    if (loadingTypes) {
+      return (
+        <Row gutter={[24, 24]} className="mt-8">
+           {[...Array(3)].map((_, i) => (
+            <Col key={i} xs={24} sm={12} md={8}>
+              <Card loading />
+            </Col>
+          ))}
+        </Row>
+      );
+    }
+
+    return (
+      <Row gutter={[24, 24]} className="mt-8 justify-center">
+        {/* Option 1: Separate Card (Single) */}
+        <Col xs={24} sm={12} md={8}>
+           <Card 
+            hoverable
+            className="text-center h-full transition-all duration-300 border-2 border-transparent hover:border-blue-500 hover:bg-blue-50/10"
+            onClick={() => {
+              const singleType = types.find((t: any) => t.name === "แยกใบ");
+              if (singleType) {
+                setMainTypeSelection("single");
+                setSelectedType(singleType);
                 setSelectedCards([]);
-                setCurrentStep(1);
-              }}
-            >
-              <div className="py-8">
-                <Title level={4} className="!mb-2">{type.name}</Title>
-                <Paragraph type="secondary" className="mb-0">
-                  {type.name === "แยกใบ" ? "Create a listing for a single specific card." : "Create a collection or deck with multiple cards."}
-                </Paragraph>
-                <Button 
-                  type={selectedType?.product_type_id === type.product_type_id ? "primary" : "default"}
-                  className="mt-6"
-                >
-                  Select This Type
-                </Button>
-              </div>
-            </Card>
-          </Col>
-        ))
-      )}
-    </Row>
-  );
+                setCurrentStep(1); 
+              } else {
+                 message.error("Product Type 'แยกใบ' not found");
+              }
+            }}
+          >
+            <div className="py-8">
+              <Title level={4} className="!mb-2">แยกใบ</Title>
+              <Paragraph type="secondary" className="mb-0">
+                Create a listing for a single specific card.
+              </Paragraph>
+              <Button className="mt-6">Select This Type</Button>
+            </div>
+          </Card>
+        </Col>
+
+        {/* Option 2: Set (Bundle/Deck) */}
+        <Col xs={24} sm={12} md={8}>
+           <Card 
+            hoverable
+            className="text-center h-full transition-all duration-300 border-2 border-transparent hover:border-purple-500 hover:bg-purple-50/10"
+            onClick={() => {
+              const defaultSetType = types.find((t: any) => t.name === "ประเภทเดี่ยว");
+              if (defaultSetType) {
+                  setMainTypeSelection("set");
+                  setSelectedType(defaultSetType); // Default to Single Type
+                  setSelectedCards([]);
+                  setCurrentStep(1);
+              } else {
+                  // Fallback if 'ประเภทเดี่ยว' missing (shouldn't happen with seed)
+                   const anySetType = types.find((t: any) => t.name === "หลายประเภท");
+                   if (anySetType) {
+                      setMainTypeSelection("set");
+                      setSelectedType(anySetType);
+                      setSelectedCards([]);
+                      setCurrentStep(1);
+                   } else {
+                      message.error("Set types not found");
+                   }
+              }
+            }}
+          >
+            <div className="py-8">
+              <Title level={4} className="!mb-2">ชุด</Title>
+              <Paragraph type="secondary" className="mb-0">
+                Create a collection or deck with multiple cards.
+              </Paragraph>
+              <Button className="mt-6">Select This Type</Button>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
 
   const { user } = useAuth();
   const canSell = user?.permissions?.includes("product:create:sell");
 
   const renderConfiguration = () => {
     const isSingle = selectedType?.name === "แยกใบ";
+    const isBundle = selectedType?.name === "ประเภทเดี่ยว";
     
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
@@ -170,9 +234,37 @@ export default function AddProductPage() {
           </div>
           <div className="p-6">
               <Row gutter={24}>
+                {mainTypeSelection === "set" && (
+                  <Col span={24}>
+                    <Form.Item label="Set Type" required>
+                      <Radio.Group 
+                        value={selectedType?.product_type_id} 
+                        onChange={(e) => {
+                           const newType = types.find((t: any) => t.product_type_id === e.target.value);
+                           if (newType) {
+                              setSelectedType(newType);
+                              setSelectedCards([]); // Clear cards on type change
+                           }
+                        }}
+                        className="w-full"
+                        size="large"
+                      >
+                      {types.filter((t: any) => t.name === "ประเภทเดี่ยว" || t.name === "หลายประเภท").map((t: any) => (
+                            <Radio.Button key={t.product_type_id} value={t.product_type_id} className="w-1/2 text-center">
+                              {t.name}
+                            </Radio.Button>
+                         ))}
+                      </Radio.Group>
+                    </Form.Item>
+                  </Col>
+                )}
                 <Col span={24}>
                   <Form.Item name="name" label="Product Name" rules={[{ required: true }]}>
-                    <Input placeholder="e.g. Rare Dracomon Deck" size="large" />
+                    <Input 
+                      placeholder="e.g. Rare Dracomon Deck" 
+                      size="large" 
+                      disabled={isSingle}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
@@ -212,6 +304,16 @@ export default function AddProductPage() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
+                  <Form.Item name="quantity" label="Product Quantity" initialValue={1} rules={[{ required: true, message: "Please enter product quantity" }]}>
+                    <InputNumber 
+                      className="w-full" 
+                      placeholder="1" 
+                      size="large"
+                      min={1}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
                   <Form.Item name="price_period_ended" label="Price Valid Until (Optional)">
                     <DatePicker className="w-full" size="large" showTime />
                   </Form.Item>
@@ -240,7 +342,7 @@ export default function AddProductPage() {
             <div>
               <Title level={4} className="!mb-0">Card Selection</Title>
               <Text type="secondary">
-                {isSingle ? "Choose 1 card for this product" : "Select one or more cards"}
+                {(isSingle || isBundle) ? "Choose 1 specific card type for this product" : "Select one or more cards"}
               </Text>
             </div>
             <Tag color="blue">{selectedCards.length} Cards Selected</Tag>
@@ -249,7 +351,7 @@ export default function AddProductPage() {
             <CardBrowser 
               selectedCards={selectedCards}
               onSelect={setSelectedCards}
-              multiple={!isSingle}
+              multiple={!isSingle && !isBundle}
               renderCustomActions={(card: CardType, isSelected: boolean) => isSelected && (
                 <div 
                   className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200"
@@ -260,12 +362,21 @@ export default function AddProductPage() {
                     className="!mb-0"
                     rules={[{ required: true, message: '' }]}
                   >
-                     <InputNumber 
-                      min={1} 
-                      className="w-full" 
-                      placeholder="Qty"
-                      prefix={<Text type="secondary" className="mr-1 text-xs">Qty:</Text>}
-                    />
+                     {isSingle ? (
+                        <div className="text-center text-gray-500 text-sm py-1">
+                          Qty: 1
+                          <div style={{ display: 'none' }}>
+                            <InputNumber value={1} />
+                          </div>
+                        </div>
+                     ) : (
+                        <InputNumber 
+                          min={1} 
+                          className="w-full" 
+                          placeholder="Qty"
+                          prefix={<Text type="secondary" className="mr-1 text-xs">Qty:</Text>}
+                        />
+                     )}
                   </Form.Item>
                 </div>
               )}
@@ -336,7 +447,13 @@ export default function AddProductPage() {
       <Header className="bg-white border-b border-gray-100 flex items-center px-8 h-20">
         <Button 
           icon={<ArrowLeftOutlined />} 
-          onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : router.back()}
+          onClick={() => {
+             if (currentStep > 0) {
+                setCurrentStep(currentStep - 1);
+             } else {
+                router.back();
+             }
+          }}
           className="mr-6 border-none shadow-none hover:bg-gray-50"
         >
           Back
@@ -350,7 +467,25 @@ export default function AddProductPage() {
 
       <Content className="p-8 pb-32">
         <div className="max-w-5xl mx-auto">
-          <Form form={form} layout="vertical" preserve={true}>
+          <Form 
+            form={form} 
+            layout="vertical" 
+            preserve={true}
+            onValuesChange={(changedValues) => {
+               // Handle real-time updates for Bundle auto-naming
+               if (isBundle && selectedCards.length > 0) {
+                 const card = selectedCards[0];
+                 const qtyKey = `quantity_${card.card_id}`;
+                 
+                 // If quantity changed, update name
+                 if (qtyKey in changedValues) {
+                    const qty = changedValues[qtyKey]; // New quantity
+                    const autoName = `ชุด ${card.name} ${card.rare} ${qty} ใบ`.trim();
+                    form.setFieldValue("name", autoName);
+                 }
+               }
+            }}
+          >
             <div className="mb-12">
               <Steps 
                 current={currentStep} 
@@ -383,7 +518,13 @@ export default function AddProductPage() {
             <Space size="large" className="w-full max-w-5xl justify-between px-8">
               <Button 
                 size="large" 
-                onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : router.back()}
+                onClick={() => {
+                  if (currentStep > 0) {
+                    setCurrentStep(currentStep - 1);
+                  } else {
+                    router.back();
+                  }
+                }}
                 disabled={mutation.isPending}
               >
                 {currentStep === 0 ? "Cancel" : "Previous Step"}
