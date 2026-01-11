@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import { getCards } from "@/services/card";
 import { Product } from "@/types/product";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { getCardImageUrl } from "@/utils/image";
 
 export function useMarketPage() {
   const { data: productsRaw, isLoading: isLoadingProducts } = useQuery<
@@ -24,14 +23,6 @@ export function useMarketPage() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const getCardImageUrl = (imageName: string | null | undefined) => {
-    return imageName
-      ? `${API_URL}/uploads/${
-          imageName.endsWith(".png") ? imageName : `${imageName}.png`
-        }`
-      : "/images/card-placeholder.png";
-  };
 
   const getProductImage = (product: Product) => {
     const firstStock = product.product_stock_card?.[0];

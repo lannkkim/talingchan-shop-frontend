@@ -103,7 +103,10 @@ function AllMarketProductsContent() {
     );
   };
 
-  const title = typeCode === "single" ? "แยกใบทั้งหมด" : typeCode === "deck" ? "โครงการ์ดทั้งหมด" : "สินค้าทั้งหมด";
+  const title = typeCode === "single" ? "แยกใบทั้งหมด" 
+    : typeCode === "bundle" ? "ชุดประเภทเดี่ยวทั้งหมด"
+    : typeCode === "deck" ? "ชุดหลายประเภททั้งหมด" 
+    : "สินค้าทั้งหมด";
 
   return (
     <Layout className="min-h-screen bg-white">
@@ -185,7 +188,7 @@ function AllMarketProductsContent() {
                   <Space orientation="vertical" size="middle" className="w-full">
                     <div>
                       <Text type="secondary" className="block text-xs text-gray-400">Shop</Text>
-                      <Text strong>{selectedProduct.users?.shop?.name || selectedProduct.users?.username || "Individual Seller"}</Text>
+                      <Text strong>{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Individual Seller"}</Text>
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">Description</Text>
