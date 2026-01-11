@@ -2,9 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, LoginInput, RegisterInput } from "@/types/auth";
-import { login as loginService, register as registerService, logout as logoutService, refreshToken as refreshTokenService } from "@/services/auth";
+import {
+  login as loginService,
+  register as registerService,
+  logout as logoutService,
+  refreshToken as refreshTokenService,
+} from "@/services/auth";
 import { setAccessToken } from "@/lib/axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -21,10 +26,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   // Initialize session
   useEffect(() => {
     const initAuth = async () => {
+      // Check if this is a social login callback
+      const loginSuccess = searchParams.get("login_success");
+
       try {
         // Try to verify session by refreshing token silently
         // Note: Backend doesn't have /me, so we rely on refresh returning a token.
@@ -33,32 +43,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Problem: /refresh-token currently only returns `{ token }`. It does NOT return the User object.
         // Solution 1: Update backend /refresh-token to return user too. -> Best.
         // Solution 2: Rely on localStorage for user info (display only), but trust token for auth. -> Acceptable for now.
-        
+
         // Let's use stored user for display, and try refresh.
-        
 
         const { token, user } = await refreshTokenService();
         setAccessToken(token); // Set in memory
         setUser(user);
+
+        // Clean up URL if this was a social login callback
+        if (loginSuccess === "true") {
+          window.history.replaceState({}, "", pathname);
+        }
       } catch (error) {
         // Refresh failed (no cookie or expired)
         // Clear everything
         setUser(null);
-        
+
         setAccessToken(null);
+
+        // Still clean up URL if login_success was present
+        if (loginSuccess === "true") {
+          window.history.replaceState({}, "", pathname);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [searchParams, pathname]);
 
   const login = async (input: LoginInput) => {
     try {
       const { user: userData, token } = await loginService(input);
       setUser(userData);
-      
+
       setAccessToken(token); // Set in memory
     } catch (error: any) {
       throw error;
@@ -67,24 +86,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (input: RegisterInput) => {
     try {
-        const { user: userData, token } = await registerService(input);
-        setUser(userData);
-        
-        setAccessToken(token);
+      const { user: userData, token } = await registerService(input);
+      setUser(userData);
+
+      setAccessToken(token);
     } catch (error: any) {
-        throw error;
+      throw error;
     }
   };
 
-	const logout = async () => {
-		try {
-			await logoutService();
-		} finally {
-			setUser(null);
-			setAccessToken(null);
-			router.push("/");
-		}
-	};
+  const logout = async () => {
+    try {
+      await logoutService();
+    } finally {
+      setUser(null);
+      setAccessToken(null);
+      router.push("/");
+    }
+  };
 
   return (
     <AuthContext.Provider
