@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { Address, CreateAddressInput } from "@/types/address";
+import { Address, CreateAddressInput, AddressType } from "@/types/address";
 
 const BASE_URL = "api/v1/addresses";
 
@@ -21,4 +21,9 @@ export const deleteAddress = async (id: number): Promise<void> => {
 
 export const setDefaultAddress = async (id: number): Promise<void> => {
   await axiosInstance.put(`${BASE_URL}/${id}/default`);
+};
+
+export const getAddressTypes = async (): Promise<AddressType[]> => {
+  const response = await axiosInstance.get(`${BASE_URL}/types`);
+  return response.data;
 };

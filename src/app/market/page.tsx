@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Product } from "@/types/product";
 import { getProducts } from "@/services/product";
-import { Card, Spin, Typography, Row, Col, Divider, ConfigProvider, Layout, Tag, Modal, Button, Space } from "antd";
-import { ShoppingOutlined, LineChartOutlined } from "@ant-design/icons";
+import { addToCart } from "@/services/cart";
+import { App, Card, Spin, Typography, Row, Col, Divider, ConfigProvider, Layout, Tag, Modal, Button, Space, InputNumber } from "antd";
+import { ShoppingOutlined, LineChartOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
 import { getCardImageUrl } from "@/utils/image";
@@ -19,6 +20,8 @@ export default function MarketPage() {
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { modal } = App.useApp();
+  const queryClient = useQueryClient(); // Initialize QueryClient
 
   // Query for Admin/Official Store Products
   const { data: adminProducts = [], isLoading: loadingAdmin } = useQuery({
@@ -38,7 +41,19 @@ export default function MarketPage() {
     }),
   });
 
-  // Query for User/Community Market Products - Decks
+  // Query for User/Community Market Products - Bundles (Single Type Set)
+  const { data: bundleProducts = [], isLoading: loadingBundle } = useQuery({
+    queryKey: ["products", "market", "bundle"],
+    queryFn: () => getProducts({
+      status: "active",
+      is_admin_shop: false,
+      product_type_code: "bundle",
+      limit: 10,
+      include_shop: true,
+    }),
+  });
+
+  // Query for User/Community Market Products - Decks (Multi Type Set)
   const { data: deckProducts = [], isLoading: loadingDeck } = useQuery({
     queryKey: ["products", "market", "deck"],
     queryFn: () => getProducts({
@@ -50,7 +65,7 @@ export default function MarketPage() {
     }),
   });
 
-  const loading = loadingAdmin || loadingSingle || loadingDeck;
+  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck;
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -64,6 +79,38 @@ export default function MarketPage() {
     return firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name || null;
   };
 
+
+  const [buyQuantity, setBuyQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!selectedProduct) return;
+    
+    setAddingToCart(true);
+    try {
+      await addToCart({
+        product_id: selectedProduct.product_id,
+        quantity: buyQuantity
+      });
+      
+      // Invalidate cart query to update the global state (including PageHeader)
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+
+      // Optionally show success message
+      modal.success({
+        title: "เพิ่มสินค้าลงตะกร้าแล้ว",
+        content: `เพิ่ม ${selectedProduct.name} จำนวน ${buyQuantity} รายการลงในตะกร้าเรียบร้อยแล้ว`,
+      });
+      setIsModalOpen(false);
+    } catch (err: any) {
+      modal.error({
+        title: "เพิ่มสินค้าไม่สำเร็จ",
+        content: err.response?.data?.error || "เกิดข้อผิดพลาดในการเพิ่มสินค้าลงตะกร้า",
+      });
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
@@ -99,11 +146,18 @@ export default function MarketPage() {
                   <Text className="text-lg text-blue-600 font-semibold">
                     {activePrice ? `฿${Number(activePrice.price).toLocaleString()}` : "No Price"}
                   </Text>
-                  {product.total_quantity !== undefined && (
-                    <Text type="secondary" className="text-xs font-medium">
-                      Qty: {product.total_quantity}
-                    </Text>
-                  )}
+                  <div className="text-right">
+                    {product.quantity !== undefined && (
+                      <Text strong className="text-xs block leading-tight">
+                        {product.quantity} {product.product_type?.code === "single" ? "ชุด" : "ชุด"}
+                      </Text>
+                    )}
+                    {product.product_stock_card && (
+                      <Text type="secondary" className="text-[10px] block leading-tight">
+                        ({product.product_stock_card.reduce((sum, pc) => sum + pc.quantity, 0)} ใบ/ชุด)
+                      </Text>
+                    )}
+                  </div>
                 </div>
                 
                 {product.market_min_price !== undefined && product.market_min_price > 0 && (
@@ -144,8 +198,8 @@ export default function MarketPage() {
     >
       <Layout className="min-h-screen bg-white">
         <PageHeader title="ตลาด" />
-        <Layout className="container mx-auto">
-          <Content className="p-4 md:p-8">
+        <Layout className="w-full">
+          <Content className="container mx-auto max-w-7xl p-4 md:p-8">
             <div className="mb-10">
               <Title level={3} className="text-[#1890ff]">
                 Official Store
@@ -180,7 +234,22 @@ export default function MarketPage() {
 
             <div className="mb-10">
               <div className="flex justify-between items-center">
-                <Title level={3}>โครงการ์ด</Title>
+                <Title level={3}>ชุดประเภทเดี่ยว</Title>
+                <Link href="/market/products?type=bundle">
+                  <Button type="link">ดูเพิ่มเติม</Button>
+                </Link>
+              </div>
+              <Divider className="my-3" />
+              {bundleProducts && bundleProducts.length > 0 ? (
+                <Row gutter={[16, 24]}>{bundleProducts.map((p: Product) => renderProductCard(p))}</Row>
+              ) : (
+                <Text type="secondary">No bundle products available.</Text>
+              )}
+            </div>
+
+            <div className="mb-10">
+              <div className="flex justify-between items-center">
+                <Title level={3}>ชุดหลายประเภท</Title>
                 <Link href="/market/products?type=deck">
                   <Button type="link">ดูเพิ่มเติม</Button>
                 </Link>
@@ -267,8 +336,12 @@ export default function MarketPage() {
                                 })()}
                              </div>
                              <div className="flex justify-between items-center">
-                                <Text type="secondary">Product Type</Text>
-                                <Tag color="blue" className="m-0">{selectedProduct.product_type?.name || "N/A"}</Tag>
+                                <Text type="secondary">In Stock</Text>
+                                <Text strong>{selectedProduct.quantity || 0} {selectedProduct.product_type?.code === "single" ? "ถาด/ใบ" : "ชุด"}</Text>
+                             </div>
+                             <div className="flex justify-between items-center">
+                                <Text type="secondary">Cards per Set</Text>
+                                <Text strong>{selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} cards</Text>
                              </div>
                            </Space>
                         </div>
@@ -290,10 +363,10 @@ export default function MarketPage() {
                           ) : (
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">
-                                 {selectedProduct.users?.shop?.name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
+                                 {selectedProduct.users?.shop?.shop_profile?.shop_name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
                                </div>
                                <div>
-                                 <Text strong className="block">{selectedProduct.users?.shop?.name || selectedProduct.users?.username || "Community Member"}</Text>
+                                 <Text strong className="block">{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Community Member"}</Text>
                                  <Text type="secondary" className="text-xs">
                                    Seller: {selectedProduct.users?.first_name} {selectedProduct.users?.last_name}
                                  </Text>
@@ -302,9 +375,28 @@ export default function MarketPage() {
                           )}
                         </div>
                         
-                        <Button type="primary" size="large" className="w-full mt-4" icon={<ShoppingOutlined />}>
-                          Buy Now
-                        </Button>
+                        <div className="flex items-center gap-4 mt-4">
+                          <div className="flex-shrink-0">
+                            <Text type="secondary" className="block text-xs mb-1">Quantity</Text>
+                            <InputNumber 
+                              min={1} 
+                              max={selectedProduct.total_quantity || 99} 
+                              value={buyQuantity} 
+                              onChange={(val) => setBuyQuantity(val || 1)}
+                              className="w-24"
+                            />
+                          </div>
+                          <Button 
+                            type="primary" 
+                            size="large" 
+                            className="flex-1 bg-blue-600 hover:bg-blue-700" 
+                            icon={<ShoppingCartOutlined />}
+                            onClick={handleAddToCart}
+                            loading={addingToCart}
+                          >
+                            เพิ่มสินค้าลงตะกร้า
+                          </Button>
+                        </div>
                       </Space>
                     </Col>
                   </Row>

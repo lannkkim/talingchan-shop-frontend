@@ -2,14 +2,23 @@ import { Card } from "./card";
 import { Type } from "./type";
 import { User } from "./auth";
 
+export interface ShopProfile {
+  shop_profile_id: number;
+  shop_id: number;
+  user_profile_id: number;
+  shop_name: string;
+  shop_display?: string;
+  owner_name?: string;
+  shop_email?: string;
+  shop_phone?: string;
+}
+
 export interface Shop {
   shop_id: number;
   user_id: number;
-  name: string;
-  description?: string;
-  address?: string;
-  phone?: string;
+  level?: string;
   is_stock_check_enabled?: boolean;
+  shop_profile?: ShopProfile;
 }
 
 export interface Product {
@@ -32,6 +41,7 @@ export interface Product {
   users?: User & { shop?: Shop };
   market_min_price?: number;
   total_quantity?: number;
+  quantity?: number;
 }
 
 export interface TransactionType {

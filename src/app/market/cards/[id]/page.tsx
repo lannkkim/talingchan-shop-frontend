@@ -51,20 +51,15 @@ export default function CardMarketStatsPage() {
   const listings = products.filter(p => p.product_type?.code !== 'deck');
   
   let totalPriceSum = 0;
+  let totalPSCQuantity = 0;
   let totalSupply = 0;
   const prices: number[] = [];
 
   listings.forEach(p => {
-    // Deck check removed as listings is already filtered
-
     const activePrice = p.price_period?.find(pp => pp.status === "active") || p.price_period?.[0];
     const price = activePrice?.price ? Number(activePrice.price) : 0;
+    const stockQty = p.quantity || 1;
     
-    // Find the quantity of THIS card in the product
-    // p.product_stock_card contains all cards in the product (deck or single)
-    // We need to match the cardId.
-    // Note: psc.card_id might be directly available or via stock_card
-    // The backend filter ensured this product contains the card.
     const psc = p.product_stock_card?.find(item => 
        item.card_id === cardId || 
        item.stock_card?.card_id === cardId ||
@@ -72,15 +67,19 @@ export default function CardMarketStatsPage() {
     );
     
     if (psc && price > 0) {
-        const qty = psc.quantity || 1; // Supply of this card in this product listing
-        totalPriceSum += price;
-        totalSupply += qty;
+        const cardsPerItem = psc.quantity || 1;
+        const totalCardsInListing = cardsPerItem * stockQty;
+
+        totalPriceSum += price; // Sum of listing prices (not weighted by stock)
+        totalPSCQuantity += cardsPerItem; // Sum of cards in listings (not weighted by stock)
+        
+        totalSupply += totalCardsInListing; // Total supply remains total cards in market
         prices.push(price);
     }
   });
 
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-  const avgPrice = totalSupply > 0 ? totalPriceSum / totalSupply : 0;
+  const avgPrice = totalPSCQuantity > 0 ? totalPriceSum / totalPSCQuantity : 0;
   const totalQty = totalSupply;
 
 
@@ -101,7 +100,7 @@ export default function CardMarketStatsPage() {
       render: (_: unknown, record: Product) => (
         <Space>
            {record.is_admin_shop ? <Tag color="blue">Official</Tag> : <ShopOutlined />}
-           <Text>{record.users?.shop?.name || record.users?.username || "Seller"}</Text>
+           <Text>{record.users?.shop?.shop_profile?.shop_name || record.users?.username || "Seller"}</Text>
         </Space>
       ),
     },

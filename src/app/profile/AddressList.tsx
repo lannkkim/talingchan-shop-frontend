@@ -44,18 +44,18 @@ export default function AddressList() {
         <div className="max-w-3xl">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                     <Title level={4} className="!mb-0">My Addresses</Title>
-                     <Text type="secondary">Manage your shipping and shop addresses</Text>
+                     <Title level={4} className="!mb-0">รายการที่อยู่</Title>
+                     <Text type="secondary">จัดการที่อยู่สำหรับการจัดส่งและการรับสินค้า</Text>
                 </div>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-                    Add New Address
+                    เพิ่มที่อยู่จัดส่ง
                 </Button>
             </div>
 
             {isLoading ? (
-               <div className="text-center py-8">Loading...</div>
+               <div className="text-center py-8">กำลังโหลด...</div>
             ) : addresses.length === 0 ? (
-                <Empty description="No addresses found" />
+                <Empty description="ไม่พบข้อมูลที่อยู่" />
             ) : (
                 <div className="space-y-4">
                     {addresses.map((addr: Address) => (
@@ -65,13 +65,14 @@ export default function AddressList() {
                                     <div className="flex items-center gap-2 mb-1">
                                         <Text strong className="text-base">{addr.name}</Text>
                                         <div className="space-x-1">
-                                            {addr.is_default && <Tag color="blue">Default</Tag>}
-                                            <Tag>{addr.address_type?.name || 'Shipping'}</Tag>
+                                            {addr.is_default && <Tag color="blue">ค่าเริ่มต้น</Tag>}
+                                            <Tag>{addr.address_type?.name || 'ที่อยู่จัดส่ง'}</Tag>
                                         </div>
                                     </div>
                                     <div className="text-gray-600 flex gap-2 items-start mt-2">
                                          <EnvironmentOutlined className="mt-1 text-gray-400" />
                                          <span>
+                                            <span className="block font-medium text-gray-800 mb-1">{addr.phone}</span>
                                             {addr.address}<br/>
                                             {addr.sub_district}, {addr.district}<br/>
                                             {addr.province} {addr.zipcode}
@@ -81,10 +82,10 @@ export default function AddressList() {
                                 <div className="flex flex-col gap-2 items-end">
                                     {!addr.is_default && (
                                         <Button size="small" type="text" onClick={() => handleSetDefault(addr.address_id)}>
-                                            Set as Default
+                                            ตั้งเป็นค่าเริ่มต้น
                                         </Button>
                                     )}
-                                    <Popconfirm title="Delete this address?" onConfirm={() => handleDelete(addr.address_id)}>
+                                    <Popconfirm title="ลบที่อยู่นี้?" okText="ลบ" cancelText="ยกเลิก" onConfirm={() => handleDelete(addr.address_id)}>
                                         <Button size="small" type="text" danger icon={<DeleteOutlined />} />
                                     </Popconfirm>
                                 </div>

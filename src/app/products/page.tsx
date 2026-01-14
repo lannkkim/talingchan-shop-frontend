@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyProducts, deleteProduct, updateProduct } from "@/services/product";
 import PageHeader from "@/components/shared/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs, Form, Input, App, Tooltip } from "antd";
-import { PlusOutlined, ShoppingOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, StopOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs, Form, Input, App } from "antd";
+import { PlusOutlined, ShoppingOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
@@ -181,72 +181,37 @@ export default function ProductsPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 180,
       render: (_: unknown, record: Product) => (
         <Space>
-          <Tooltip title="View Details">
-            <Button 
-              shape="circle"
-              icon={<EyeOutlined />} 
-              onClick={() => {
-                setSelectedProduct(record);
-                setIsModalOpen(true);
-              }}
-            />
-          </Tooltip>
-          <Tooltip title="Edit Product">
-            <Button 
-              shape="circle"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setEditingProduct(record);
-                form.setFieldsValue({
-                  name: record.name,
-                  description: record.description,
-                });
-                setIsEditModalOpen(true);
-              }}
-            />
-          </Tooltip>
-          {record.status === "active" ? (
-            <Tooltip title="Close Listing">
-              <Button 
-                shape="circle"
-                danger
-                icon={<StopOutlined />}
-                onClick={() => {
-                  modal.confirm({
-                    title: 'Close this listing?',
-                    content: 'This will hide the product from the market.',
-                    onOk: () => updateMutation.mutate({ id: record.product_id, data: { status: "inactive" } }),
-                  });
-                }}
-              />
-            </Tooltip>
-          ) : (
-            <Tooltip title="Re-open Listing">
-              <Button 
-                shape="circle"
-                style={{ color: '#52c41a', borderColor: '#52c41a' }}
-                icon={<PlayCircleOutlined />}
-                onClick={() => {
-                  modal.confirm({
-                    title: 'Re-open this listing?',
-                    content: 'This will show the product on the market again.',
-                    onOk: () => updateMutation.mutate({ id: record.product_id, data: { status: "active" } }),
-                  });
-                }}
-              />
-            </Tooltip>
-          )}
-          <Tooltip title="Delete Product">
-            <Button 
-              shape="circle"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.product_id)}
-            />
-          </Tooltip>
+          <Button 
+            icon={<EyeOutlined />} 
+            onClick={() => {
+              setSelectedProduct(record);
+              setIsModalOpen(true);
+            }}
+          >
+            View
+          </Button>
+          <Button 
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingProduct(record);
+              form.setFieldsValue({
+                name: record.name,
+                description: record.description,
+              });
+              setIsEditModalOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+          <Button 
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.product_id)}
+          >
+            Delete
+          </Button>
         </Space>
       ),
     },
@@ -302,7 +267,7 @@ export default function ProductsPage() {
         title="My Products" 
       />
 
-      <Content className="p-8 container mx-auto">
+      <Content className="container mx-auto max-w-7xl p-8">
         <div className="flex justify-end mb-6">
           <Link href="/products/add">
             <Button type="primary" icon={<PlusOutlined />} size="large">
@@ -355,14 +320,8 @@ export default function ProductsPage() {
                               <Text type="secondary" className="text-xs">{card?.type}</Text>
                             </div>
                           </div>
-                          <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                            <Tag color="blue" className="m-0">x{pc.quantity}</Tag>
-                            {/* Assuming market_price is available or user wants to see it if it exists */}
-                            {pc.market_price && pc.market_price > 0 && (
-                                <Text className="text-xs text-gray-500">
-                                   Start <span className="text-blue-600 font-bold">฿{Number(pc.market_price).toLocaleString()}</span>
-                                </Text>
-                            )}
+                          <div className="flex-shrink-0">
+                            <Tag color="blue">x{pc.quantity}</Tag>
                           </div>
                         </div>
                       );
