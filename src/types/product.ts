@@ -41,6 +41,7 @@ export interface Product {
   users?: User & { shop?: Shop };
   market_min_price?: number;
   total_quantity?: number;
+  quantity?: number;
 }
 
 export interface TransactionType {

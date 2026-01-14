@@ -13,6 +13,7 @@ export interface Address {
   district: string;
   province: string;
   zipcode: string;
+  phone: string;
   is_default: boolean;
   address_type_id: number;
   created_at: string;
@@ -27,6 +28,7 @@ export interface CreateAddressInput {
   district: string;
   province: string;
   zipcode: string;
+  phone: string;
   is_default?: boolean;
   address_type_id?: number;
 }

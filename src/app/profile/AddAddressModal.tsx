@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { Modal, Form, Input, Select, Checkbox, Button, App } from "antd";
-import { createAddress } from "@/services/address";
-import { CreateAddressInput } from "@/types/address";
+import { createAddress, getAddressTypes } from "@/services/address";
+import { CreateAddressInput, AddressType } from "@/types/address";
+import { useQuery } from "@tanstack/react-query";
 
 interface AddAddressModalProps {
   visible: boolean;
@@ -17,22 +18,34 @@ export default function AddAddressModal({ visible, onClose, onSuccess }: AddAddr
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const { message } = App.useApp();
+  
+  const { data: addressTypes = [] } = useQuery<AddressType[]>({
+    queryKey: ["addressTypes"],
+    queryFn: getAddressTypes,
+  });
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      await createAddress(values as CreateAddressInput);
-      message.success("Address added successfully");
+      
+      // Find shipping type
+      const shippingType = addressTypes.find(t => t.name.toLowerCase() === 'shipping');
+      const payload = {
+        ...values,
+        address_type_id: shippingType?.address_type_id || 1 // Fallback to 1 if not found
+      };
+
+      await createAddress(payload as CreateAddressInput);
+      message.success("เพิ่มที่อยู่สำเร็จ");
       form.resetFields();
       onSuccess();
       onClose();
     } catch (error: any) {
         if (error.errorFields) {
-            // Form validation error, do nothing
             return;
         }
-      const msg = error.response?.data?.error || "Failed to add address";
+      const msg = error.response?.data?.error || "เพิ่มที่อยู่ไม่สำเร็จ";
       message.error(msg);
     } finally {
       setLoading(false);
@@ -41,78 +54,76 @@ export default function AddAddressModal({ visible, onClose, onSuccess }: AddAddr
 
   return (
     <Modal
-      title="Add New Address"
+      title="เพิ่มที่อยู่จัดส่งใหม่"
       open={visible}
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={loading}
       afterClose={() => form.resetFields()}
-      okText="Save Address"
+      okText="บันทึกที่อยู่"
+      cancelText="ยกเลิก"
     >
       <Form form={form} layout="vertical">
         <div className="flex gap-4">
              <Form.Item
                 name="name"
-                label="Recipient Name"
+                label="ชื่อผู้รับ"
                 className="flex-1"
-                rules={[{ required: true, message: "Please enter recipient name" }]}
+                rules={[{ required: true, message: "กรุณาระบุชื่อผู้รับ" }]}
             >
-                <Input placeholder="John Doe" />
+                <Input placeholder="เช่น สมชาย ใจดี" />
             </Form.Item>
              <Form.Item
-                name="phone" // Note: Schema might need phone if we want to store it. Wait, check schema.
-                // Addresses table has `phone`? Let me check schema address.prisma.
-                // It has `address` string txt. I'll stick to schema fields.
-                // Wait, address.prisma had: first_name, last_name, phone -> User deleted them and made `name`.
-                // So now we only have `name`.
-                // I will stick to `name` only for now.
-                hidden
+                name="phone"
+                label="เบอร์โทรศัพท์"
+                className="flex-1"
+                rules={[{ required: true, message: "กรุณาระบุเบอร์โทรศัพท์" }]}
             >
-                <Input />
+                <Input placeholder="เช่น 0812345678" />
             </Form.Item>
         </div>
 
         <Form.Item
             name="address"
-            label="Address"
-            rules={[{ required: true, message: "Please enter house number, soi, road" }]}
+            label="ที่อยู่"
+            rules={[{ required: true, message: "กรุณาระบุบ้านเลขที่ " }]}
         >
-            <Input.TextArea rows={2} placeholder="123/45 Moo 6, Soi 5, Sukhumvit Rd." />
+            <Input.TextArea rows={2} placeholder="บ้านเลขที่, หมู่, ซอย, ถนน" />
         </Form.Item>
 
         <div className="grid grid-cols-2 gap-4">
             <Form.Item
                 name="sub_district"
-                label="Sub-district (Tambon)"
-                rules={[{ required: true, message: "Required" }]}
+                label="ตำบล / แขวง"
+                rules={[{ required: true, message: "กรุณาระบุตำบล/แขวง" }]}
             >
                 <Input />
             </Form.Item>
              <Form.Item
                 name="district"
-                label="District (Amphoe)"
-                rules={[{ required: true, message: "Required" }]}
+                label="อำเภอ / เขต"
+                rules={[{ required: true, message: "กรุณาระบุอำเภอ/เขต" }]}
             >
                 <Input />
             </Form.Item>
              <Form.Item
                 name="province"
-                label="Province (Changwat)"
-                rules={[{ required: true, message: "Required" }]}
+                label="จังหวัด"
+                rules={[{ required: true, message: "กรุณาระบุจังหวัด" }]}
             >
                 <Input />
             </Form.Item>
              <Form.Item
                 name="zipcode"
-                label="Zipcode"
-                rules={[{ required: true, message: "Required" }]}
+                label="รหัสไปรษณีย์"
+                rules={[{ required: true, message: "กรุณาระบุรหัสไปรษณีย์" }]}
             >
                 <Input />
             </Form.Item>
         </div>
 
         <Form.Item name="is_default" valuePropName="checked">
-            <Checkbox>Set as default address</Checkbox>
+            <Checkbox>ตั้งเป็นที่อยู่ค่าเริ่มต้น</Checkbox>
         </Form.Item>
       </Form>
     </Modal>

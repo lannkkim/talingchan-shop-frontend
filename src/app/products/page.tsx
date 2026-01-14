@@ -267,7 +267,7 @@ export default function ProductsPage() {
         title="My Products" 
       />
 
-      <Content className="p-8 container mx-auto">
+      <Content className="container mx-auto max-w-7xl p-8">
         <div className="flex justify-end mb-6">
           <Link href="/products/add">
             <Button type="primary" icon={<PlusOutlined />} size="large">
