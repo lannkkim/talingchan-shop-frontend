@@ -20,8 +20,8 @@ export default function CardsPage() {
       <Layout className="min-h-screen bg-white">
         <PageHeader title="คลัง" />
 
-        <Layout className="container mx-auto">
-          <Content className="p-4 md:p-8">
+        <Layout className="w-full">
+          <Content className="container mx-auto max-w-7xl p-4 md:p-8">
             <CardBrowser selectable={false} />
           </Content>
         </Layout>

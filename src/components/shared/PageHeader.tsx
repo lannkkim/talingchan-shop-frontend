@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Layout, Typography, Menu, Button, Dropdown, Avatar } from "antd";
+import React, { useState, useEffect } from "react";
+import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -11,15 +11,20 @@ import {
   LogoutOutlined,
   UserOutlined,
   ArrowLeftOutlined,
+  ShoppingCartOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/auth/LoginModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCart, removeFromCart, CartItem } from "@/services/cart";
+import { getCardImageUrl } from "@/utils/image";
 
 const { Header } = Layout;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface PageHeaderProps {
   title: string;
@@ -31,18 +36,31 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  const queryClient = useQueryClient();
 
-  React.useEffect(() => {
+  // Cart Logic
+  const { data: cartItems = [] } = useQuery<CartItem[]>({
+    queryKey: ["cart"],
+    queryFn: getCart,
+    enabled: isAuthenticated,
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: number) => removeFromCart(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
+
+  useEffect(() => {
     if (searchParams.get("login") === "true") {
       setModalVisible(true);
-      // Optional: Clean URL
-      // router.replace(pathname); 
     }
   }, [searchParams]);
 
-  const menuItems = [
+  const menuItems: MenuProps['items'] = [
     {
       key: "/market",
       icon: <ShoppingOutlined />,
@@ -55,13 +73,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     },
     {
       key: "/products",
-      icon: <DatabaseOutlined />, // Products icon was ShoppingOutlined, swapping to Database or keeping checks.
-      // Wait, original products was ShoppingOutlined. I'll use ShopOutlined or similar for Market.
-      // Let's use SkinOutlined or ShopOutlined if available.
-      // Or reuse ShoppingOutlined for Market and something else for Products?
-      // Products usually means management. Market means buying.
-      // Let's keep Products as is and use a new icon for Market.
-      // I'll import ShopOutlined.
+      icon: <DatabaseOutlined />,
       label: <Link href="/products">Products</Link>,
     },
     {
@@ -71,18 +83,15 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     },
   ];
 
-  // Add Admin Dashboard if user is admin
   if (user?.role?.name === "admin") {
       menuItems.push({
           key: "/admin",
-          icon: <AppstoreOutlined />, // or DashboardOutlined
+          icon: <AppstoreOutlined />,
           label: <Link href="/admin">Admin</Link>,
-      } as any);
+      });
   }
 
-  // Determine selected key based on pathname
   const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
-
 
   const userMenu: MenuProps['items'] = [
     {
@@ -97,14 +106,95 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
       danger: true,
       onClick: async () => {
          await logout();
-         // Optionally redirect or refresh
       },
     },
   ];
 
+  const cartDropdownContent = (
+    <Card 
+      className="w-[350px] shadow-2xl border border-blue-50 rounded-xl overflow-hidden" 
+      styles={{ body: { padding: 0 } }}
+    >
+      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+        <Text strong className="text-gray-800">
+          <ShoppingCartOutlined className="mr-2" /> ตะกร้าสินค้า ({cartItems.length})
+        </Text>
+      </div>
+
+      <div className="max-h-[300px] overflow-y-auto">
+        {cartItems.length === 0 ? (
+          <div className="py-8 text-center bg-white">
+            <Empty description="ไม่มีสินค้าในตะกร้า" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100 bg-white">
+            {cartItems.map((item) => {
+              const product = item.product;
+              const price = Number(product?.price_period?.[0]?.price || 0);
+              const firstCard = product?.product_stock_card?.[0]?.card || product?.product_stock_card?.[0]?.stock_card?.cards;
+              
+              return (
+                <div key={item.cart_id} className="p-3 flex gap-3 hover:bg-gray-50 group">
+                  <div className="relative w-12 h-16 bg-gray-50 rounded overflow-hidden flex-shrink-0">
+                    <Image
+                      src={getCardImageUrl(firstCard?.image_name)}
+                      alt={product?.name || "Product"}
+                      fill
+                      className="object-contain"
+                      sizes="48px"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Text strong className="block truncate text-sm" title={product?.name}>
+                      {product?.name}
+                    </Text>
+                    <div className="flex justify-between items-center mt-1">
+                      <Text type="secondary" className="text-xs">
+                        x{item.quantity} · ฿{price.toLocaleString()}
+                      </Text>
+                      <Button 
+                        type="text" 
+                        danger 
+                        icon={<DeleteOutlined />} 
+                        size="small" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeMutation.mutate(item.cart_id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 bg-white border-t space-y-3">
+        {cartItems.length > 0 && (
+          <div className="flex justify-between items-center mb-1">
+            <Text type="secondary">รวมทั้งหมด</Text>
+            <Text strong className="text-lg text-blue-600">
+              ฿{cartItems.reduce((acc, item) => acc + (Number(item.product?.price_period?.[0]?.price || 0) * item.quantity), 0).toLocaleString()}
+            </Text>
+          </div>
+        )}
+        <Button 
+          type="primary" 
+          block 
+          onClick={() => router.push("/cart")}
+        >
+          {cartItems.length > 0 ? "ดำเนินการต่อไปยังตะกร้า" : "ไปที่หน้าตลาด"}
+        </Button>
+      </div>
+    </Card>
+  );
+
   return (
-    <Header className="sticky top-0 z-20 !bg-gray-50 border-b border-gray-200 px-4 md:px-8 h-auto py-0">
-      <div className="container mx-auto flex items-center justify-between h-16">
+    <Header className="sticky top-0 z-20 !bg-gray-50 border-b border-gray-200 px-4 h-auto py-0">
+      <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
           {backUrl ? (
@@ -128,16 +218,16 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
               {title}
             </Title>
             {subtitle && (
-              <Typography.Text type="secondary" className="text-xs">
+              <Text type="secondary" className="text-xs">
                 {subtitle}
-              </Typography.Text>
+              </Text>
             )}
           </div>
         </div>
 
         {/* Navigation Menu + Auth */}
-        <div className="flex items-center flex-1 justify-end gap-4">
-             <Menu
+        <div className="flex items-center flex-1 justify-end gap-2 md:gap-4">
+            <Menu
               mode="horizontal"
               selectedKeys={[selectedKey]}
               items={menuItems}
@@ -145,11 +235,21 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
             />
             
             {isAuthenticated ? (
-                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                     <Button type="text" icon={<UserOutlined />} className="flex items-center">
-                        <span className="hidden md:inline">{user?.username}</span>
-                     </Button>
-                </Dropdown>
+                <div className="flex items-center gap-0 md:gap-2">
+                  <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+                       <Button type="text" icon={<UserOutlined />} className="flex items-center px-1 md:px-4">
+                          <span className="hidden md:inline">{user?.username}</span>
+                       </Button>
+                  </Dropdown>
+
+                  <Dropdown popupRender={() => cartDropdownContent} trigger={['click']} placement="bottomRight">
+                    <Button 
+                      type="text" 
+                      icon={<ShoppingCartOutlined style={{ fontSize: '20px' }} />} 
+                      className="flex items-center justify-center w-10 h-10 p-0 text-gray-600 hover:text-blue-600"
+                    />
+                  </Dropdown>
+                </div>
             ) : (
                 <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
                     Login
