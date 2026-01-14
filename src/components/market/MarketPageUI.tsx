@@ -36,7 +36,7 @@ export default function MarketPageUI({
   getActivePrice,
 }: MarketPageUIProps) {
   return (
-    <Layout className="min-h-screen bg-gray-50">
+    <Layout className="min-h-screen">
       <PageHeader title="Market" />
 
       <Content>

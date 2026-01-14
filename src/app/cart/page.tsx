@@ -5,8 +5,11 @@ import {
   getCart,
   removeFromCart,
   updateCartQuantity,
+  checkout,
   CartItem,
+  CheckoutInput,
 } from "@/services/cart";
+import { useRouter } from "next/navigation";
 import {
   Typography,
   Layout,
@@ -114,17 +117,54 @@ export default function CartPage() {
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { modal } = App.useApp();
+  const router = useRouter();
+
+  const checkoutMutation = useMutation({
+    mutationFn: (data: CheckoutInput) => checkout(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      modal.success({
+        title: "สั่งซื้อสำเร็จ",
+        content: `สร้างคำสั่งซื้อเรียบร้อยแล้ว (Order IDs: ${data.order_ids.join(", ")})`,
+        onOk: () => {
+          // Navigate to purchase history or clear cart UI
+          // For now, reload or navigate to market
+          router.push("/profile?tab=purchases"); 
+        },
+      });
+    },
+    onError: (error: any) => {
+      modal.error({
+        title: "เกิดข้อผิดพลาด",
+        content: error.response?.data?.error || "ไม่สามารถทำรายการได้",
+      });
+    },
+  });
 
   const handleCheckout = () => {
-    modal.info({
-      title: "กําลังพัฒนาระบบชำระเงิน",
-      content: "ระบบ Checkout จะเปิดให้ใช้งานเร็วๆ นี้ครับ!",
+    if (!selectedAddressId) {
+      message.error("กรุณาเลือกที่อยู่จัดส่ง");
+      return;
+    }
+
+    modal.confirm({
+      title: "ยืนยันการสั่งซื้อ",
+      content: `ยอดชำระสุทธิ ฿${subtotal.toLocaleString()} ชำระผ่าน QR PromptPay`,
+      okText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+      onOk: () => {
+        checkoutMutation.mutate({
+          shipping_address_id: selectedAddressId,
+          payment_type_id: paymentMethod === "qr_promptpay" ? 1 : 1, // Defaulting to 1 for now as per seed
+          cart_item_ids: [], // Checkout all items
+        });
+      },
     });
   };
 
   if (isLoading) {
     return (
-      <Layout className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <Layout className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Spin size="large" />
           <Text type="secondary">กำลังโหลดตะกร้าสินค้า...</Text>
@@ -134,8 +174,8 @@ export default function CartPage() {
   }
 
   return (
-    <Layout className="min-h-screen bg-gray-50">
-      <PageHeader title="ตะกร้าสินค้า" />
+    <Layout className="min-h-screen">
+      <PageHeader title="Shopping Cart" subtitle="ตะกร้าสินค้าของคุณ" />
       <Content className="container mx-auto max-w-7xl py-8 px-4">
         <Row gutter={24}>
           {/* Left Column: Cart Items */}

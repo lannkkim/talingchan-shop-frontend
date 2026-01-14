@@ -34,3 +34,20 @@ export const updateCartQuantity = async (
 export const removeFromCart = async (id: number): Promise<void> => {
   await axios.delete(`/api/v1/cart/${id}`);
 };
+
+export interface CheckoutInput {
+  shipping_address_id: number;
+  payment_type_id: number;
+  cart_item_ids?: number[];
+}
+
+export interface CheckoutResponse {
+  order_ids: number[];
+}
+
+export const checkout = async (
+  input: CheckoutInput
+): Promise<CheckoutResponse> => {
+  const response = await axios.post("/api/v1/checkout", input);
+  return response.data;
+};

@@ -196,7 +196,7 @@ export default function MarketPage() {
         },
       }}
     >
-      <Layout className="min-h-screen bg-white">
+      <Layout className="min-h-screen">
         <PageHeader title="ตลาด" />
         <Layout className="w-full">
           <Content className="container mx-auto max-w-7xl p-4 md:p-8">

@@ -443,7 +443,7 @@ export default function AddProductPage() {
   );
 
   return (
-    <Layout className="min-h-screen bg-white">
+    <Layout className="min-h-screen">
       <Header className="bg-white border-b border-gray-100 flex items-center px-8 h-20">
         <Button 
           icon={<ArrowLeftOutlined />} 

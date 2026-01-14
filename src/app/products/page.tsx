@@ -262,7 +262,7 @@ export default function ProductsPage() {
   }, [canSell, activeTab]);
 
   return (
-    <Layout className="min-h-screen bg-white">
+    <Layout className="min-h-screen">
       <PageHeader 
         title="My Products" 
       />

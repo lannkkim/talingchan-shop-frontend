@@ -109,7 +109,7 @@ function AllMarketProductsContent() {
     : "สินค้าทั้งหมด";
 
   return (
-    <Layout className="min-h-screen bg-white">
+    <Layout className="min-h-screen">
       <PageHeader title={title} />
       <Content className="p-4 md:p-8 container mx-auto">
         {isLoading ? (
@@ -222,7 +222,7 @@ function AllMarketProductsContent() {
 export default function AllMarketProductsPage() {
   return (
     <Suspense fallback={
-      <Layout className="min-h-screen bg-white">
+      <Layout className="min-h-screen">
         <PageHeader title="กำลังโหลด..." />
         <Content className="p-4 md:p-8 container mx-auto">
           <div className="flex justify-center items-center min-h-[400px]">

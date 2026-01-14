@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Layout, message, Spin } from "antd";
+import { Layout, Spin, App } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const { message } = App.useApp();
 
   useEffect(() => {
     if (!loading) {
@@ -47,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <Layout className="min-h-screen bg-gray-50">
+    <Layout className="min-h-screen">
       {/* We need PageHeader here. But PageHeader is fixed/sticky usually or part of main layout. 
           AdminLayout is a child of RootLayout? RootLayout might already validly checking current path? 
           Root layout usually just wraps children. 

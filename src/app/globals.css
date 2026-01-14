@@ -24,3 +24,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Global Override for Ant Design Layout */
+.ant-layout {
+  background: var(--background) !important;
+}
+
+/* Ensure Content areas are also transparent or white */
+.ant-layout-content {
+  background: var(--background);
+}

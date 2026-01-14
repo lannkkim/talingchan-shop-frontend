@@ -54,7 +54,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <Layout className="min-h-screen bg-gray-50">
+    <Layout className="min-h-screen">
       <PageHeader title="Profile" />
 
       <Content className="container mx-auto py-8 px-4">

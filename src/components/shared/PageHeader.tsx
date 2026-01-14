@@ -83,6 +83,14 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     },
   ];
 
+  if (user?.role?.name === "shop" || user?.role?.name === "admin") {
+     menuItems.push({
+        key: "/shop",
+        icon: <ShoppingOutlined />,
+        label: <Link href="/shop">Shop</Link>,
+     });
+  }
+
   if (user?.role?.name === "admin") {
       menuItems.push({
           key: "/admin",
@@ -91,7 +99,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
       });
   }
 
-  const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : "";
+  const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : pathname.startsWith("/shop") ? "/shop" : "";
 
   const userMenu: MenuProps['items'] = [
     {
@@ -193,7 +201,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
   );
 
   return (
-    <Header className="sticky top-0 z-20 !bg-gray-50 border-b border-gray-200 px-4 h-auto py-0">
+    <Header className="sticky top-0 z-20 !bg-white border-b border-gray-200 px-4 h-auto py-0">
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
@@ -231,7 +239,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
               mode="horizontal"
               selectedKeys={[selectedKey]}
               items={menuItems}
-              className="border-0 !bg-gray-50 flex-1 justify-end min-w-0"
+              className="border-0 !bg-white flex-1 justify-end min-w-0"
             />
             
             {isAuthenticated ? (

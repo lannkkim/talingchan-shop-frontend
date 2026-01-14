@@ -136,7 +136,7 @@ export default function CardMarketStatsPage() {
 
   if (loadingCard) {
     return (
-      <Layout className="min-h-screen bg-white">
+      <Layout className="min-h-screen">
         <PageHeader title="Loading..." />
         <div className="flex justify-center items-center h-[500px]">
           <Spin size="large" />
@@ -147,7 +147,7 @@ export default function CardMarketStatsPage() {
 
   if (!card) {
       return (
-        <Layout className="min-h-screen bg-white">
+        <Layout className="min-h-screen">
           <PageHeader title="Not Found" />
           <div className="text-center py-20">Card not found</div>
         </Layout>
@@ -155,7 +155,7 @@ export default function CardMarketStatsPage() {
   }
 
   return (
-    <Layout className="min-h-screen bg-white">
+    <Layout className="min-h-screen">
       <PageHeader title={`Market Data: ${card.name}`} backUrl="/market" />
       <Content className="container mx-auto p-4 md:p-8">
         <Row gutter={[24, 24]}>
