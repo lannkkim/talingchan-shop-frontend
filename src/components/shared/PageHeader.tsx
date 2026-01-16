@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty } from "antd";
+import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty, ConfigProvider } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -63,40 +63,40 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
   const menuItems: MenuProps['items'] = [
     {
       key: "/market",
-      icon: <ShoppingOutlined />,
-      label: <Link href="/market">Market</Link>,
+      //icon: <ShoppingOutlined />,
+      label: <Link href="/market">ตลาดสินค้า</Link>,
     },
     {
       key: "/cards",
-      icon: <AppstoreOutlined />,
-      label: <Link href="/cards">Cards</Link>,
+      //icon: <AppstoreOutlined />,
+      label: <Link href="/cards">ข้อมูลการ์ด</Link>,
     },
     {
       key: "/products",
-      icon: <DatabaseOutlined />,
-      label: <Link href="/products">Products</Link>,
+      //icon: <DatabaseOutlined />,
+      label: <Link href="/products">ตั้งรับการ์ด</Link>,
     },
     {
       key: "/stock",
-      icon: <DatabaseOutlined />,
-      label: <Link href="/stock">Stock</Link>,
+      //icon: <DatabaseOutlined />,
+      label: <Link href="/stock">คลังการ์ด</Link>,
     },
   ];
 
   if (user?.role?.name === "shop" || user?.role?.name === "admin") {
-     menuItems.push({
-        key: "/shop",
-        icon: <ShoppingOutlined />,
-        label: <Link href="/shop">Shop</Link>,
-     });
+    menuItems.push({
+      key: "/shop",
+      //icon: <ShoppingOutlined />,
+      label: <Link href="/shop">ร้านค้า</Link>,
+    });
   }
 
   if (user?.role?.name === "admin") {
-      menuItems.push({
-          key: "/admin",
-          icon: <AppstoreOutlined />,
-          label: <Link href="/admin">Admin</Link>,
-      });
+    menuItems.push({
+      key: "/admin",
+      icon: <AppstoreOutlined />,
+      label: <Link href="/admin">Admin</Link>,
+    });
   }
 
   const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : pathname.startsWith("/shop") ? "/shop" : "";
@@ -113,14 +113,14 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
       icon: <LogoutOutlined />,
       danger: true,
       onClick: async () => {
-         await logout();
+        await logout();
       },
     },
   ];
 
   const cartDropdownContent = (
-    <Card 
-      className="w-[350px] shadow-2xl border border-blue-50 rounded-xl overflow-hidden" 
+    <Card
+      className="w-[350px] shadow-2xl border border-blue-50 rounded-xl overflow-hidden"
       styles={{ body: { padding: 0 } }}
     >
       <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
@@ -140,7 +140,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
               const product = item.product;
               const price = Number(product?.price_period?.[0]?.price || 0);
               const firstCard = product?.product_stock_card?.[0]?.card || product?.product_stock_card?.[0]?.stock_card?.cards;
-              
+
               return (
                 <div key={item.cart_id} className="p-3 flex gap-3 hover:bg-gray-50 group">
                   <div className="relative w-12 h-16 bg-gray-50 rounded overflow-hidden flex-shrink-0">
@@ -160,11 +160,11 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
                       <Text type="secondary" className="text-xs">
                         x{item.quantity} · ฿{price.toLocaleString()}
                       </Text>
-                      <Button 
-                        type="text" 
-                        danger 
-                        icon={<DeleteOutlined />} 
-                        size="small" 
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeMutation.mutate(item.cart_id);
@@ -189,9 +189,9 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
             </Text>
           </div>
         )}
-        <Button 
-          type="primary" 
-          block 
+        <Button
+          type="primary"
+          block
           onClick={() => router.push("/cart")}
         >
           {cartItems.length > 0 ? "ดำเนินการต่อไปยังตะกร้า" : "ไปที่หน้าตลาด"}
@@ -201,14 +201,14 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
   );
 
   return (
-    <Header className="sticky top-0 z-20 !bg-white border-b border-gray-200 px-4 h-auto py-0">
+    <Header className="sticky top-0 z-20 !bg-white border-b  px-4 h-auto py-0">
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
           {backUrl ? (
-             <Link href={backUrl} className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2">
-                 <ArrowLeftOutlined style={{ fontSize: '20px' }} />
-             </Link>
+            <Link href={backUrl} className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2">
+              <ArrowLeftOutlined style={{ fontSize: '20px' }} />
+            </Link>
           ) : (
             <Link href="/" className="flex-shrink-0 -ml-3">
               <Image
@@ -233,36 +233,52 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
           </div>
         </div>
 
-        {/* Navigation Menu + Auth */}
-        <div className="flex items-center flex-1 justify-end gap-2 md:gap-4">
+        {/* Navigation Menu */}
+        <div className="flex-1 flex justify-center px-4">
+          <ConfigProvider
+            theme={{
+              components: {
+                Menu: {
+                  itemHoverColor: "#DC143C",
+                  horizontalItemSelectedColor: "#DC143C",
+                  itemSelectedColor: "#DC143C",
+                  activeBarHeight: 0,
+                },
+              },
+            }}
+          >
             <Menu
               mode="horizontal"
               selectedKeys={[selectedKey]}
               items={menuItems}
-              className="border-0 !bg-white flex-1 justify-end min-w-0"
+              className="border-0 !bg-transparent min-w-0 w-full justify-center [&_.ant-menu-item]:px-4"
             />
-            
-            {isAuthenticated ? (
-                <div className="flex items-center gap-0 md:gap-2">
-                  <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                       <Button type="text" icon={<UserOutlined />} className="flex items-center px-1 md:px-4">
-                          <span className="hidden md:inline">{user?.username}</span>
-                       </Button>
-                  </Dropdown>
+          </ConfigProvider>
+        </div>
 
-                  <Dropdown popupRender={() => cartDropdownContent} trigger={['click']} placement="bottomRight">
-                    <Button 
-                      type="text" 
-                      icon={<ShoppingCartOutlined style={{ fontSize: '20px' }} />} 
-                      className="flex items-center justify-center w-10 h-10 p-0 text-gray-600 hover:text-blue-600"
-                    />
-                  </Dropdown>
-                </div>
-            ) : (
-                <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
-                    Login
+        {/* Auth / Actions */}
+        <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-0 md:gap-2">
+              <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+                <Button type="text" icon={<UserOutlined />} className="flex items-center px-1 md:px-4">
+                  <span className="hidden md:inline">{user?.username}</span>
                 </Button>
-            )}
+              </Dropdown>
+
+              <Dropdown popupRender={() => cartDropdownContent} trigger={['click']} placement="bottomRight">
+                <Button
+                  type="text"
+                  icon={<ShoppingCartOutlined style={{ fontSize: '20px' }} />}
+                  className="flex items-center justify-center w-10 h-10 p-0 text-gray-600 hover:text-blue-600"
+                />
+              </Dropdown>
+            </div>
+          ) : (
+            <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
+              Login
+            </Button>
+          )}
         </div>
       </div>
 

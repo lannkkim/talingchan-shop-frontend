@@ -37,7 +37,7 @@ export default function MarketPageUI({
 }: MarketPageUIProps) {
   return (
     <Layout className="min-h-screen">
-      <PageHeader title="Market" />
+      <PageHeader title="" />
 
       <Content>
         {/* Hero Banner Component */}
@@ -53,7 +53,7 @@ export default function MarketPageUI({
             getActivePrice={getActivePrice}
           />
         </div>
-        
+
         {/* Card Carousel Component */}
         <CardCarouselSection
           cards={cards}

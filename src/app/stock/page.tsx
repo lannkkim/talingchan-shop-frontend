@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Table, Typography, Tag, App, Empty, Skeleton } from "antd"; // Added Empty, Skeleton
+import { Button, Table, Typography, Tag, App, Empty, Skeleton, Layout } from "antd"; // Added Layout
 import { PlusOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { StockCard } from "@/types/stock";
 import { getMyStockCards } from "@/services/stock";
@@ -11,6 +11,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import type { ColumnsType } from "antd/es/table";
 
 const { Title } = Typography;
+const { Content } = Layout;
 
 export default function StockPage() {
   const { message } = App.useApp();
@@ -59,48 +60,50 @@ export default function StockPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <PageHeader title="My Stock"/>
-      
-      <div className="p-6 max-w-[1200px] mx-auto bg-white mt-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex items-center justify-end mb-6">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setModalVisible(true)}
-            size="large"
-          >
-            Add Card
-          </Button>
-        </div>
+    <Layout className="min-h-screen">
+      <PageHeader title="My Stock" />
 
-      {isLoading ? (
-         <Skeleton active paragraph={{ rows: 10 }} />
-      ) : isError ? (
-         <Empty description="Error loading stock data" />
-      ) : stockCards.length === 0 ? (
-          <Empty
-            image={<DatabaseOutlined style={{ fontSize: 60, color: '#e5e7eb' }} />}
-            description="You don't have any cards in your stock yet."
-          >
+      <Content>
+        <div className="p-6 max-w-[1200px] mx-auto bg-white mt-6 rounded-lg shadow-sm border border-gray-100">
+          <div className="flex items-center justify-end mb-6">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setModalVisible(true)}
+              size="large"
+            >
+              Add Card
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <Skeleton active paragraph={{ rows: 10 }} />
+          ) : isError ? (
+            <Empty description="Error loading stock data" />
+          ) : stockCards.length === 0 ? (
+            <Empty
+              image={<DatabaseOutlined style={{ fontSize: 60, color: '#e5e7eb' }} />}
+              description="You don't have any cards in your stock yet."
+            >
               <Button type="primary" onClick={() => setModalVisible(true)}>Add Your First Card</Button>
-          </Empty>
-      ) : (
-        <Table
-          columns={columns}
-          dataSource={stockCards}
-          rowKey="stock_card_id"
-          pagination={{ pageSize: 20 }}
-          rowClassName="hover:bg-gray-50 cursor-pointer"
-        />
-      )}
+            </Empty>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={stockCards}
+              rowKey="stock_card_id"
+              pagination={{ pageSize: 20 }}
+              rowClassName="hover:bg-gray-50 cursor-pointer"
+            />
+          )}
 
-      <AddStockCardModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSuccess={handleSuccess}
-      />
-      </div>
-    </div>
+          <AddStockCardModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            onSuccess={handleSuccess}
+          />
+        </div>
+      </Content>
+    </Layout>
   );
 }

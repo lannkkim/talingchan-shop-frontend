@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const notoSans = localFont({
+const inter = localFont({
   src: [
     {
-      path: "../../public/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf",
+      path: "../../public/Inter/Inter-VariableFont_opsz,wght.ttf",
       style: "normal",
     },
     {
-      path: "../../public/Noto_Sans/NotoSans-Italic-VariableFont_wdth,wght.ttf",
+      path: "../../public/Inter/Inter-Italic-VariableFont_opsz,wght.ttf",
       style: "italic",
     },
   ],
   display: "swap",
-  variable: "--font-noto-sans",
+  variable: "--font-inter",
 });
 
 const notoSansThai = localFont({
@@ -42,14 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${notoSans.variable} ${notoSansThai.variable} antialiased`}
+        className={`${inter.variable} ${notoSansThai.variable} antialiased`}
       >
         <QueryProvider>
           <StyledComponentsRegistry>
             <ConfigProvider
               theme={{
                 token: {
-                  fontFamily: `var(--font-noto-sans), var(--font-noto-sans-thai), sans-serif`,
+                  fontFamily: `var(--font-inter), var(--font-noto-sans-thai), sans-serif`,
                 },
               }}
             >
