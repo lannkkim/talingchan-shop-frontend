@@ -23,7 +23,7 @@ export default {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        sans: ["var(--font-archivo-black)", "Arial", "Helvetica", "sans-serif"],
+        sans: ["var(--font-inter)", "var(--font-noto-sans-thai)", "Arial", "Helvetica", "sans-serif"],
       },
     },
   },
