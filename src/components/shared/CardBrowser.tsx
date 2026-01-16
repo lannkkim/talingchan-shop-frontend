@@ -6,12 +6,14 @@ import { FilterOutlined, ReloadOutlined, CheckOutlined } from "@ant-design/icons
 import { CardFilters } from "@/services/card";
 import CardSelector, { CardSelectorProps } from "@/components/shared/CardSelector";
 import { COLORS, TYPES, SUBTYPES, RARITIES, SYMBOLS, PRINTS, GEMS, POWER } from "@/constants/filters";
+import { Card } from "@/types/card";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
 interface CardBrowserProps extends Omit<CardSelectorProps, "filters"> {
   // We omit 'filters' from props because CardBrowser manages them internally
+  availableCards?: Card[] | null; // Optional filtered card list
 }
 
 export default function CardBrowser({ 
@@ -19,7 +21,8 @@ export default function CardBrowser({
   onSelect, 
   selectedCards, 
   multiple,
-  renderCustomActions 
+  renderCustomActions,
+  availableCards
 }: CardBrowserProps) {
   // activeFilters: Applied to the query
   const [activeFilters, setActiveFilters] = useState<CardFilters>({});
@@ -212,7 +215,8 @@ export default function CardBrowser({
           selectedCards={selectedCards}
           multiple={multiple}
           renderCustomActions={renderCustomActions}
-          filters={activeFilters} 
+          filters={activeFilters}
+          availableCards={availableCards}
         />
 
         <Drawer
