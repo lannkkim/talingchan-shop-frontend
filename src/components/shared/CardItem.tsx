@@ -20,7 +20,7 @@ const CardItem: React.FC<CardItemProps> = ({ card }) => {
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-gray-50 rounded-t-lg">
           <Image
             src={imageUrl}
-            alt={card.name}
+            alt={card.name || "Card image"}
             fill
             className="object-contain p-2"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

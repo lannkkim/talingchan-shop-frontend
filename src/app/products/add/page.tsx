@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTypes, getTransactionTypes, getSellTypes, getBuyTypes } from "@/services/type";
 import { createProduct, CreateProductInput, checkStock } from "@/services/product";
+import { getMyShop } from "@/services/shop";
+import { getMyInventory } from "@/services/stock";
 import { Card as CardType } from "@/types/card";
 import CardSelector from "@/components/shared/CardSelector";
 import CardBrowser from "@/components/shared/CardBrowser";
@@ -72,6 +74,56 @@ export default function AddProductPage() {
     queryKey: ["buyTypes"],
     queryFn: getBuyTypes,
   });
+
+  // Fetch shop profile to check stock settings
+  const { data: shopProfile } = useQuery({
+    queryKey: ["myShop"],
+    queryFn: getMyShop,
+  });
+
+  // Watch transaction type selection
+  const transactionType = Form.useWatch("transaction_type_selection", form);
+  
+  // Determine if we should check stock
+  const shouldCheckStock = shopProfile?.is_stock_check_enabled && transactionType === "sell_order";
+
+  // Fetch inventory conditionally
+  const { data: inventory } = useQuery({
+    queryKey: ["myInventory"],
+    queryFn: getMyInventory,
+    enabled: shouldCheckStock,
+  });
+
+  // Create filtered card list with stock quantities
+  const availableCards = useMemo(() => {
+    if (shouldCheckStock && inventory) {
+      return inventory
+        .filter(stock => stock.cards) // Only include items with card data
+        .map(stock => ({
+          ...stock.cards!,
+          stockQuantity: stock.quantity, // Total available in stock
+          stock_card_id: stock.stock_card_id
+        }));
+    }
+    return null; // Use all cards from CardBrowser's default fetch
+  }, [shouldCheckStock, inventory]);
+
+  // Calculate max product quantity based on selected cards and their quantities
+  const maxProductQuantity = useMemo(() => {
+    if (!shouldCheckStock || !selectedCards.length) return undefined;
+    
+    let minMax = Infinity;
+    selectedCards.forEach(card => {
+      const cardQty = form.getFieldValue(`quantity_${card.card_id}`) || 1;
+      const stockQty = (card as any).stockQuantity;
+      if (stockQty !== undefined) {
+        const maxProducts = Math.floor(stockQty / cardQty);
+        minMax = Math.min(minMax, maxProducts);
+      }
+    });
+    
+    return minMax === Infinity ? undefined : minMax;
+  }, [shouldCheckStock, selectedCards, form, availableCards]);
 
   const mutation = useMutation({
     mutationFn: (data: CreateProductInput) => createProduct(data),
@@ -304,12 +356,28 @@ export default function AddProductPage() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="quantity" label="Product Quantity" initialValue={1} rules={[{ required: true, message: "Please enter product quantity" }]}>
+                  <Form.Item 
+                    name="quantity" 
+                    label="Product Quantity" 
+                    initialValue={1} 
+                    rules={[
+                      { required: true, message: "Please enter product quantity" },
+                      ...(maxProductQuantity !== undefined ? [{
+                        type: 'number' as const,
+                        max: maxProductQuantity,
+                        message: `Maximum ${maxProductQuantity} products based on selected cards`
+                      }] : [])
+                    ]}
+                    help={maxProductQuantity !== undefined && shouldCheckStock ? 
+                      `Max: ${maxProductQuantity} (based on stock)` : undefined
+                    }
+                  >
                     <InputNumber 
                       className="w-full" 
                       placeholder="1" 
                       size="large"
                       min={1}
+                      max={maxProductQuantity}
                     />
                   </Form.Item>
                 </Col>
@@ -352,6 +420,7 @@ export default function AddProductPage() {
               selectedCards={selectedCards}
               onSelect={setSelectedCards}
               multiple={!isSingle && !isBundle}
+              availableCards={availableCards}
               renderCustomActions={(card: CardType, isSelected: boolean) => isSelected && (
                 <div 
                   className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200"
@@ -371,7 +440,12 @@ export default function AddProductPage() {
                         </div>
                      ) : (
                         <InputNumber 
-                          min={1} 
+                          min={1}
+                          max={(() => {
+                            const stockQty = (card as any).stockQuantity;
+                            const productQty = form.getFieldValue('quantity') || 1;
+                            return stockQty ? Math.floor(stockQty / productQty) : undefined;
+                          })()}
                           className="w-full" 
                           placeholder="Qty"
                           prefix={<Text type="secondary" className="mr-1 text-xs">Qty:</Text>}

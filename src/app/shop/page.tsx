@@ -7,6 +7,7 @@ import { UserOutlined, ShopOutlined, AppstoreOutlined, FileTextOutlined } from "
 import PageHeader from "@/components/shared/PageHeader";
 import ShopProfileForm from "./ShopProfileForm";
 import ShopStockSettings from "./ShopStockSettings";
+import ShopOrders from "./ShopOrders";
 import Link from "next/link";
 
 const { Content } = Layout;
@@ -68,8 +69,8 @@ export default function ShopPage() {
           </span>
         ),
         children: (
-          <div className="py-12 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
-               <Empty description="ระบบจัดการคำสั่งซื้อ กำลังพัฒนา..." image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <div className="space-y-6">
+               <ShopOrders />
           </div>
         ),
       },
