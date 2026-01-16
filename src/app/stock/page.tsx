@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Table, Typography, Tag, App, Empty, Skeleton, Layout } from "antd"; // Added Layout
+import { Button, Table, Typography, Tag, App, Empty, Skeleton, Layout } from "antd";
 import { PlusOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { StockCard } from "@/types/stock";
 import { getMyStockCards } from "@/services/stock";
@@ -61,10 +61,10 @@ export default function StockPage() {
 
   return (
     <Layout className="min-h-screen">
-      <PageHeader title="My Stock" />
-
-      <Content>
-        <div className="p-6 max-w-[1200px] mx-auto bg-white mt-6 rounded-lg shadow-sm border border-gray-100">
+      <PageHeader title="My Stock"/>
+      
+      <Content className="p-6 container mx-auto">
+        <div className="max-w-[1200px] mx-auto bg-white rounded-lg shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-end mb-6">
             <Button
               type="primary"
@@ -76,32 +76,32 @@ export default function StockPage() {
             </Button>
           </div>
 
-          {isLoading ? (
-            <Skeleton active paragraph={{ rows: 10 }} />
-          ) : isError ? (
-            <Empty description="Error loading stock data" />
-          ) : stockCards.length === 0 ? (
+        {isLoading ? (
+           <Skeleton active paragraph={{ rows: 10 }} />
+        ) : isError ? (
+           <Empty description="Error loading stock data" />
+        ) : stockCards.length === 0 ? (
             <Empty
               image={<DatabaseOutlined style={{ fontSize: 60, color: '#e5e7eb' }} />}
               description="You don't have any cards in your stock yet."
             >
-              <Button type="primary" onClick={() => setModalVisible(true)}>Add Your First Card</Button>
+                <Button type="primary" onClick={() => setModalVisible(true)}>Add Your First Card</Button>
             </Empty>
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={stockCards}
-              rowKey="stock_card_id"
-              pagination={{ pageSize: 20 }}
-              rowClassName="hover:bg-gray-50 cursor-pointer"
-            />
-          )}
-
-          <AddStockCardModal
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-            onSuccess={handleSuccess}
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={stockCards}
+            rowKey="stock_card_id"
+            pagination={{ pageSize: 20 }}
+            rowClassName="hover:bg-gray-50 cursor-pointer"
           />
+        )}
+
+        <AddStockCardModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSuccess={handleSuccess}
+        />
         </div>
       </Content>
     </Layout>

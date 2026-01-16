@@ -8,6 +8,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import ShopProfileForm from "./ShopProfileForm";
 import ShopStockSettings from "./ShopStockSettings";
 import ShopOrders from "./ShopOrders";
+import ShopProducts from "./ShopProducts";
 import Link from "next/link";
 
 const { Content } = Layout;
@@ -51,14 +52,7 @@ export default function ShopPage() {
             สินค้าของฉัน
         </span>
       ),
-      children: (
-        <div className="py-12 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
-             <Empty description="จัดการสินค้าของคุณได้ที่เมนู Products" />
-             <Link href="/products/me" className="mt-4 inline-block">
-                <Button type="primary">ไปที่จัดการสินค้า</Button>
-             </Link>
-        </div>
-      ),
+      children: <ShopProducts />,
     },
     {
         key: "3",
