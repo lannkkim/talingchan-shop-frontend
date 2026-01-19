@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Card as CardType } from "@/types/card";
+import { getCardImageUrl } from "@/utils/image";
 import { Card, Tag, Typography, Space } from "antd";
 
 const { Text, Title } = Typography;
@@ -10,10 +11,7 @@ interface CardItemProps {
 }
 
 const CardItem: React.FC<CardItemProps> = ({ card }) => {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  const imageUrl = card.image_name
-    ? `${API_URL}/uploads/${card.image_name.endsWith(".png") ? card.image_name : `${card.image_name}.png`}`
-    : "/images/card-placeholder.png";
+  const imageUrl = getCardImageUrl(card.image_name);
 
   return (
     <Card
@@ -22,7 +20,7 @@ const CardItem: React.FC<CardItemProps> = ({ card }) => {
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-gray-50 rounded-t-lg">
           <Image
             src={imageUrl}
-            alt={card.name}
+            alt={card.name || "Card image"}
             fill
             className="object-contain p-2"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

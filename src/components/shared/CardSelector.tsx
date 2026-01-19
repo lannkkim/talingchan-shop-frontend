@@ -19,6 +19,7 @@ export interface CardSelectorProps {
   selectable?: boolean;
   renderCustomActions?: (card: CardType, isSelected: boolean) => React.ReactNode;
   filters?: CardFilters;
+  availableCards?: CardType[] | null; // If provided, use this instead of fetching
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({
@@ -28,6 +29,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   selectable = true,
   renderCustomActions,
   filters,
+  availableCards,
 }) => {
   const { ref, inView } = useInView();
 
@@ -45,6 +47,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === LIMIT ? allPages.length + 1 : undefined;
     },
+    enabled: !availableCards, // Only fetch if availableCards not provided
   });
 
   useEffect(() => {
@@ -54,8 +57,18 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const allCards = useMemo(() => {
+    if (availableCards) {
+      // Use provided cards and apply search filter if present
+      if (filters?.search) {
+        const searchLower = filters.search.toLowerCase();
+        return availableCards.filter(card => 
+          card.name.toLowerCase().includes(searchLower)
+        );
+      }
+      return availableCards;
+    }
     return data?.pages.flat() || [];
-  }, [data]);
+  }, [data, availableCards, filters?.search]);
 
   const sortedCards = useMemo(() => {
     return [...allCards].sort((a, b) => a.card_id - b.card_id);
@@ -96,10 +109,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   return (
     <div className="space-y-6">
       <Row gutter={[16, 24]}>
-        {sortedCards.map((card) => {
+        {sortedCards.map((card, index) => {
           const isSelected = !!selectedCards.find((c) => c.card_id === card.card_id);
+          // Use stock_card_id if available (from inventory), otherwise use card_id
+          const uniqueKey = (card as any).stock_card_id || card.card_id;
           return (
-            <Col key={card.card_id} xs={12} sm={8} md={6}>
+            <Col key={`${uniqueKey}-${index}`} xs={12} sm={8} md={6}>
               <div 
                 className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${
                   selectable ? "cursor-pointer" : ""
@@ -132,16 +147,18 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       </Row>
 
       <div ref={ref} className="py-8 flex justify-center w-full min-h-[50px]">
-        {isFetchingNextPage ? (
+        {!availableCards && isFetchingNextPage ? (
           <Space className="w-full justify-center">
             <Spin />
             <Text type="secondary">Loading more...</Text>
           </Space>
-        ) : hasNextPage ? (
+        ) : !availableCards && hasNextPage ? (
           <Text type="secondary">Scroll for more</Text>
         ) : sortedCards.length > 0 ? (
-          <Text type="secondary" italic>No more cards</Text>
-        ) : null}
+          <Text type="secondary" italic>{availableCards ? "" : "No more cards"}</Text>
+        ) : (
+          <Empty description={availableCards ? "No cards in stock" : "No cards found"} />
+        )}
       </div>
     </div>
   );
