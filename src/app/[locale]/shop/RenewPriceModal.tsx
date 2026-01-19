@@ -3,6 +3,7 @@ import { Modal, Form, InputNumber, DatePicker, App } from "antd";
 import { Product } from "@/types/product";
 import { updateProduct } from "@/services/product";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 interface RenewPriceModalProps {
   product: Product | null;
@@ -20,6 +21,7 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { message } = App.useApp();
+  const t = useTranslations("Shop.products.renewModal");
 
   const handleSubmit = async () => {
     if (!product) return;
@@ -36,16 +38,16 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
 
       await updateProduct(product.product_id, payload);
 
-      message.success("Product renewed successfully");
+      message.success(t("success"));
       form.resetFields();
       onSuccess();
       onClose();
     } catch (error: any) {
       if (error.response?.data?.error) {
-           // Handle specific validation/business errors if any
-           message.error(error.response.data.error);
+        // Handle specific validation/business errors if any
+        message.error(error.response.data.error);
       } else {
-           message.error("Failed to renew product");
+        message.error(t("error"));
       }
       console.error(error);
     } finally {
@@ -55,40 +57,44 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
 
   return (
     <Modal
-      title="Renew Product Price"
+      title={t("title")}
       open={isOpen}
       onCancel={onClose}
       onOk={handleSubmit}
       confirmLoading={loading}
-      okText="Renew & Activate"
+      okText={t("ok")}
       destroyOnHidden
     >
       <Form form={form} layout="vertical" preserve={false}>
         <Form.Item
           name="price"
-          label="New Price"
-          rules={[{ required: true, message: "Please enter new price" }]}
-          initialValue={product?.price_period?.[0]?.price ? Number(product.price_period[0].price) : undefined}
+          label={t("newPrice")}
+          rules={[{ required: true, message: t("newPriceError") }]}
+          initialValue={
+            product?.price_period?.[0]?.price
+              ? Number(product.price_period[0].price)
+              : undefined
+          }
         >
           <InputNumber
             prefix="฿"
             className="w-full"
-            placeholder="0.00"
+            placeholder={t("newPricePlaceholder")}
             min={0}
             size="large"
           />
         </Form.Item>
         <Form.Item
           name="price_period_ended"
-          label="Price Valid Until (Optional)"
-          dependencies={['price']}
+          label={t("priceValidUntil")}
+          dependencies={["price"]}
         >
-          <DatePicker 
-            className="w-full" 
-            size="large" 
+          <DatePicker
+            className="w-full"
+            size="large"
             disabledDate={(current) => {
               // Valid date must be >= today
-              return current && current < dayjs().startOf('day');
+              return current && current < dayjs().startOf("day");
             }}
           />
         </Form.Item>

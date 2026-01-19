@@ -2,10 +2,13 @@
 
 import { Typography, Tag, Button } from "antd";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 const { Title } = Typography;
 
 export default function HeroBanner() {
+  const t = useTranslations("Hero");
+
   return (
     <div className="relative w-full h-[500px] lg:h-[700px] overflow-hidden">
       <Image
@@ -23,19 +26,19 @@ export default function HeroBanner() {
             size="large"
             className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
           >
-            สมัครร้านค้า
+            {t("registerShop")}
           </Button>
           <Button
             size="large"
             className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
           >
-            ซื้อสินค้า
+            {t("buyProducts")}
           </Button>
           <Button
             size="large"
             className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
           >
-            แลก-เปลี่ยน
+            {t("exchange")}
           </Button>
         </div>
       </div>

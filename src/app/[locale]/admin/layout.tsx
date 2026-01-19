@@ -6,42 +6,48 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import PageHeader from "@/components/shared/PageHeader";
+import { useTranslations } from "next-intl";
 
 const { Content } = Layout;
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const { message } = App.useApp();
+  const t = useTranslations("Admin.Layout");
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        message.error("Please login first");
+        message.error(t("loginRequired"));
         router.push("/");
         return;
       }
 
       if (user.role?.name !== "admin") {
-        message.error("Access denied. Admin privileges required.");
+        message.error(t("accessDenied"));
         router.push("/");
         return;
       }
 
       setIsAuthorized(true);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, t, message]); // Include message and t in deps
 
   if (loading || !isAuthorized) {
     return (
       <div className="flex flex-col items-center justify-center p-20">
         <Spin size="large" />
-        <div className="mt-4 text-gray-600 font-medium">Verifying access...</div>
+        <div className="mt-4 text-gray-600 font-medium">{t("verifying")}</div>
         <div className="mt-2 text-gray-500 text-sm border p-2 rounded bg-gray-50">
-          Loading: {loading ? "Yes" : "No"} <br/>
-          User: {user ? user.username : "None"} <br/>
-          Role: {user?.role ? user.role.name : "None"}
+          {t("loading")}: {loading ? "Yes" : "No"} <br />
+          {t("user")}: {user ? user.username : "None"} <br />
+          {t("role")}: {user?.role ? user.role.name : "None"}
         </div>
       </div>
     );
@@ -58,23 +64,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* However, AdminSidebar is a Sider. Antd Layout structure: Layout -> (Sider, Layout -> (Header, Content, Footer)) */}
       <AdminSidebar />
       <Layout>
-         {/* We probably don't want the default PageHeader sticking out if it conflicts with Sidebar style. 
+        {/* We probably don't want the default PageHeader sticking out if it conflicts with Sidebar style. 
              But user asked for it. Let's put it on top of content area or inside the inner Layout.*/}
-             
-         {/* Note: Original PageHeader has sticky behavior and specific container/logo logic used for Public pages.
+
+        {/* Note: Original PageHeader has sticky behavior and specific container/logo logic used for Public pages.
              For Admin, maybe we want a simpler header or re-use it. User said "take header to admin page".
          */}
-         {/* Issue: PageHeader contains Navigation Menu. Admin pages usually don't need "Cards", "Products" links taking space?
+        {/* Issue: PageHeader contains Navigation Menu. Admin pages usually don't need "Cards", "Products" links taking space?
              User wants the button to enter admin, and header in admin.
          */}
         <div className="bg-white">
-             {/* Dynamic title? */}
-            <PageHeader title="Admin Dashboard" /> 
+          {/* Dynamic title? */}
+          <PageHeader title="Admin Dashboard" />
         </div>
-        
-        <Content className="p-8">
-          {children}
-        </Content>
+
+        <Content className="p-8">{children}</Content>
       </Layout>
     </Layout>
   );

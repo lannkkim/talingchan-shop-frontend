@@ -41,17 +41,20 @@ import { Product } from "@/types/product";
 import { getAddresses } from "@/services/address";
 import { Address } from "@/types/address";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 export default function CartPage() {
   const queryClient = useQueryClient();
+  const t = useTranslations("CartPage");
+  const tCart = useTranslations("Cart");
 
   // Queries
   // State
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
-    null
+    null,
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>("qr_promptpay");
@@ -95,13 +98,13 @@ export default function CartPage() {
     mutationFn: (id: number) => removeFromCart(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      message.success("ลบสินค้าออกจากตะกร้าแล้ว");
+      message.success(t("removeSuccess"));
     },
   });
 
   // Derived state
   const selectedAddress = addresses.find(
-    (a) => a.address_id === selectedAddressId
+    (a) => a.address_id === selectedAddressId,
   );
 
   const subtotal = cartItems.reduce((acc, item) => {
@@ -113,7 +116,7 @@ export default function CartPage() {
     const cardsPerItem =
       item.product.product_stock_card?.reduce(
         (sum: number, psc: any) => sum + (psc.quantity || 0),
-        0
+        0,
       ) || 0;
     return acc + cardsPerItem * item.quantity;
   }, 0);
@@ -127,18 +130,18 @@ export default function CartPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       modal.success({
-        title: "สั่งซื้อสำเร็จ",
-        content: `สร้างคำสั่งซื้อเรียบร้อยแล้ว (Order IDs: ${data.order_ids.join(", ")})`,
+        title: t("success"),
+        content: t("successContent", { orderIds: data.order_ids.join(", ") }),
         onOk: () => {
           // Navigate to purchase history or clear cart UI
           // For now, reload or navigate to market
-          router.push("/profile?tab=purchases"); 
+          router.push("/profile?tab=purchases");
         },
       });
     },
     onError: (error: any) => {
       modal.error({
-        title: "เกิดข้อผิดพลาด",
+        title: t("error"),
         content: error.response?.data?.error || "ไม่สามารถทำรายการได้",
       });
     },
@@ -146,15 +149,15 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!selectedAddressId) {
-      message.error("กรุณาเลือกที่อยู่จัดส่ง");
+      message.error(t("selectShippingAddress"));
       return;
     }
 
     modal.confirm({
-      title: "ยืนยันการสั่งซื้อ",
-      content: `ยอดชำระสุทธิ ฿${subtotal.toLocaleString()} ชำระผ่าน QR PromptPay`,
-      okText: "ยืนยัน",
-      cancelText: "ยกเลิก",
+      title: t("confirmOrder"),
+      content: t("confirmOrderContent", { amount: subtotal.toLocaleString() }),
+      okText: t("confirm"),
+      cancelText: t("cancel"),
       onOk: () => {
         checkoutMutation.mutate({
           shipping_address_id: selectedAddressId,
@@ -170,7 +173,7 @@ export default function CartPage() {
       <Layout className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Spin size="large" />
-          <Text type="secondary">กำลังโหลดตะกร้าสินค้า...</Text>
+          <Text type="secondary">{t("loading")}</Text>
         </div>
       </Layout>
     );
@@ -178,7 +181,7 @@ export default function CartPage() {
 
   return (
     <Layout className="min-h-screen">
-      <PageHeader title="Shopping Cart" subtitle="ตะกร้าสินค้าของคุณ" />
+      <PageHeader title={tCart("title")} subtitle={t("subtitle")} />
       <Content className="container mx-auto max-w-7xl py-8 px-4">
         <Row gutter={24}>
           {/* Left Column: Cart Items */}
@@ -186,12 +189,12 @@ export default function CartPage() {
             <Card className="shadow-sm rounded-xl overflow-hidden border-none mb-4">
               <div className="flex justify-between items-center mb-6">
                 <Title level={4} className="m-0 flex items-center gap-2">
-                  <ShoppingCartOutlined /> ตะกร้าของฉัน ({cartItems.length}{" "}
-                  รายการ)
+                  <ShoppingCartOutlined /> {t("myCart")} ({cartItems.length}{" "}
+                  {t("items")})
                 </Title>
                 <Link href="/market">
                   <Button type="link" icon={<ArrowLeftOutlined />}>
-                    กลับไปตลาด
+                    {t("backToMarket")}
                   </Button>
                 </Link>
               </div>
@@ -199,11 +202,11 @@ export default function CartPage() {
               {cartItems.length === 0 ? (
                 <div className="py-12 bg-white rounded-lg">
                   <Empty
-                    description="ไม่มีสินค้าในตะกร้า"
+                    description={t("empty")}
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                   >
                     <Link href="/market">
-                      <Button type="primary">ไปที่ตลาดเพื่อเลือกซื้อ</Button>
+                      <Button type="primary">{t("goToMarketToShop")}</Button>
                     </Link>
                   </Empty>
                 </div>
@@ -234,7 +237,7 @@ export default function CartPage() {
                         <div className="flex-1 min-w-0">
                           <Link
                             href={`/market/cards/${btoa(
-                              String(firstCard?.card_id)
+                              String(firstCard?.card_id),
                             )}`}
                           >
                             <Text
@@ -285,7 +288,7 @@ export default function CartPage() {
 
                         <div className="text-right flex-shrink-0 hidden md:block">
                           <Text type="secondary" className="text-xs block">
-                            รวม
+                            {t("total")}
                           </Text>
                           <Text strong className="text-lg">
                             ฿{(price * item.quantity).toLocaleString()}
@@ -303,20 +306,20 @@ export default function CartPage() {
           <Col xs={24} lg={8}>
             <Card className="shadow-sm rounded-xl border-none sticky">
               <Title level={4} className="mb-6">
-                สรุปคำสั่งซื้อ
+                {t("summary")}
               </Title>
 
               <div className="space-y-6 mb-6">
                 {/* Shipping Address Section */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <Text strong>ที่อยู่จัดส่ง</Text>
+                    <Text strong>{t("shippingAddress")}</Text>
                     <Button
                       type="link"
                       size="small"
                       onClick={() => setIsAddressModalOpen(true)}
                     >
-                      เปลี่ยน
+                      {t("change")}
                     </Button>
                   </div>
                   {selectedAddress ? (
@@ -335,7 +338,7 @@ export default function CartPage() {
                     </div>
                   ) : (
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
-                      <Text type="secondary">กรุณาเลือกที่อยู่จัดส่ง</Text>
+                      <Text type="secondary">{t("selectShippingAddress")}</Text>
                     </div>
                   )}
                 </div>
@@ -343,7 +346,7 @@ export default function CartPage() {
                 {/* Payment Method Section */}
                 <div>
                   <Text strong className="block mb-2">
-                    ช่องทางการชำระเงิน
+                    {t("paymentMethod")}
                   </Text>
                   <div className="space-y-2">
                     <div
@@ -362,7 +365,7 @@ export default function CartPage() {
                       <div className="flex-1">
                         <Text strong>QR PromptPay</Text>
                         <Text type="secondary" className="text-xs block">
-                          สแกนจ่ายรวดเร็ว ยืนยันทันที
+                          {t("scanToPay")}
                         </Text>
                       </div>
                     </div>
@@ -373,16 +376,16 @@ export default function CartPage() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-gray-500">
-                    <Text>ราคารวมสินค้า</Text>
+                    <Text>{t("subtotal")}</Text>
                     <Text>฿{subtotal.toLocaleString()}</Text>
                   </div>
                   <div className="flex justify-between items-center text-gray-500">
-                    <Text>ค่าธรรมเนียม</Text>
-                    <Text className="text-green-500">ฟรี</Text>
+                    <Text>{t("fee")}</Text>
+                    <Text className="text-green-500">{t("free")}</Text>
                   </div>
                   <div className="flex justify-between items-center">
                     <Text strong className="text-lg uppercase">
-                      ยอดชำระสุทธิ
+                      {t("netTotal")}
                     </Text>
                     <Text strong className="text-2xl text-blue-600">
                       ฿{subtotal.toLocaleString()}
@@ -400,13 +403,13 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 disabled={cartItems.length === 0 || !selectedAddress}
               >
-                ชำระเงิน
+                {t("checkout")}
               </Button>
             </Card>
 
             {/* Address Selection Modal */}
             <Modal
-              title="เลือกที่อยู่จัดส่ง"
+              title={t("selectAddress")}
               open={isAddressModalOpen}
               onCancel={() => setIsAddressModalOpen(false)}
               footer={null}
@@ -430,7 +433,7 @@ export default function CartPage() {
                         <Text strong>{addr.name}</Text>
                         {addr.is_default && (
                           <span className="ml-2 text-xs bg-gray-200 px-1 rounded text-gray-600">
-                            ค่าเริ่มต้น
+                            {t("default")}
                           </span>
                         )}
                         <Text className="block text-sm text-gray-600 mt-1">
@@ -451,7 +454,7 @@ export default function CartPage() {
                     icon={<WalletOutlined />}
                     className="mt-2"
                   >
-                    จัดการที่อยู่
+                    {t("manageAddress")}
                   </Button>
                 </Link>
               </div>

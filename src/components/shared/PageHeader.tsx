@@ -1,7 +1,16 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
-import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty, ConfigProvider } from "antd";
+import { useTranslations } from "next-intl";
+import {
+  Layout,
+  Typography,
+  Menu,
+  Button,
+  Dropdown,
+  Avatar,
+  Card,
+  Empty,
+  ConfigProvider,
+} from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -15,13 +24,14 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { Link, usePathname, useRouter } from "@/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/auth/LoginModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCart, removeFromCart, CartItem } from "@/services/cart";
 import { getCardImageUrl } from "@/utils/image";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -32,13 +42,19 @@ interface PageHeaderProps {
   backUrl?: string;
 }
 
-export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps) {
+export default function PageHeader({
+  title,
+  subtitle,
+  backUrl,
+}: PageHeaderProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
+  const tNav = useTranslations("Navigation");
+  const tCart = useTranslations("Cart");
 
   // Cart Logic
   const { data } = useQuery<CartItem[]>({
@@ -61,26 +77,26 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     }
   }, [searchParams]);
 
-  const menuItems: MenuProps['items'] = [
+  const menuItems: MenuProps["items"] = [
     {
       key: "/market",
       //icon: <ShoppingOutlined />,
-      label: <Link href="/market">ตลาดสินค้า</Link>,
+      label: <Link href="/market">{tNav("market")}</Link>,
     },
     {
       key: "/cards",
       //icon: <AppstoreOutlined />,
-      label: <Link href="/cards">ข้อมูลการ์ด</Link>,
+      label: <Link href="/cards">{tNav("cards")}</Link>,
     },
     {
       key: "/products",
       //icon: <DatabaseOutlined />,
-      label: <Link href="/products">ตั้งรับการ์ด</Link>,
+      label: <Link href="/products">{tNav("products")}</Link>,
     },
     {
       key: "/stock",
       //icon: <DatabaseOutlined />,
-      label: <Link href="/stock">คลังการ์ด</Link>,
+      label: <Link href="/stock">{tNav("stock")}</Link>,
     },
   ];
 
@@ -88,7 +104,7 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     menuItems.push({
       key: "/shop",
       //icon: <ShoppingOutlined />,
-      label: <Link href="/shop">ร้านค้า</Link>,
+      label: <Link href="/shop">{tNav("shop")}</Link>,
     });
   }
 
@@ -96,21 +112,31 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     menuItems.push({
       key: "/admin",
       icon: <AppstoreOutlined />,
-      label: <Link href="/admin">Admin</Link>,
+      label: <Link href="/admin">{tNav("admin")}</Link>,
     });
   }
 
-  const selectedKey = pathname.startsWith("/market") ? "/market" : pathname.startsWith("/products") ? "/products" : pathname.startsWith("/cards") ? "/cards" : pathname.startsWith("/stock") ? "/stock" : pathname.startsWith("/shop") ? "/shop" : "";
+  const selectedKey = pathname.startsWith("/market")
+    ? "/market"
+    : pathname.startsWith("/products")
+      ? "/products"
+      : pathname.startsWith("/cards")
+        ? "/cards"
+        : pathname.startsWith("/stock")
+          ? "/stock"
+          : pathname.startsWith("/shop")
+            ? "/shop"
+            : "";
 
-  const userMenu: MenuProps['items'] = [
+  const userMenu: MenuProps["items"] = [
     {
       key: "profile",
-      label: <Link href="/profile">Profile</Link>,
+      label: <Link href="/profile">{tNav("profile")}</Link>,
       icon: <UserOutlined />,
     },
     {
       key: "logout",
-      label: "Logout",
+      label: tNav("logout"),
       icon: <LogoutOutlined />,
       danger: true,
       onClick: async () => {
@@ -126,24 +152,33 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
     >
       <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
         <Text strong className="text-gray-800">
-          <ShoppingCartOutlined className="mr-2" /> ตะกร้าสินค้า ({cartItems.length})
+          <ShoppingCartOutlined className="mr-2" /> {tCart("title")} (
+          {cartItems.length})
         </Text>
       </div>
 
       <div className="max-h-[300px] overflow-y-auto">
         {cartItems.length === 0 ? (
           <div className="py-8 text-center bg-white">
-            <Empty description="ไม่มีสินค้าในตะกร้า" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty
+              description={tCart("empty")}
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
           </div>
         ) : (
           <div className="divide-y divide-gray-100 bg-white">
             {cartItems.map((item) => {
               const product = item.product;
               const price = Number(product?.price_period?.[0]?.price || 0);
-              const firstCard = product?.product_stock_card?.[0]?.card || product?.product_stock_card?.[0]?.stock_card?.cards;
+              const firstCard =
+                product?.product_stock_card?.[0]?.card ||
+                product?.product_stock_card?.[0]?.stock_card?.cards;
 
               return (
-                <div key={item.cart_id} className="p-3 flex gap-3 hover:bg-gray-50 group">
+                <div
+                  key={item.cart_id}
+                  className="p-3 flex gap-3 hover:bg-gray-50 group"
+                >
                   <div className="relative w-12 h-16 bg-gray-50 rounded overflow-hidden flex-shrink-0">
                     <Image
                       src={getCardImageUrl(firstCard?.image_name)}
@@ -154,7 +189,11 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Text strong className="block truncate text-sm" title={product?.name}>
+                    <Text
+                      strong
+                      className="block truncate text-sm"
+                      title={product?.name}
+                    >
                       {product?.name}
                     </Text>
                     <div className="flex justify-between items-center mt-1">
@@ -184,18 +223,23 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
       <div className="p-4 bg-white border-t space-y-3">
         {cartItems.length > 0 && (
           <div className="flex justify-between items-center mb-1">
-            <Text type="secondary">รวมทั้งหมด</Text>
+            <Text type="secondary">{tCart("total")}</Text>
             <Text strong className="text-lg text-blue-600">
-              ฿{cartItems.reduce((acc, item) => acc + (Number(item.product?.price_period?.[0]?.price || 0) * item.quantity), 0).toLocaleString()}
+              ฿
+              {cartItems
+                .reduce(
+                  (acc, item) =>
+                    acc +
+                    Number(item.product?.price_period?.[0]?.price || 0) *
+                      item.quantity,
+                  0,
+                )
+                .toLocaleString()}
             </Text>
           </div>
         )}
-        <Button
-          type="primary"
-          block
-          onClick={() => router.push("/cart")}
-        >
-          {cartItems.length > 0 ? "ดำเนินการต่อไปยังตะกร้า" : "ไปที่หน้าตลาด"}
+        <Button type="primary" block onClick={() => router.push("/cart")}>
+          {cartItems.length > 0 ? tCart("proceed") : tCart("goToMarket")}
         </Button>
       </div>
     </Card>
@@ -207,8 +251,11 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
           {backUrl ? (
-            <Link href={backUrl} className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2">
-              <ArrowLeftOutlined style={{ fontSize: '20px' }} />
+            <Link
+              href={backUrl}
+              className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2"
+            >
+              <ArrowLeftOutlined style={{ fontSize: "20px" }} />
             </Link>
           ) : (
             <Link href="/" className="flex-shrink-0 -ml-3">
@@ -259,25 +306,38 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
 
         {/* Auth / Actions */}
         <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
+          <LanguageSwitcher />
           {isAuthenticated ? (
             <div className="flex items-center gap-0 md:gap-2">
               <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                <Button type="text" icon={<UserOutlined />} className="flex items-center px-1 md:px-4">
+                <Button
+                  type="text"
+                  icon={<UserOutlined />}
+                  className="flex items-center px-1 md:px-4"
+                >
                   <span className="hidden md:inline">{user?.username}</span>
                 </Button>
               </Dropdown>
 
-              <Dropdown popupRender={() => cartDropdownContent} trigger={['click']} placement="bottomRight">
+              <Dropdown
+                popupRender={() => cartDropdownContent}
+                trigger={["click"]}
+                placement="bottomRight"
+              >
                 <Button
                   type="text"
-                  icon={<ShoppingCartOutlined style={{ fontSize: '20px' }} />}
+                  icon={<ShoppingCartOutlined style={{ fontSize: "20px" }} />}
                   className="flex items-center justify-center w-10 h-10 p-0 text-gray-600 hover:text-blue-600"
                 />
               </Dropdown>
             </div>
           ) : (
-            <Button type="primary" icon={<LoginOutlined />} onClick={() => setModalVisible(true)}>
-              Login
+            <Button
+              type="primary"
+              icon={<LoginOutlined />}
+              onClick={() => setModalVisible(true)}
+            >
+              {tNav("login")}
             </Button>
           )}
         </div>

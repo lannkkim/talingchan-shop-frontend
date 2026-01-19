@@ -9,6 +9,7 @@ import ProductCarouselSection from "./ProductCarouselSection";
 import CardCarouselSection from "./CardCarouselSection";
 import CategoryGridSection from "./CategoryGridSection";
 import MarketFooter from "./MarketFooter";
+import { useTranslations } from "next-intl";
 
 const { Content } = Layout;
 
@@ -35,6 +36,8 @@ export default function MarketPageUI({
   getProductImage,
   getActivePrice,
 }: MarketPageUIProps) {
+  const t = useTranslations("Market");
+
   return (
     <Layout className="min-h-screen">
       <PageHeader title="" />
@@ -59,24 +62,22 @@ export default function MarketPageUI({
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="ประมูล"
+          title={t("auction")}
           coverImage="/images/auction.png"
-
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="การ์ดแยกใบ"
+          title={t("singleCards")}
           coverImage="/images/single_card.png"
         />
         <CardCarouselSection
           cards={cards}
           isLoading={isLoadingCards}
           getCardImageUrl={getCardImageUrl}
-          title="การ์ดเด็ค"
+          title={t("deckCards")}
           coverImage="/images/deck_card.png"
-
         />
         {/* Category Grid Component */}
         <CategoryGridSection />

@@ -1,32 +1,33 @@
 "use client";
 
 import { Card, Typography } from "antd";
+import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
 
 export default function CategoryGridSection() {
+  const t = useTranslations("Category");
+
   return (
     <div className="container mx-auto px-4 lg:px-8 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0 hover:shadow-lg transition-shadow">
           <Title level={5} className="!text-blue-800">
-            Featured Cards
+            {t("featured")}
           </Title>
-          <Text className="text-blue-600">Explore our best selling cards</Text>
+          <Text className="text-blue-600">{t("featuredDesc")}</Text>
         </Card>
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0 hover:shadow-lg transition-shadow">
           <Title level={5} className="!text-purple-800">
-            New Arrivals
+            {t("newArrivals")}
           </Title>
-          <Text className="text-purple-600">
-            Check out the latest additions
-          </Text>
+          <Text className="text-purple-600">{t("newArrivalsDesc")}</Text>
         </Card>
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-0 hover:shadow-lg transition-shadow">
           <Title level={5} className="!text-orange-800">
-            Special Offers
+            {t("specialOffers")}
           </Title>
-          <Text className="text-orange-600">Limited time deals</Text>
+          <Text className="text-orange-600">{t("specialOffersDesc")}</Text>
         </Card>
       </div>
     </div>
