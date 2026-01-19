@@ -1,0 +1,433 @@
+{
+  "Navigation": {
+    "market": "Market",
+    "cards": "Card Info",
+    "products": "Buying List",
+    "stock": "Card Stock",
+    "shop": "Shop",
+    "admin": "Admin",
+    "profile": "Profile",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "Cart": {
+    "title": "Shopping Cart",
+    "empty": "No items in cart",
+    "total": "Total",
+    "proceed": "Proceed to Cart",
+    "goToMarket": "Go to Market"
+  },
+  "CartPage": {
+    "subtitle": "Your Shopping Cart",
+    "myCart": "My Cart",
+    "items": "items",
+    "backToMarket": "Back to Market",
+    "empty": "No items in cart",
+    "goToMarketToShop": "Go to Market to Shop",
+    "summary": "Order Summary",
+    "shippingAddress": "Shipping Address",
+    "change": "Change",
+    "selectAddress": "Select Address",
+    "paymentMethod": "Payment Method",
+    "scanToPay": "Scan to Pay, Confirm Immediately",
+    "subtotal": "Subtotal",
+    "fee": "Fee",
+    "free": "Free",
+    "netTotal": "Net Total",
+    "checkout": "Checkout",
+    "confirmOrder": "Confirm Order",
+    "confirmOrderContent": "Net Total ฿{amount} pay via QR PromptPay",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "success": "Order Success",
+    "successContent": "Order created successfully (Order IDs: {orderIds})",
+    "error": "Error",
+    "removeSuccess": "Item removed from cart",
+    "loading": "Loading cart...",
+    "default": "Default",
+    "manageAddress": "Manage Address",
+    "selectShippingAddress": "Please select shipping address",
+    "total": "Total"
+  },
+  "Profile": {
+    "title": "Profile",
+    "menu": {
+      "account": "My Account",
+      "addresses": "My Addresses",
+      "logout": "Logout"
+    },
+    "logoutConfirm": {
+      "title": "Confirm Logout",
+      "content": "Are you sure you want to log out?",
+      "ok": "Logout",
+      "cancel": "Cancel"
+    },
+    "account": {
+      "title": "My Account",
+      "description": "View and manage your personal information.",
+      "personalDetails": "Personal Details",
+      "username": "Username",
+      "fullName": "Full Name",
+      "email": "Email",
+      "role": "Role",
+      "security": {
+        "title": "Security Note",
+        "description": "Your account is secured with standard encryption. To update your password or email, please contact support."
+      }
+    },
+    "address": {
+      "title": "Address List",
+      "description": "Manage addresses for shipping and receiving",
+      "add": "Add Shipping Address",
+      "loading": "Loading...",
+      "empty": "No address found",
+      "default": "Default",
+      "shipping": "Shipping Address",
+      "setDefault": "Set as default",
+      "deleteConfirm": "Delete this address?",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "success": {
+        "deleted": "Address deleted",
+        "defaultUpdated": "Default address updated",
+        "added": "Address added successfully"
+      },
+      "error": {
+        "delete": "Failed to delete address",
+        "defaultUpdate": "Failed to update default address",
+        "add": "Failed to add address"
+      },
+      "modal": {
+        "title": "Add New Shipping Address",
+        "save": "Save Address",
+        "cancel": "Cancel",
+        "name": "Receiver Name",
+        "namePlaceholder": "e.g. Somchai Jaidee",
+        "nameError": "Please enter name",
+        "phone": "Phone Number",
+        "phonePlaceholder": "e.g. 0812345678",
+        "phoneError": "Please enter phone number",
+        "address": "Address",
+        "addressPlaceholder": "House No, Village, Soi, Road",
+        "addressError": "Please enter address",
+        "subDistrict": "Sub-district",
+        "subDistrictError": "Please enter sub-district",
+        "district": "District",
+        "districtError": "Please enter district",
+        "province": "Province",
+        "provinceError": "Please enter province",
+        "zipcode": "Zipcode",
+        "zipcodeError": "Please enter zipcode",
+        "setDefault": "Set as default address"
+      }
+    }
+  },
+  "Shop": {
+    "title": "Shop Management",
+    "subtitle": "Manage Shop Data",
+    "subtitleWithName": "Manage Shop: {name}",
+    "loading": "Loading shop data...",
+    "noShop": {
+      "title": "No Shop Found",
+      "subtitle": "It seems your account has not activated a shop or you don't have permission.",
+      "retry": "Try Again"
+    },
+    "tabs": {
+      "info": "Shop Info",
+      "products": "My Products",
+      "orders": "Orders"
+    },
+    "form": {
+      "title": "Shop Information",
+      "description": "Manage your shop's general information",
+      "shopName": "Shop Name (Official)",
+      "shopNamePlaceholder": "e.g. Talingchan Official",
+      "shopNameError": "Please enter shop name",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Name shown on storefront",
+      "phone": "Phone Number",
+      "phonePlaceholder": "Contact phone number",
+      "email": "Shop Email",
+      "emailPlaceholder": "example@shop.com",
+      "contactInfo": "Contact Information",
+      "save": "Save Changes",
+      "success": "Shop updated successfully",
+      "error": "Failed to update shop info"
+    },
+    "orders": {
+      "title": "All Orders",
+      "empty": "No orders found",
+      "columns": {
+        "order": "Order",
+        "customer": "Customer",
+        "items": "Items",
+        "total": "Total",
+        "shipping": "Shipping",
+        "status": "Status"
+      },
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "shipped": "Shipped",
+        "delivered": "Delivered"
+      },
+      "actions": {
+        "addTracking": "Add Tracking No",
+        "editShipping": "Edit Shipping",
+        "specifyShipping": "Specify Shipping"
+      },
+      "modal": {
+        "transport": "Transportation Company",
+        "selectTransport": "Select Transport",
+        "trackingNo": "Tracking Number",
+        "trackingPlaceholder": "e.g. TH123456789",
+        "note": "* Once saved, status will automatically change to Shipped and customer will be notified.",
+        "save": "Save Info",
+        "cancel": "Cancel",
+        "success": "Tracking number updated",
+        "error": "Error updating tracking number",
+        "warning": "Please enter tracking number"
+      }
+    },
+    "products": {
+      "title": "Sell Orders",
+      "description": "Manage all your selling products",
+      "add": "Add Sell Product",
+      "empty": {
+        "title": "No sell products yet",
+        "description": "Start adding products to sell now"
+      },
+      "columns": {
+        "name": "Product Name",
+        "price": "Price",
+        "type": "Type",
+        "cards": "Cards",
+        "quantity": "Quantity",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View",
+        "close": "Close Sale (Inactive)",
+        "renew": "Renew Price & Activate"
+      },
+      "modal": {
+        "closeTitle": "Close Sale",
+        "closeContent": "Are you sure you want to stop selling \"{name}\"? This will set status to Inactive.",
+        "closeOk": "Yes, Close Sale",
+        "cancel": "Cancel",
+        "success": "Product sale closed successfully",
+        "error": "Failed to close sale",
+        "details": "Product Details",
+        "description": "Description",
+        "activeUntil": "Active Until",
+        "priceValidUntil": "Price Valid Until",
+        "indefinite": "Indefinite"
+      },
+      "renewModal": {
+        "title": "Renew Product Price",
+        "newPrice": "New Price",
+        "newPricePlaceholder": "0.00",
+        "newPriceError": "Please enter new price",
+        "priceValidUntil": "Price Valid Until (Optional)",
+        "ok": "Renew & Activate",
+        "success": "Product renewed successfully",
+        "error": "Failed to renew product"
+      }
+    },
+    "stock": {
+      "title": "Stock Integration",
+      "description": "Manage automatic stock deduction for orders",
+      "connected": "Connected",
+      "notConnected": "Not Connected",
+      "connect": "Connect Stock",
+      "active": "Active",
+      "activeTooltip": "This system cannot be disabled to ensure data accuracy",
+      "running": "System Running: Products will be automatically deducted from stock when new orders arrive",
+      "success": "Stock system connected successfully",
+      "error": "Failed to connect stock system",
+      "modal": {
+        "title": "Confirm Stock Integration",
+        "cancel": "Cancel",
+        "confirm": "Confirm & Enable",
+        "warningTitle": "Important Warning",
+        "warningDesc": "Once enabled, you cannot disable this system.",
+        "howItWorks": "How it works:",
+        "point1": "When customers order, stock will be <b>automatically deducted</b> immediately.",
+        "point2": "Products on sale will be added to stock automatically and cannot increase logic until removed from sale.",
+        "typeInstruction": "Please type <b>{text}</b> to continue",
+        "placeholder": "Confirm Connect",
+        "confirmText": "Confirm Connect"
+      }
+    }
+  },
+  "Footer": {
+    "about": "About Us",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "quickLinks": "Quick Links",
+    "categories": "Categories",
+    "cardGames": "Card Games",
+    "figures": "Figures",
+    "accessories": "Accessories",
+    "followUs": "Follow Us",
+    "stayConnected": "Stay connected on social media",
+    "rights": "© 2026 Talingchan Shop. All rights reserved.",
+    "description": "Your destination for premium card games and collectibles."
+  },
+  "Hero": {
+    "registerShop": "Register Shop",
+    "buyProducts": "Buy Products",
+    "exchange": "Exchange"
+  },
+  "Market": {
+    "auction": "Auction",
+    "singleCards": "Single Cards",
+    "deckCards": "Deck Cards"
+  },
+  "Category": {
+    "featured": "Featured Cards",
+    "featuredDesc": "Explore our best selling cards",
+    "newArrivals": "New Arrivals",
+    "newArrivalsDesc": "Check out the latest additions",
+    "specialOffers": "Special Offers",
+    "specialOffersDesc": "Limited time deals"
+  },
+  "Admin": {
+    "Sidebar": {
+      "title": "Admin Panel",
+      "dashboard": "Dashboard",
+      "users": "User Management",
+      "roles": "Role Management",
+      "products": "Product Management"
+    },
+    "Layout": {
+      "verifying": "Verifying access...",
+      "loginRequired": "Please login first",
+      "accessDenied": "Access denied. Admin privileges required.",
+      "loading": "Loading",
+      "user": "User",
+      "role": "Role"
+    },
+    "Dashboard": {
+      "title": "Dashboard",
+      "totalUsers": "Total Users",
+      "activeRoles": "Active Roles",
+      "welcome": "Welcome to the Admin Control Panel. Use the sidebar to manage users and roles."
+    },
+    "Users": {
+      "title": "User Management",
+      "columns": {
+        "id": "ID",
+        "username": "Username",
+        "fullname": "Full Name",
+        "email": "Email",
+        "role": "Role",
+        "action": "Action"
+      },
+      "actions": {
+        "editRole": "Edit Role"
+      },
+      "modal": {
+        "title": "Edit Role: {username}",
+        "selectRole": "Select Role",
+        "save": "Save Changes",
+        "cancel": "Cancel",
+        "success": "User role updated",
+        "error": "Failed to update role"
+      }
+    },
+    "Roles": {
+      "title": "Role Management",
+      "create": "Create New Role",
+      "columns": {
+        "id": "ID",
+        "name": "Name",
+        "description": "Description",
+        "permissions": "Permissions",
+        "action": "Action"
+      },
+      "actions": {
+        "permissions": "Permissions"
+      },
+      "modal": {
+        "title": "Create New Role",
+        "name": "Role Name",
+        "namePlaceholder": "e.g. manager",
+        "description": "Description",
+        "descPlaceholder": "Role description",
+        "success": "Role created",
+        "save": "Create"
+      },
+      "permModal": {
+        "title": "Manage Permissions: {role}",
+        "success": "Permissions updated",
+        "error": "Failed to update permissions"
+      }
+    },
+    "Products": {
+      "filter": "Filter:",
+      "filterPlaceholder": "Filter by Status",
+      "refresh": "Refresh",
+      "status": {
+        "active": "Active",
+        "pending": "Pending",
+        "inactive": "Inactive",
+        "rejected": "Rejected",
+        "approved": "Approved"
+      },
+      "columns": {
+        "id": "ID",
+        "name": "Name",
+        "type": "Type",
+        "shop": "Shop / Seller",
+        "price": "Price",
+        "status": "Status",
+        "items": "Items",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "view": "View",
+        "delete": "Delete"
+      },
+      "details": {
+        "id": "ID",
+        "type": "Type",
+        "created": "Created",
+        "includedCards": "Included Cards",
+        "items": "items",
+        "description": "Description",
+        "noDescription": "No description provided.",
+        "price": "Price",
+        "validUntil": "Valid until",
+        "inStock": "In Stock",
+        "totalCards": "Total Cards",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "sellerInfo": "Seller Information",
+        "official": "Talingchan Official",
+        "userId": "User ID",
+        "close": "Close"
+      },
+      "confirm": {
+        "approveTitle": "Approve Product",
+        "approveContent": "Are you sure you want to approve \"{name}\"? Status will be set to '{status}'.",
+        "rejectTitle": "Reject Product",
+        "rejectContent": "Are you sure you want to reject \"{name}\"?",
+        "deleteTitle": "Delete Product",
+        "deleteContent": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+        "success": {
+          "status": "Product status updated",
+          "delete": "Product deleted successfully"
+        },
+        "error": {
+          "status": "Failed to update status: {error}",
+          "delete": "Failed to delete product: {error}"
+        }
+      }
+    }
+  }
+}

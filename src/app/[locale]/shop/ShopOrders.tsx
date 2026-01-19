@@ -1,23 +1,44 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getShopOrders, updateTrackingNo, getTransportations } from "@/services/order";
-import { Table, Tag, Typography, Space, Card, Badge, Empty, Skeleton, Avatar, Button, Modal, Input, Select, Tooltip, App } from "antd";
+import {
+  getShopOrders,
+  updateTrackingNo,
+  getTransportations,
+} from "@/services/order";
+import {
+  Table,
+  Tag,
+  Typography,
+  Space,
+  Card,
+  Badge,
+  Empty,
+  Skeleton,
+  Avatar,
+  Button,
+  Modal,
+  Input,
+  Select,
+  Tooltip,
+  App,
+} from "antd";
 import type { Order, OrderProduct, Transportation } from "@/types/order";
 import dayjs from "dayjs";
-import { 
-  ShoppingCartOutlined, 
-  UserOutlined, 
-  ClockCircleOutlined, 
-  CreditCardOutlined, 
-  CarOutlined, 
-  PlusOutlined, 
+import {
+  ShoppingCartOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+  CreditCardOutlined,
+  CarOutlined,
+  PlusOutlined,
   EditOutlined,
   CheckCircleOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { getCardImageUrl } from "@/utils/image";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const { Text } = Typography;
 
@@ -25,11 +46,18 @@ export default function ShopOrders() {
   const queryClient = useQueryClient();
   const { message: messageApi } = App.useApp();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const t = useTranslations("Shop.orders");
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [trackingNo, setTrackingNo] = useState("");
-  const [transportationId, setTransportationId] = useState<number | undefined>(undefined);
+  const [transportationId, setTransportationId] = useState<number | undefined>(
+    undefined,
+  );
 
-  const { data: orders, isLoading, isError } = useQuery<Order[]>({
+  const {
+    data: orders,
+    isLoading,
+    isError,
+  } = useQuery<Order[]>({
     queryKey: ["shopOrders"],
     queryFn: getShopOrders,
   });
@@ -40,8 +68,15 @@ export default function ShopOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ orderId, trackingNo, transportId }: { orderId: number; trackingNo: string; transportId?: number }) => 
-      updateTrackingNo(orderId, trackingNo, transportId),
+    mutationFn: ({
+      orderId,
+      trackingNo,
+      transportId,
+    }: {
+      orderId: number;
+      trackingNo: string;
+      transportId?: number;
+    }) => updateTrackingNo(orderId, trackingNo, transportId),
     onSuccess: () => {
       messageApi.success("อัปเดตหมายเลขติดตามพัสดุเรียบร้อยแล้ว");
       setIsModalVisible(false);
@@ -51,8 +86,10 @@ export default function ShopOrders() {
       queryClient.invalidateQueries({ queryKey: ["shopOrders"] });
     },
     onError: (err: any) => {
-      messageApi.error("เกิดข้อผิดพลาด: " + (err.response?.data?.error || err.message));
-    }
+      messageApi.error(
+        "เกิดข้อผิดพลาด: " + (err.response?.data?.error || err.message),
+      );
+    },
   });
 
   const showModal = (order: Order) => {
@@ -64,13 +101,13 @@ export default function ShopOrders() {
 
   const handleOk = () => {
     if (currentOrder && trackingNo.trim()) {
-      updateMutation.mutate({ 
-        orderId: currentOrder.order_id, 
-        trackingNo, 
-        transportId: transportationId 
+      updateMutation.mutate({
+        orderId: currentOrder.order_id,
+        trackingNo,
+        transportId: transportationId,
       });
     } else {
-      messageApi.warning("กรุณากรอกหมายเลขติดตามพัสดุ");
+      messageApi.warning(t("modal.warning"));
     }
   };
 
@@ -93,11 +130,13 @@ export default function ShopOrders() {
   }
 
   // Check if any order has shipping info to show/hide column
-  const hasShippingInfo = orders?.some(o => o.tracking_no || o.transportation);
+  const hasShippingInfo = orders?.some(
+    (o) => o.tracking_no || o.transportation,
+  );
 
   const columns = [
     {
-      title: "คำสั่งซื้อ",
+      title: t("columns.order"),
       key: "order_id",
       render: (_: any, record: Order) => (
         <Space orientation="vertical" size={0}>
@@ -116,37 +155,48 @@ export default function ShopOrders() {
       ),
     },
     {
-      title: "ลูกค้า",
+      title: t("columns.customer"),
       key: "buyer",
       render: (_: any, record: Order) => (
         <Space>
           <Avatar icon={<UserOutlined />} src={record.buyer?.image} />
           <Space orientation="vertical" size={0}>
-            <Text strong className="text-xs">{record.buyer?.username}</Text>
+            <Text strong className="text-xs">
+              {record.buyer?.username}
+            </Text>
             {record.address_user && (
-                <div className="flex items-start gap-1 text-[10px] text-gray-400 max-w-[150px]">
-                    <EnvironmentOutlined className="mt-0.5" />
-                    <Text type="secondary" className="text-[10px]" ellipsis={{ tooltip: record.address_user.detail }}>
-                        {record.address_user.detail}
-                    </Text>
-                </div>
+              <div className="flex items-start gap-1 text-[10px] text-gray-400 max-w-[150px]">
+                <EnvironmentOutlined className="mt-0.5" />
+                <Text
+                  type="secondary"
+                  className="text-[10px]"
+                  ellipsis={{ tooltip: record.address_user.detail }}
+                >
+                  {record.address_user.detail}
+                </Text>
+              </div>
             )}
           </Space>
         </Space>
       ),
     },
     {
-      title: "รายการสินค้า",
+      title: t("columns.items"),
       key: "items",
       render: (_: any, record: Order) => (
         <div className="flex -space-x-2 overflow-hidden py-1">
           {record.order_product?.map((item: OrderProduct, idx: number) => {
-            const productImage = item.product?.product_stock_card?.[0]?.card?.image_name || item.product?.name;
+            const productImage =
+              item.product?.product_stock_card?.[0]?.card?.image_name ||
+              item.product?.name;
             return (
-              <Tooltip key={item.order_product_id} title={`${item.product?.name} x ${item.quantity}`}>
-                <img 
-                  src={getCardImageUrl(productImage)} 
-                  alt={item.product?.name} 
+              <Tooltip
+                key={item.order_product_id}
+                title={`${item.product?.name} x ${item.quantity}`}
+              >
+                <img
+                  src={getCardImageUrl(productImage)}
+                  alt={item.product?.name}
                   className="w-10 h-10 rounded-lg object-cover border-2 border-white shadow-sm ring-1 ring-gray-100"
                   style={{ zIndex: 10 - idx }}
                 />
@@ -157,14 +207,16 @@ export default function ShopOrders() {
       ),
     },
     {
-      title: "ยอดรวม",
+      title: t("columns.total"),
       key: "total",
       align: "right" as const,
       render: (_: any, record: Order) => (
         <Space orientation="vertical" size={0} align="end">
-          <Text strong className="text-base text-green-600">฿{parseFloat(record.total_price).toLocaleString()}</Text>
+          <Text strong className="text-base text-green-600">
+            ฿{parseFloat(record.total_price).toLocaleString()}
+          </Text>
           <Text type="secondary" className="text-[10px]">
-             {record.order_quantity} ชิ้น
+            {record.order_quantity} ชิ้น
           </Text>
         </Space>
       ),
@@ -174,7 +226,7 @@ export default function ShopOrders() {
   // Dynamically add Shipping column if needed
   if (hasShippingInfo) {
     columns.push({
-      title: "การขนส่ง",
+      title: t("columns.shipping"),
       key: "shipping",
       render: (_: any, record: Order) => {
         if (!record.tracking_no && !record.transportation) return <></>;
@@ -187,18 +239,24 @@ export default function ShopOrders() {
               </div>
             )}
             {record.tracking_no && (
-               <div className="flex items-center gap-1">
-                 <Tag color="cyan" variant="filled" className="m-0 text-[11px] font-mono px-2 py-0.5">
-                   {record.tracking_no}
-                 </Tag>
-                 <Button 
-                   type="text" 
-                   size="small" 
-                   className="p-0 h-auto"
-                   icon={<EditOutlined className="text-gray-300 hover:text-blue-500 text-[12px]" />} 
-                   onClick={() => showModal(record)}
-                 />
-               </div>
+              <div className="flex items-center gap-1">
+                <Tag
+                  color="cyan"
+                  variant="filled"
+                  className="m-0 text-[11px] font-mono px-2 py-0.5"
+                >
+                  {record.tracking_no}
+                </Tag>
+                <Button
+                  type="text"
+                  size="small"
+                  className="p-0 h-auto"
+                  icon={
+                    <EditOutlined className="text-gray-300 hover:text-blue-500 text-[12px]" />
+                  }
+                  onClick={() => showModal(record)}
+                />
+              </div>
             )}
           </Space>
         );
@@ -208,47 +266,52 @@ export default function ShopOrders() {
 
   // Final column: Status & Actions
   columns.push({
-    title: "สถานะ",
+    title: t("columns.status"),
     key: "status_actions",
     align: "right" as const,
     render: (_: any, record: Order) => {
       let color = "default";
       let text = record.status;
-      
+
       if (record.status === "paid") {
         color = "success";
-        text = "ชำระเงินแล้ว";
+        text = t("status.paid");
       } else if (record.status === "pending") {
         color = "warning";
-        text = "รอชำระเงิน";
+        text = t("status.pending");
       } else if (record.status === "shipped") {
         color = "processing";
-        text = "จัดส่งแล้ว";
+        text = t("status.shipped");
       }
 
       return (
         <Space orientation="vertical" align="end" size={6}>
-          <Tag color={color} variant="filled" className="m-0 text-[10px] border-none px-2">
+          <Tag
+            color={color}
+            variant="filled"
+            className="m-0 text-[10px] border-none px-2"
+          >
             {text}
           </Tag>
-          
-          {(record.status === "paid" || (record.status === "shipped" && !record.tracking_no)) && (
-            <Button 
-              type="primary" 
-              size="small" 
-              icon={<PlusOutlined />} 
+
+          {(record.status === "paid" ||
+            (record.status === "shipped" && !record.tracking_no)) && (
+            <Button
+              type="primary"
+              size="small"
+              icon={<PlusOutlined />}
               onClick={() => showModal(record)}
               className="text-[10px] px-3 h-7 bg-blue-600"
             >
-              เพิ่มเลขพัสดุ
+              {t("actions.addTracking")}
             </Button>
           )}
 
           {record.status === "shipped" && record.tracking_no && (
-             <div className="flex items-center gap-1 text-[10px] text-green-500">
-                <CheckCircleOutlined />
-                <span className="font-medium">จัดส่งเรียบร้อย</span>
-             </div>
+            <div className="flex items-center gap-1 text-[10px] text-green-500">
+              <CheckCircleOutlined />
+              <span className="font-medium">{t("status.delivered")}</span>
+            </div>
           )}
         </Space>
       );
@@ -257,27 +320,29 @@ export default function ShopOrders() {
 
   return (
     <>
-      <Card 
-        className="shadow-sm border-gray-100 overflow-hidden" 
+      <Card
+        className="shadow-sm border-gray-100 overflow-hidden"
         styles={{ body: { padding: 0 } }}
         title={
           <div className="flex items-center gap-2 py-4">
-              <ShoppingCartOutlined className="text-blue-500" />
-              <Text strong>รายการคำสั่งซื้อทั้งหมด</Text>
+            <ShoppingCartOutlined className="text-blue-500" />
+            <Text strong>{t("title")}</Text>
           </div>
         }
       >
         {orders && orders.length > 0 ? (
-          <Table 
-            dataSource={orders} 
-            columns={columns} 
-            rowKey="order_id" 
+          <Table
+            dataSource={orders}
+            columns={columns}
+            rowKey="order_id"
             pagination={{ pageSize: 10 }}
             className="shop-orders-table"
           />
         ) : (
           <div className="py-20">
-            <Empty description="ยังไม่มีรายการคำสั่งซื้อ" />
+            <div className="py-20">
+              <Empty description={t("empty")} />
+            </div>
           </div>
         )}
       </Card>
@@ -286,53 +351,73 @@ export default function ShopOrders() {
         title={
           <div className="flex items-center gap-2">
             <CarOutlined className="text-blue-500" />
-            <span>{currentOrder?.tracking_no ? "แก้ไขข้อมูลการจัดส่ง" : "ระบุข้อมูลการจัดส่ง"}</span>
+            <span>
+              {currentOrder?.tracking_no
+                ? t("actions.editShipping")
+                : t("actions.specifyShipping")}
+            </span>
           </div>
         }
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={updateMutation.isPending}
-        okText="บันทึกข้อมูล"
-        cancelText="ยกเลิก"
+        okText={t("modal.save")}
+        cancelText={t("modal.cancel")}
         centered
         width={400}
       >
         <div className="py-4 space-y-4">
           <div>
-            <div className="text-[11px] text-gray-500 mb-1.5 ml-1 font-medium italic">บริษัทขนส่ง</div>
-             <Select
+            <div className="text-[11px] text-gray-500 mb-1.5 ml-1 font-medium italic">
+              {t("modal.transport")}
+            </div>
+            <Select
               className="w-full"
-              placeholder="เลือกบริษัทขนส่ง"
+              placeholder={t("modal.selectTransport")}
               value={transportationId}
               onChange={(value) => setTransportationId(value)}
             >
-               {transportations?.map(t => (
-                  <Select.Option key={t.transportation_id} value={t.transportation_id}>{t.name}</Select.Option>
-               ))}
+              {transportations?.map((t) => (
+                <Select.Option
+                  key={t.transportation_id}
+                  value={t.transportation_id}
+                >
+                  {t.name}
+                </Select.Option>
+              ))}
             </Select>
           </div>
           <div>
-            <div className="text-[11px] text-gray-500 mb-1.5 ml-1 font-medium italic">หมายเลขติดตามพัสดุ</div>
-            <Input 
-              placeholder="ระบุหมายเลขพัสดุ (เช่น TH123456789)" 
-              value={trackingNo} 
+            <div className="text-[11px] text-gray-500 mb-1.5 ml-1 font-medium italic">
+              {t("modal.trackingNo")}
+            </div>
+            <Input
+              placeholder={t("modal.trackingPlaceholder")}
+              value={trackingNo}
               onChange={(e) => setTrackingNo(e.target.value)}
               onPressEnter={handleOk}
               prefix={<CarOutlined className="text-gray-300" />}
             />
           </div>
           {currentOrder && (
-             <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mt-4">
-                <Text type="secondary" className="text-[11px] block text-blue-600 leading-relaxed">
-                   * เมื่อบันทึกแล้ว สถานะจะเปลี่ยนเป็น <b>จัดส่งเรียบร้อย</b> อัตโนมัติ ลูกค้าจะได้รับการแจ้งเตือนเลขพัสดุ
-                </Text>
-             </div>
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mt-4">
+              <Text
+                type="secondary"
+                className="text-[11px] block text-blue-600 leading-relaxed"
+              >
+                {t.rich("modal.note", {
+                  b: (chunks) => <b>{chunks}</b>,
+                })}
+              </Text>
+            </div>
           )}
         </div>
       </Modal>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .shop-orders-table .ant-table-thead > tr > th {
           background-color: #fafafa;
           font-size: 11px;
@@ -347,7 +432,9 @@ export default function ShopOrders() {
         .shop-orders-table .ant-table-tbody > tr:hover > td {
           background-color: #f0f7ff !important;
         }
-      `}} />
+      `,
+        }}
+      />
     </>
   );
 }

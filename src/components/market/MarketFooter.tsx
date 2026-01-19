@@ -1,11 +1,14 @@
 "use client";
 
 import { Typography } from "antd";
-import Link from "next/link";
+import { Link } from "@/navigation";
+import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
 
 export default function MarketFooter() {
+  const t = useTranslations("Footer");
+
   return (
     <footer className="bg-gray-800 text-white py-8 px-4 lg:px-8">
       <div className="container mx-auto">
@@ -14,73 +17,67 @@ export default function MarketFooter() {
             <Title level={5} className="!text-white !mb-4">
               TALINGCHAN
             </Title>
-            <Text className="text-gray-400">
-              Your destination for premium card games and collectibles.
-            </Text>
+            <Text className="text-gray-400">{t("description")}</Text>
           </div>
           <div>
             <Title level={5} className="!text-white !mb-4">
-              Quick Links
+              {t("quickLinks")}
             </Title>
             <div className="flex flex-col gap-2">
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                About Us
+                {t("about")}
               </Link>
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                Contact
+                {t("contact")}
               </Link>
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                FAQ
+                {t("faq")}
               </Link>
             </div>
           </div>
           <div>
             <Title level={5} className="!text-white !mb-4">
-              Categories
+              {t("categories")}
             </Title>
             <div className="flex flex-col gap-2">
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                Card Games
+                {t("cardGames")}
               </Link>
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                Figures
+                {t("figures")}
               </Link>
               <Link
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                Accessories
+                {t("accessories")}
               </Link>
             </div>
           </div>
           <div>
             <Title level={5} className="!text-white !mb-4">
-              Follow Us
+              {t("followUs")}
             </Title>
-            <Text className="text-gray-400">
-              Stay connected on social media
-            </Text>
+            <Text className="text-gray-400">{t("stayConnected")}</Text>
           </div>
         </div>
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-          <Text className="text-gray-500">
-            © 2026 Talingchan Shop. All rights reserved.
-          </Text>
+          <Text className="text-gray-500">{t("rights")}</Text>
         </div>
       </div>
     </footer>

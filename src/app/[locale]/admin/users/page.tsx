@@ -4,8 +4,10 @@ import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Select, message, Tag } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import { adminService, AdminUser, AdminRole } from "@/services/admin";
+import { useTranslations } from "next-intl";
 
 export default function UsersManagementPage() {
+  const t = useTranslations("Admin.Users");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function UsersManagementPage() {
       setRoles(rolesData);
     } catch (error) {
       console.error(error);
-      message.error("Failed to fetch data");
+      message.error(t("modal.error")); // Or general error? Using modal error for fetch specific is weird but okay for now.
     } finally {
       setLoading(false);
     }
@@ -44,53 +46,66 @@ export default function UsersManagementPage() {
     if (!selectedUser || !selectedRoleId) return;
     try {
       await adminService.updateUserRole(selectedUser.users_id, selectedRoleId);
-      message.success("User role updated");
+      message.success(t("modal.success"));
       setModalVisible(false);
       fetchData(); // Refresh list
     } catch (error) {
       console.error(error);
-      message.error("Failed to update role");
+      message.error(t("modal.error"));
     }
   };
 
   const columns = [
     {
-      title: "ID",
+      title: t("columns.id"),
       dataIndex: "users_id",
       key: "users_id",
       width: 80,
     },
     {
-      title: "Username",
+      title: t("columns.username"),
       dataIndex: "username",
       key: "username",
     },
     {
-      title: "Full Name",
+      title: t("columns.fullname"),
       key: "fullname",
-      render: (_: any, record: AdminUser) => `${record.first_name} ${record.last_name}`,
+      render: (_: any, record: AdminUser) =>
+        `${record.first_name} ${record.last_name}`,
     },
     {
-      title: "Email",
+      title: t("columns.email"),
       dataIndex: "email",
       key: "email",
     },
     {
-      title: "Role",
+      title: t("columns.role"),
       dataIndex: ["role", "name"],
       key: "role",
       render: (roleName: string) => (
-        <Tag color={roleName === "admin" ? "red" : roleName === "shop" ? "green" : "blue"}>
+        <Tag
+          color={
+            roleName === "admin"
+              ? "red"
+              : roleName === "shop"
+                ? "green"
+                : "blue"
+          }
+        >
           {roleName ? roleName.toUpperCase() : "USER"}
         </Tag>
       ),
     },
     {
-      title: "Action",
+      title: t("columns.action"),
       key: "action",
       render: (_: any, record: AdminUser) => (
-        <Button icon={<EditOutlined />} size="small" onClick={() => handleEditRole(record)}>
-          Edit Role
+        <Button
+          icon={<EditOutlined />}
+          size="small"
+          onClick={() => handleEditRole(record)}
+        >
+          {t("actions.editRole")}
         </Button>
       ),
     },
@@ -99,7 +114,7 @@ export default function UsersManagementPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t("title")}</h1>
       </div>
 
       <Table
@@ -111,20 +126,24 @@ export default function UsersManagementPage() {
       />
 
       <Modal
-        title={`Edit Role: ${selectedUser?.username}`}
+        title={t("modal.title", { username: selectedUser?.username || "" })}
         open={modalVisible}
         onOk={handleSaveRole}
         onCancel={() => setModalVisible(false)}
+        okText={t("modal.save")}
+        cancelText={t("modal.cancel")}
       >
-         <div className="py-4">
-             <label className="block text-sm font-medium text-gray-700 mb-2">Select Role</label>
-             <Select
-                className="w-full"
-                value={selectedRoleId}
-                onChange={setSelectedRoleId}
-                options={roles.map(r => ({ label: r.name, value: r.roles_id }))}
-             />
-         </div>
+        <div className="py-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t("modal.selectRole")}
+          </label>
+          <Select
+            className="w-full"
+            value={selectedRoleId}
+            onChange={setSelectedRoleId}
+            options={roles.map((r) => ({ label: r.name, value: r.roles_id }))}
+          />
+        </div>
       </Modal>
     </div>
   );

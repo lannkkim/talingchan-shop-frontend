@@ -2,15 +2,21 @@
 
 import React from "react";
 import { Layout, Menu } from "antd";
-import { UserOutlined, SafetyCertificateOutlined, DashboardOutlined, ShoppingOutlined } from "@ant-design/icons";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {
+  UserOutlined,
+  SafetyCertificateOutlined,
+  DashboardOutlined,
+  ShoppingOutlined,
+} from "@ant-design/icons";
+import { Link, usePathname } from "@/navigation";
+import { useTranslations } from "next-intl";
 
 const { Sider } = Layout;
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  
+  const t = useTranslations("Admin.Sidebar");
+
   // Determine selected key
   const getSelectedKey = () => {
     if (pathname.includes("/admin/users")) return "users";
@@ -23,29 +29,33 @@ export default function AdminSidebar() {
     {
       key: "dashboard",
       icon: <DashboardOutlined />,
-      label: <Link href="/admin">Dashboard</Link>,
+      label: <Link href="/admin">{t("dashboard")}</Link>,
     },
     {
       key: "users",
       icon: <UserOutlined />,
-      label: <Link href="/admin/users">User Management</Link>,
+      label: <Link href="/admin/users">{t("users")}</Link>,
     },
     {
       key: "roles",
       icon: <SafetyCertificateOutlined />,
-      label: <Link href="/admin/roles">Role Management</Link>,
+      label: <Link href="/admin/roles">{t("roles")}</Link>,
     },
     {
       key: "products",
       icon: <ShoppingOutlined />,
-      label: <Link href="/admin/products">Product Management</Link>,
+      label: <Link href="/admin/products">{t("products")}</Link>,
     },
   ];
 
   return (
-    <Sider width={250} theme="light" className="border-r border-gray-100 min-h-screen">
+    <Sider
+      width={250}
+      theme="light"
+      className="border-r border-gray-100 min-h-screen"
+    >
       <div className="p-4 text-center border-b border-gray-100 mb-2">
-        <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
+        <h1 className="text-xl font-bold text-gray-800">{t("title")}</h1>
       </div>
       <Menu
         mode="inline"
