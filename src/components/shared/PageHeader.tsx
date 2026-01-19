@@ -32,6 +32,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCart, removeFromCart, CartItem } from "@/services/cart";
 import { getCardImageUrl } from "@/utils/image";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
+import ThemeSwitcher from "@/components/shared/ThemeSwitcher";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -246,7 +247,7 @@ export default function PageHeader({
   );
 
   return (
-    <Header className="sticky top-0 z-20 !bg-white border-b  px-4 h-auto py-0">
+    <Header className="sticky top-0 z-20 border-b px-4 h-auto py-0">
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
@@ -306,6 +307,7 @@ export default function PageHeader({
 
         {/* Auth / Actions */}
         <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
+          <ThemeSwitcher />
           <LanguageSwitcher />
           {isAuthenticated ? (
             <div className="flex items-center gap-0 md:gap-2">
