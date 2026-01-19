@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --header-bg: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+:root.dark {
+  --background: #1a1a2e;
+  --foreground: #eaeaea;
+  --header-bg: #16213e;
+  --card-bg: #1f2940;
+  --border-color: #3a4a6b;
 }
 
 @theme inline {
@@ -10,13 +21,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), var(--font-noto-sans-thai), sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -33,4 +37,57 @@ body {
 /* Ensure Content areas are also transparent or white */
 .ant-layout-content {
   background: var(--background);
+}
+
+/* Header dark mode support */
+.ant-layout-header {
+  background: var(--header-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Card dark mode support */
+.ant-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Menu dark mode support */
+.dark .ant-menu {
+  background: transparent !important;
+}
+
+.dark .ant-menu-item {
+  color: var(--foreground) !important;
+}
+
+.dark .ant-menu-item:hover {
+  color: #dc143c !important;
+}
+
+/* Typography dark mode */
+.dark .ant-typography {
+  color: var(--foreground);
+}
+
+.dark .ant-typography-secondary {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Button text color in dark mode */
+.dark .ant-btn-text {
+  color: var(--foreground);
+}
+
+/* Dropdown menu dark mode */
+.dark .ant-dropdown-menu {
+  background: var(--card-bg);
+}
+
+.dark .ant-dropdown-menu-item {
+  color: var(--foreground);
+}
+
+/* Sider dark mode */
+.dark .ant-layout-sider {
+  background: var(--header-bg) !important;
 }

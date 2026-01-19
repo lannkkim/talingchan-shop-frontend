@@ -10,6 +10,11 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
   const locale = useLocale();
 
+  const toggleLocale = () => {
+    const newLocale = locale === "en" ? "th" : "en";
+    router.replace(pathname, { locale: newLocale });
+  };
+
   const handleLocaleChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
   };
@@ -17,11 +22,13 @@ export default function LanguageSwitcher() {
   const items = [
     {
       key: "en",
+      icon: <span className="text-sm font-medium">EN</span>,
       label: "English",
       onClick: () => handleLocaleChange("en"),
     },
     {
       key: "th",
+      icon: <span className="text-sm font-medium">TH</span>,
       label: "ไทย",
       onClick: () => handleLocaleChange("th"),
     },
@@ -32,10 +39,9 @@ export default function LanguageSwitcher() {
       <Button
         type="text"
         icon={<GlobalOutlined />}
-        className="items-center flex"
-      >
-        {locale === "th" ? "TH" : "EN"}
-      </Button>
+        className="flex items-center"
+        onClick={toggleLocale}
+      />
     </Dropdown>
   );
 }
