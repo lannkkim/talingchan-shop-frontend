@@ -11,11 +11,13 @@ import { ShoppingOutlined, LineChartOutlined, ShoppingCartOutlined } from "@ant-
 import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
 import { getCardImageUrl } from "@/utils/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 export default function MarketPage() {
+  const { user } = useAuth();
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -85,6 +87,13 @@ export default function MarketPage() {
 
   const handleAddToCart = async () => {
     if (!selectedProduct) return;
+    if (user?.users_id === selectedProduct.users?.users_id) {
+       modal.warning({
+         title: "ไม่สามารถเพิ่มสินค้าได้",
+         content: "คุณไม่สามารถซื้อสินค้าของคุณเองได้",
+       });
+       return;
+    }
     
     setAddingToCart(true);
     try {
@@ -384,17 +393,19 @@ export default function MarketPage() {
                               value={buyQuantity} 
                               onChange={(val) => setBuyQuantity(val || 1)}
                               className="w-24"
+                              disabled={user?.users_id === selectedProduct.users?.users_id}
                             />
                           </div>
                           <Button 
                             type="primary" 
                             size="large" 
-                            className="flex-1 bg-blue-600 hover:bg-blue-700" 
-                            icon={<ShoppingCartOutlined />}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:border-gray-300" 
+                            icon={user?.users_id === selectedProduct.users?.users_id ? undefined : <ShoppingCartOutlined />}
                             onClick={handleAddToCart}
                             loading={addingToCart}
+                            disabled={user?.users_id === selectedProduct.users?.users_id}
                           >
-                            เพิ่มสินค้าลงตะกร้า
+                            {user?.users_id === selectedProduct.users?.users_id ? "สินค้าของคุณ" : "เพิ่มสินค้าลงตะกร้า"}
                           </Button>
                         </div>
                       </Space>

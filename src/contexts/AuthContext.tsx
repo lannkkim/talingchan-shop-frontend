@@ -24,6 +24,7 @@ interface AuthContextType {
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,6 +99,11 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasPermission = (permission: string): boolean => {
+    if (!user || !user.permissions) return false;
+    return user.permissions.includes(permission);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -107,6 +113,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        hasPermission,
       }}
     >
       {children}

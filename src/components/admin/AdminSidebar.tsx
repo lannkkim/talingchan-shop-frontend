@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Layout, Menu } from "antd";
-import { UserOutlined, SafetyCertificateOutlined, DashboardOutlined } from "@ant-design/icons";
+import { UserOutlined, SafetyCertificateOutlined, DashboardOutlined, ShoppingOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,6 +15,7 @@ export default function AdminSidebar() {
   const getSelectedKey = () => {
     if (pathname.includes("/admin/users")) return "users";
     if (pathname.includes("/admin/roles")) return "roles";
+    if (pathname.includes("/admin/products")) return "products";
     return "dashboard";
   };
 
@@ -33,6 +34,11 @@ export default function AdminSidebar() {
       key: "roles",
       icon: <SafetyCertificateOutlined />,
       label: <Link href="/admin/roles">Role Management</Link>,
+    },
+    {
+      key: "products",
+      icon: <ShoppingOutlined />,
+      label: <Link href="/admin/products">Product Management</Link>,
     },
   ];
 

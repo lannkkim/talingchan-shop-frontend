@@ -31,10 +31,12 @@ export interface ProductFilter {
   limit?: number;
   user_id?: number;
   card_id?: number;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 export const getProducts = async (
-  filter?: ProductFilter
+  filter?: ProductFilter,
 ): Promise<Product[]> => {
   const { data } = await axiosInstance.get("/api/v1/products/", {
     params: filter,
@@ -43,7 +45,7 @@ export const getProducts = async (
 };
 
 export const getMyProducts = async (
-  filter?: ProductFilter
+  filter?: ProductFilter,
 ): Promise<Product[]> => {
   const { data } = await axiosInstance.get("/api/v1/products/me", {
     params: filter,
@@ -58,11 +60,11 @@ export const getProductById = async (id: number): Promise<Product> => {
 
 export const updateProduct = async (
   id: number,
-  data: Partial<Product>
+  data: Partial<Product>,
 ): Promise<Product> => {
   const { data: responseData } = await axiosInstance.put(
     `/api/v1/products/${id}`,
-    data
+    data,
   );
   return responseData;
 };
@@ -72,14 +74,14 @@ export const deleteProduct = async (id: number): Promise<void> => {
 };
 
 export const createProduct = async (
-  data: CreateProductInput
+  data: CreateProductInput,
 ): Promise<Product> => {
   const response = await axiosInstance.post<Product>("/api/v1/products/", data);
   return response.data;
 };
 
 export const checkStock = async (
-  cards: { stock_card_id: number; quantity: number }[]
+  cards: { stock_card_id: number; quantity: number }[],
 ): Promise<void> => {
   await axiosInstance.post("/api/v1/products/check-stock", { cards });
 };

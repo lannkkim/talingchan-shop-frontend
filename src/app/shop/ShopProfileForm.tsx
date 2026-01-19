@@ -31,10 +31,10 @@ export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
   useEffect(() => {
     if (shopData) {
       form.setFieldsValue({
-        shop_name: shopData.shop_profile.shop_name,
-        shop_display: shopData.shop_profile.shop_display,
-        shop_phone: shopData.shop_profile.shop_phone,
-        shop_email: shopData.shop_profile.shop_email,
+        shop_name: shopData.shop_profile?.shop_name,
+        shop_display: shopData.shop_profile?.shop_display,
+        shop_phone: shopData.shop_profile?.shop_phone,
+        shop_email: shopData.shop_profile?.shop_email,
       });
     }
   }, [shopData, form]);

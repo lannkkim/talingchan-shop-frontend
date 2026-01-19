@@ -41,11 +41,12 @@ export default function PageHeader({ title, subtitle, backUrl }: PageHeaderProps
   const queryClient = useQueryClient();
 
   // Cart Logic
-  const { data: cartItems = [] } = useQuery<CartItem[]>({
+  const { data } = useQuery<CartItem[]>({
     queryKey: ["cart"],
     queryFn: getCart,
     enabled: isAuthenticated,
   });
+  const cartItems = data || [];
 
   const removeMutation = useMutation({
     mutationFn: (id: number) => removeFromCart(id),

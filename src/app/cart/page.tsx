@@ -57,15 +57,18 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("qr_promptpay");
 
   // Queries
-  const { data: cartItems = [], isLoading } = useQuery({
+  // Queries
+  const { data: cartData, isLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: getCart,
   });
+  const cartItems = cartData || [];
 
-  const { data: addresses = [] } = useQuery({
+  const { data: addressData } = useQuery({
     queryKey: ["addresses"],
     queryFn: getAddresses,
   });
+  const addresses = addressData || [];
 
   // Effects
   useEffect(() => {

@@ -106,7 +106,7 @@ export default function ShopPage() {
 
   return (
     <Layout className="min-h-screen">
-      <PageHeader title="Shop Management" subtitle={`จัดการร้านค้า: ${shopData.shop_profile.shop_name}`} />
+      <PageHeader title="Shop Management" subtitle={`จัดการร้านค้า: ${shopData.shop_profile?.shop_name || ""}`} />
       <Content className="container mx-auto max-w-7xl py-6 px-4">
         
         <Tabs 

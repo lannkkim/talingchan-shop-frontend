@@ -5,11 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyProducts, deleteProduct, updateProduct } from "@/services/product";
 import PageHeader from "@/components/shared/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Tabs, Form, Input, App } from "antd";
+import { Layout, Typography, Button, Table, Tag, Space, Card, Empty, Skeleton, Modal, Row, Col, Form, Input, App } from "antd";
 import { PlusOutlined, ShoppingOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+import PermissionGuard from "@/components/shared/PermissionGuard";
 
 const { Content } = Layout;
 const { Text, Title } = Typography;
@@ -45,9 +46,7 @@ export default function ProductsPage() {
     enabled: !!user?.users_id,
   });
 
-  const canSell = React.useMemo(() => 
-    user?.permissions?.includes("product:create:sell") || false,
-  [user]);
+
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteProduct(id),
@@ -205,83 +204,57 @@ export default function ProductsPage() {
           >
             Edit
           </Button>
-          <Button 
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.product_id)}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+            <PermissionGuard permission="product:delete">
+              <Button 
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.product_id)}
+              >
+                Delete
+              </Button>
+            </PermissionGuard>
+          </Space>
+        ),
+      },
+    ];
 
-  const [activeTab, setActiveTab] = React.useState("sell");
-  
-  const filteredProducts = React.useMemo(() => {
+  // Filter only Buy orders
+  const buyProducts = React.useMemo(() => {
     return products.filter((p: Product) => 
-      p.transaction_type?.code?.toLowerCase() === activeTab
+      p.transaction_type?.code?.toLowerCase() === 'buy'
     );
-  }, [products, activeTab]);
-
-
-
-  const items = [
-    ...(canSell ? [{
-      key: 'sell',
-      label: 'Sell Order',
-      children: filteredProducts.length > 0 ? (
-        <Table 
-          columns={columns} 
-          dataSource={filteredProducts} 
-          rowKey="product_id"
-          pagination={{ pageSize: 10 }}
-        />
-      ) : <EmptyState />,
-    }] : []),
-    {
-      key: 'buy',
-      label: 'Buy Order',
-      children: filteredProducts.length > 0 ? (
-        <Table 
-          columns={columns} 
-          dataSource={filteredProducts} 
-          rowKey="product_id"
-          pagination={{ pageSize: 10 }}
-        />
-      ) : <EmptyState />,
-    },
-  ];
-
-  // Effect to ensure active tab is valid
-  React.useEffect(() => {
-    if (activeTab === 'sell' && !canSell) {
-      setActiveTab('buy');
-    }
-  }, [canSell, activeTab]);
+  }, [products]);
 
   return (
     <Layout className="min-h-screen">
       <PageHeader 
-        title="My Products" 
+        title="รายการรับซื้อ (Buy Orders)" 
       />
 
       <Content className="container mx-auto max-w-7xl p-8">
         <div className="flex justify-end mb-6">
-          <Link href="/products/add">
-            <Button type="primary" icon={<PlusOutlined />} size="large">
-              Add Product
-            </Button>
-          </Link>
+          <PermissionGuard permission="product:create:buy">
+            <Link href="/products/add">
+              <Button type="primary" icon={<PlusOutlined />} size="large">
+                Add Product
+              </Button>
+            </Link>
+          </PermissionGuard>
         </div>
 
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 10 }} />
         ) : isError ? (
           <Empty description="Error loading products" />
+        ) : buyProducts.length > 0 ? (
+          <Table 
+            columns={columns} 
+            dataSource={buyProducts} 
+            rowKey="product_id"
+            pagination={{ pageSize: 10 }}
+          />
         ) : (
-          <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
+          <EmptyState />
         )}
 
         {/* Product View Modal */}

@@ -18,10 +18,11 @@ export default function StockPage() {
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const { data: stockCards = [], isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["stock-cards"],
     queryFn: getMyStockCards,
   });
+  const stockCards = data || [];
 
   const columns: ColumnsType<StockCard> = useMemo(() => [
     {

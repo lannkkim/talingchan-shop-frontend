@@ -77,7 +77,7 @@ export default function CardCarouselSection({
             ))
             : cards.map((card: CardType, index: number) => (
               <Card
-                key={card.card_id}
+                key={`${card.card_id}-${index}`}
                 hoverable
                 className={`flex-shrink-0 w-[300px] overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 bg-white ${
                   // Only make first card sticky if no cover image

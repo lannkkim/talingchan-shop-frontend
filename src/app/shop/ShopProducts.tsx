@@ -4,19 +4,25 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import { Table, Button, Tag, Empty, Card, Typography, Space, Modal, Row, Col, Divider } from "antd";
-import { PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, StopOutlined, ReloadOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { getCardImageUrl } from "@/utils/image";
+import { updateProduct } from "@/services/product";
+import { App, Tooltip, message } from "antd";
+import { RenewPriceModal } from "./RenewPriceModal";
 
 const { Text, Title } = Typography;
 
 export default function ShopProducts() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [renewProduct, setRenewProduct] = useState<Product | null>(null);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
+  const { modal, message } = App.useApp();
 
-  const { data: products = [], isLoading } = useQuery<Product[]>({
+  const { data: products = [], isLoading, refetch } = useQuery<Product[]>({
     queryKey: ["products"],
     queryFn: () => getProducts(),
   });
@@ -25,6 +31,32 @@ export default function ShopProducts() {
   const sellProducts = products.filter(
     (p: Product) => p.transaction_type?.code === "sell"
   );
+
+  const handleCloseSale = (product: Product) => {
+    modal.confirm({
+      title: "Close Sale",
+      content: `Are you sure you want to stop selling "${product.name}"? This will set status to Inactive.`,
+      okText: "Yes, Close Sale",
+      cancelText: "Cancel",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await updateProduct(product.product_id, { status: "inactive" });
+          message.success("Product sale closed successfully");
+          refetch();
+        } catch (err: any) {
+          message.error(err.message || "Failed to close sale");
+        }
+      },
+    });
+  };
+
+  const handleRenewSuccess = () => {
+    refetch();
+    setIsRenewModalOpen(false);
+    setRenewProduct(null);
+  };
+
 
   const columns = [
     {
@@ -80,16 +112,42 @@ export default function ShopProducts() {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Product) => (
-        <Button 
-          icon={<EyeOutlined />} 
-          size="small"
-          onClick={() => {
-            setSelectedProduct(record);
-            setIsModalOpen(true);
-          }}
-        >
-          View
-        </Button>
+        <Space size="small">
+          <Button 
+            icon={<EyeOutlined />} 
+            size="small"
+            onClick={() => {
+              setSelectedProduct(record);
+              setIsModalOpen(true);
+            }}
+          >
+            View
+          </Button>
+          {record.status === "active" && (
+             <Tooltip title="Close Sale (Inactive)">
+               <Button 
+                 danger
+                 icon={<StopOutlined />} 
+                 size="small"
+                 onClick={() => handleCloseSale(record)}
+               />
+             </Tooltip>
+          )}
+          {(record.status === "expired" || record.status === "inactive") && (
+             <Tooltip title="Renew Price & Activate">
+               <Button 
+                 type="primary"
+                 ghost
+                 icon={<ReloadOutlined />} 
+                 size="small"
+                 onClick={() => {
+                   setRenewProduct(record);
+                   setIsRenewModalOpen(true);
+                 }}
+               />
+             </Tooltip>
+          )}
+        </Space>
       ),
     },
   ];
@@ -238,6 +296,13 @@ export default function ShopProducts() {
           </div>
         )}
       </Modal>
+
+      <RenewPriceModal 
+        product={renewProduct}
+        isOpen={isRenewModalOpen}
+        onClose={() => setIsRenewModalOpen(false)}
+        onSuccess={handleRenewSuccess}
+      />
     </div>
   );
 }

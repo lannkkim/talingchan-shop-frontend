@@ -109,12 +109,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   return (
     <div className="space-y-6">
       <Row gutter={[16, 24]}>
-        {sortedCards.map((card) => {
+        {sortedCards.map((card, index) => {
           const isSelected = !!selectedCards.find((c) => c.card_id === card.card_id);
           // Use stock_card_id if available (from inventory), otherwise use card_id
           const uniqueKey = (card as any).stock_card_id || card.card_id;
           return (
-            <Col key={uniqueKey} xs={12} sm={8} md={6}>
+            <Col key={`${uniqueKey}-${index}`} xs={12} sm={8} md={6}>
               <div 
                 className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${
                   selectable ? "cursor-pointer" : ""

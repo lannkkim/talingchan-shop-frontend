@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { getTypes, getTransactionTypes, getSellTypes, getBuyTypes } from "@/services/type";
 import { createProduct, CreateProductInput, checkStock } from "@/services/product";
 import { getMyShop } from "@/services/shop";
@@ -310,6 +311,34 @@ export default function ProductAddForm({ transactionType, onSuccess }: ProductAd
                   </Form.Item>
                 </Col>
                 <Col span={12}>
+                  <Form.Item name="started_at" label="Product Active From" initialValue={null} dependencies={['ended_at']}>
+                    <DatePicker 
+                      className="w-full" 
+                      size="large" 
+                      placeholder="Immediately" 
+                      disabledDate={(current) => {
+                        // Cannot select date < now (User: started_at < now invalid)
+                        return current && current < dayjs().startOf('day');
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="ended_at" label="Product Active Until" initialValue={null} dependencies={['started_at']}>
+                    <DatePicker 
+                      className="w-full" 
+                      size="large" 
+                      placeholder="Indefinite" 
+                      disabledDate={(current) => {
+                        const startedAt = form.getFieldValue("started_at");
+                        if (startedAt && current && current < startedAt.startOf('day')+1) return true;
+                        
+                        return current && current < dayjs().startOf('day');
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
                   <Form.Item name="price" label="Base Price (Optional)">
                     <InputNumber 
                       prefix="฿" 
@@ -347,18 +376,37 @@ export default function ProductAddForm({ transactionType, onSuccess }: ProductAd
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="price_period_ended" label="Price Valid Until (Optional)">
-                    <DatePicker className="w-full" size="large" showTime />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="started_at" label="Product Active From" initialValue={null}>
-                    <DatePicker className="w-full" size="large" showTime placeholder="Immediately" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="ended_at" label="Product Active Until" initialValue={null}>
-                    <DatePicker className="w-full" size="large" showTime placeholder="Indefinite" />
+                  <Form.Item 
+                    name="price_period_ended" 
+                    label="Price Valid Until (Optional)"
+                    dependencies={['started_at', 'ended_at']}
+                  >
+                    <DatePicker 
+                        className="w-full" 
+                        size="large" 
+                        disabledDate={(current) => {
+                            // User Request:
+                            // If started_at = 18, ended_at = 24 
+                            // Only 19, 20, 21, 22, 23 allowed? 
+                            // "must choose 18 and 24 FALSE" -> can't choose 18 or 24.
+                            // So STRICTLY BETWEEN.
+                            
+                            const startedAt = form.getFieldValue("started_at") || dayjs();
+                            const endedAt = form.getFieldValue("ended_at");
+                            
+                            if (!current) return false;
+
+                            // 1. Must be > started_at (Cannot be <= started_at)
+                            // "started_at = 18 ... cannot choose 18"
+                            if (current <= startedAt.endOf('day')) return true;
+
+                            // 2. Must be < ended_at (Cannot be >= ended_at)
+                            // "ended_at = 24 ... cannot choose 24"
+                            if (endedAt && current >= endedAt.startOf('day')) return true;
+                            
+                            return false;
+                        }}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
