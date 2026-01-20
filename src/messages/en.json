@@ -283,7 +283,9 @@
   "Market": {
     "auction": "Auction",
     "singleCards": "Single Cards",
-    "deckCards": "Deck Cards"
+    "deckCards": "Deck Cards",
+    "exchange": "Exchange",
+    "viewAll": "View All"
   },
   "Category": {
     "featured": "Featured Cards",

@@ -282,8 +282,10 @@
   },
   "Market": {
     "auction": "ประมูล",
-    "singleCards": "การ์ดแยกใบ",
-    "deckCards": "การ์ดเด็ค"
+    "singleCards": "แยกใบ",
+    "deckCards": "ชุดการ์ด",
+    "exchange": "แลก-เปลี่ยน",
+    "viewAll": "ดูเพิ่มเติม"
   },
   "Category": {
     "featured": "การ์ดแนะนำ",

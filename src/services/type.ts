@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { Type, SellType, BuyType } from "@/types/type";
+import { Type, SellType, BuyType, BoxFlat } from "@/types/type";
 import { TransactionType } from "@/types/product";
 
 export const getTypes = async (): Promise<Type[]> => {
@@ -21,5 +21,10 @@ export const getSellTypes = async (): Promise<SellType[]> => {
 
 export const getBuyTypes = async (): Promise<BuyType[]> => {
   const response = await axiosInstance.get<BuyType[]>("/api/v1/types/buy");
+  return response.data;
+};
+
+export const getBoxFlats = async (): Promise<BoxFlat[]> => {
+  const response = await axiosInstance.get<BoxFlat[]>("/api/v1/types/box-flat");
   return response.data;
 };

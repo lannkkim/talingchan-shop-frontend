@@ -1,11 +1,12 @@
 import axios from "@/lib/axios";
+import { Product } from "@/types/product";
 
 export interface CartItem {
   cart_id: number;
   user_id: number;
   product_id: number;
   quantity: number;
-  product: any; // You might want to type this properly later
+  product: Product;
 }
 
 export interface AddToCartInput {
