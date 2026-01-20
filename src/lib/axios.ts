@@ -3,9 +3,15 @@ import axios from "axios";
 // In-memory token storage
 let accessToken: string | null = null;
 let isRefreshing = false;
-let failedQueue: any[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+interface FailedRequest {
+  resolve: (token: string | null) => void;
+  reject: (error: unknown) => void;
+}
+
+let failedQueue: FailedRequest[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -59,7 +65,7 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise<string | null>(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
@@ -85,7 +91,7 @@ axiosInstance.interceptors.response.use(
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axiosInstance(originalRequest);
-      } catch (err: any) {
+      } catch (err: unknown) {
         processQueue(err, null);
         setAccessToken(null);
         // Let AuthContext handle the redirect if needed (store failure usually propagates)

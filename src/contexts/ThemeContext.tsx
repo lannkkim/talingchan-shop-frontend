@@ -27,14 +27,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check localStorage and system preference on mount
     const savedTheme = localStorage.getItem(THEME_KEY) as ThemeMode | null;
     if (savedTheme) {
-      setThemeModeState(savedTheme);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      if (savedTheme !== themeMode) {
+        setThemeModeState(savedTheme);
+      }
+    } else if (
+      window.matchMedia("(prefers-color-scheme: dark)").matches &&
+      themeMode !== "dark"
+    ) {
       setThemeModeState("dark");
     }
     setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

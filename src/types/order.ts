@@ -27,7 +27,7 @@ export interface Order {
   reciept_id?: number;
   created_at: string;
   updated_at: string;
-  buyer: User & { user_profile?: any };
+  buyer: User & { user_profile?: Record<string, unknown> };
   order_product: OrderProduct[];
   payment_type?: {
     name: string;
