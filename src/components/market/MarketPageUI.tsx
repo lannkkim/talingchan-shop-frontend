@@ -6,7 +6,7 @@ import { Product } from "@/types/product";
 import PageHeader from "@/components/shared/PageHeader";
 import HeroBanner from "./HeroBanner";
 import ProductCarouselSection from "./ProductCarouselSection";
-import CardCarouselSection from "./CardCarouselSection";
+import CardCarouselSection from "@/components/shared/CardCarouselSection";
 import CategoryGridSection from "./CategoryGridSection";
 import MarketFooter from "./MarketFooter";
 import { useTranslations } from "next-intl";
@@ -46,41 +46,52 @@ export default function MarketPageUI({
         {/* Hero Banner Component */}
         <HeroBanner />
         {/* Product Carousel Component */}
-        <div className="mt-8">
-          <ProductCarouselSection
-            products={products}
-            isLoading={isLoadingProducts}
-            carouselRef={carouselRef}
-            handleScroll={handleScroll}
-            getProductImage={getProductImage}
-            getActivePrice={getActivePrice}
-          />
-        </div>
+        <div className="max-w-7xl mx-auto">
 
-        {/* Card Carousel Component */}
-        <CardCarouselSection
-          cards={cards}
-          isLoading={isLoadingCards}
-          getCardImageUrl={getCardImageUrl}
-          title={t("auction")}
-          coverImage="/images/auction.png"
-        />
-        <CardCarouselSection
-          cards={cards}
-          isLoading={isLoadingCards}
-          getCardImageUrl={getCardImageUrl}
-          title={t("singleCards")}
-          coverImage="/images/single_card.png"
-        />
-        <CardCarouselSection
-          cards={cards}
-          isLoading={isLoadingCards}
-          getCardImageUrl={getCardImageUrl}
-          title={t("deckCards")}
-          coverImage="/images/deck_card.png"
-        />
-        {/* Category Grid Component */}
-        <CategoryGridSection />
+
+          {/* ประมูล - Auction (Large Cards - M) */}
+          <CardCarouselSection
+            cards={cards}
+            isLoading={isLoadingCards}
+            getCardImageUrl={getCardImageUrl}
+            title={t("auction")}
+            coverImage="/images/auction.png"
+            boxFlatCode="M"
+          />
+
+          {/* แยกใบ - Single Cards (Small Cards - S) */}
+          <CardCarouselSection
+            cards={cards}
+            isLoading={isLoadingCards}
+            getCardImageUrl={getCardImageUrl}
+            title={t("singleCards")}
+            coverImage="/images/single_card.png"
+            boxFlatCode="S"
+          />
+
+          {/* ชุดการ์ด - Deck Cards (Large Cards - M) */}
+          <CardCarouselSection
+            cards={cards}
+            isLoading={isLoadingCards}
+            getCardImageUrl={getCardImageUrl}
+            title={t("deckCards")}
+            coverImage="/images/deck_card.png"
+            boxFlatCode="M"
+          />
+
+          {/* แลก-เปลี่ยน - Exchange (Small Cards - S) */}
+          <CardCarouselSection
+            cards={cards}
+            isLoading={isLoadingCards}
+            getCardImageUrl={getCardImageUrl}
+            title={t("exchange")}
+            coverImage="/images/exchange.png"
+            boxFlatCode="S"
+          />
+
+          {/* Category Grid Component */}
+          <CategoryGridSection />
+        </div>
       </Content>
 
       {/* Footer Component */}

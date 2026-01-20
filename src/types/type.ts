@@ -16,3 +16,10 @@ export interface BuyType {
   code: string;
   name: string;
 }
+
+export interface BoxFlat {
+  box_flat_id: number;
+  box_flat_code: string;
+  box_flat_description: string;
+  is_active: boolean;
+}
