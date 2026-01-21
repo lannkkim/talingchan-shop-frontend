@@ -129,7 +129,7 @@ function LargeCardItem({
         </div>
 
         {/* Details Section */}
-        <div className="flex-1 p-4 flex flex-col">
+        <div className="flex-1] p-4 flex flex-col">
           <Title
             level={4}
             className="!mb-2 !text-lg line-clamp-1 dark:!text-white"
@@ -247,7 +247,7 @@ export default function CardCarouselSection({
 
         {/* Scrollable Cards */}
         <div
-          className="flex gap-4 overflow-x-auto scrollbar-hide py-2 flex-grow"
+          className="flex gap-4 overflow-x-auto scrollbar-hide py-3 flex-grow"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {isLoading
