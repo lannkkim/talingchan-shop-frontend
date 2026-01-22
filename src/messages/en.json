@@ -431,5 +431,21 @@
         }
       }
     }
+  },
+  "TradingMarket": {
+    "title": "Trading Market",
+    "subtitle": "Trading Market - Trade cards with other users",
+    "groupBy": "Group by: Symbol",
+    "stats": {
+      "products": "Products"
+    },
+    "actions": {
+      "createTrade": "Create Trade",
+      "filterAndGroup": "Filter & Group"
+    },
+    "empty": {
+      "title": "No Products Found",
+      "description": "There are no products in the trading market at the moment"
+    }
   }
 }

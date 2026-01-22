@@ -431,5 +431,21 @@
         }
       }
     }
+  },
+  "TradingMarket": {
+    "title": "ตลาดแลกเปลี่ยน",
+    "subtitle": "Trading Market - แลกเปลี่ยนการ์ดกับผู้ใช้อื่น",
+    "groupBy": "จัดกลุ่มโดย : สัญลักษณ์",
+    "stats": {
+      "products": "สินค้า"
+    },
+    "actions": {
+      "createTrade": "สร้างการเทรด",
+      "filterAndGroup": "ตัวกรอง และ จัดกลุ่ม"
+    },
+    "empty": {
+      "title": "ไม่พบสินค้า",
+      "description": "ไม่มีสินค้าในตลาดแลกเปลี่ยนในขณะนี้"
+    }
   }
 }
