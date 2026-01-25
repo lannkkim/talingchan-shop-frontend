@@ -71,7 +71,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   }, [data, availableCards, filters?.search]);
 
   const sortedCards = useMemo(() => {
-    return [...allCards].sort((a, b) => a.card_id - b.card_id);
+    return [...allCards].sort((a, b) => String(a.print).localeCompare(String(b.print)));
   }, [allCards]);
 
   const handleToggleSelect = (card: CardType) => {

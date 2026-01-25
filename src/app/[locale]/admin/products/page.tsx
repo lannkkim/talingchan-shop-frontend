@@ -80,7 +80,7 @@ export default function AdminProductsPage() {
 
   // Mutation for updating status
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
       updateProduct(id, { status }),
     onSuccess: () => {
       message.success(t("confirm.success.status"));
@@ -97,7 +97,7 @@ export default function AdminProductsPage() {
 
   // Mutation for deleting product
   const deleteProductMutation = useMutation({
-    mutationFn: (id: number) => deleteProduct(id),
+    mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
       message.success(t("confirm.success.delete"));
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });

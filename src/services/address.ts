@@ -9,17 +9,17 @@ export const getAddresses = async (): Promise<Address[]> => {
 };
 
 export const createAddress = async (
-  input: CreateAddressInput
+  input: CreateAddressInput,
 ): Promise<Address> => {
   const response = await axiosInstance.post(BASE_URL, input);
   return response.data;
 };
 
-export const deleteAddress = async (id: number): Promise<void> => {
+export const deleteAddress = async (id: string): Promise<void> => {
   await axiosInstance.delete(`${BASE_URL}/${id}`);
 };
 
-export const setDefaultAddress = async (id: number): Promise<void> => {
+export const setDefaultAddress = async (id: string): Promise<void> => {
   await axiosInstance.put(`${BASE_URL}/${id}/default`);
 };
 

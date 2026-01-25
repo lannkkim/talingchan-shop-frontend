@@ -8,35 +8,38 @@ import { getAddresses, deleteAddress, setDefaultAddress } from "@/services/addre
 import AddAddressModal from "./AddAddressModal";
 import { Address } from "@/types/address";
 
+import { useTranslations } from "next-intl";
+
 const { Title, Text } = Typography;
 
 export default function AddressList() {
     const { message } = App.useApp();
     const queryClient = useQueryClient();
     const [modalVisible, setModalVisible] = useState(false);
+    const t = useTranslations("Profile.address");
 
     const { data: addresses = [], isLoading } = useQuery({
         queryKey: ["addresses"],
         queryFn: getAddresses,
     });
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         try {
             await deleteAddress(id);
-            message.success("Address deleted");
+            message.success(t("success.deleted"));
             queryClient.invalidateQueries({ queryKey: ["addresses"] });
         } catch (error) {
-            message.error("Failed to delete address");
+            message.error(t("error.delete"));
         }
     };
 
-    const handleSetDefault = async (id: number) => {
+    const handleSetDefault = async (id: string) => {
         try {
             await setDefaultAddress(id);
-            message.success("Default address updated");
-             queryClient.invalidateQueries({ queryKey: ["addresses"] });
+            message.success(t("success.defaultUpdated"));
+            queryClient.invalidateQueries({ queryKey: ["addresses"] });
         } catch (error) {
-            message.error("Failed to update default address");
+            message.error(t("error.defaultUpdate"));
         }
     };
 

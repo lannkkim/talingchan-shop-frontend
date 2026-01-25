@@ -91,9 +91,9 @@ export default function AddProductPage() {
       
       const transactionTypeSelection = values.transaction_type_selection; // "sell_order" or "buy_order"
       
-      let transactionTypeId: number | undefined;
-      let sellTypeId: number | undefined;
-      let buyTypeId: number | undefined;
+      let transactionTypeId: string | undefined;
+      let sellTypeId: string | undefined;
+      let buyTypeId: string | undefined;
 
       if (transactionTypeSelection === "sell_order") {
         transactionTypeId = transactionTypes.find(t => t.code === "sell")?.transaction_type_id;

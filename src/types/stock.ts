@@ -1,12 +1,13 @@
 import { Card } from "./card";
 
 export interface StockCard {
-  stock_card_id: number;
-  stock_id: number;
-  card_id: number;
+  stock_card_id: string;
+  stock_id: string;
+  card_id: string;
   quantity: number;
   status: string;
   created_at: string;
   updated_at: string;
-  cards?: Card; // Prisma returns 'cards' (lowercase) for the relation
+  card?: Card;
+  unit_use: number;
 }

@@ -36,7 +36,7 @@ function AllMarketProductsContent() {
   const getProductImage = (product: Product) => {
     const firstStock = product.product_stock_card?.[0];
     if (!firstStock) return null;
-    return firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name || null;
+    return firstStock.card?.image_name || firstStock.stock_card?.card?.image_name || null;
   };
 
 
@@ -145,7 +145,7 @@ function AllMarketProductsContent() {
                   <Title level={5}>Cards ({selectedProduct.total_quantity} items)</Title>
                   <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
                     {selectedProduct.product_stock_card?.map(pc => {
-                      const card = pc.stock_card?.cards || pc.card;
+                      const card = pc.stock_card?.card || pc.card;
                       const cImg = getCardImageUrl(card?.image_name);
                       return (
                         <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">

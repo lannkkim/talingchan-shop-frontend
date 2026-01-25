@@ -4,15 +4,15 @@ import { Product } from "@/types/product";
 export interface CreateProductInput {
   name: string;
   detail?: string;
-  type_id?: number;
-  user_id?: number;
-  transaction_type_id?: number;
-  sell_type_id?: number;
-  buy_type_id?: number;
+  type_id?: string;
+  user_id?: string;
+  transaction_type_id?: string;
+  sell_type_id?: string;
+  buy_type_id?: string;
   started_at?: string;
   ended_at?: string;
   cards: {
-    stock_card_id: number;
+    stock_card_id: string;
     quantity: number;
   }[];
   price?: {
@@ -29,8 +29,8 @@ export interface ProductFilter {
   include_shop?: boolean;
   product_type_code?: string;
   limit?: number;
-  user_id?: number;
-  card_id?: number;
+  user_id?: string;
+  card_id?: string;
   sort_by?: string;
   sort_order?: string;
 }
@@ -53,13 +53,13 @@ export const getMyProducts = async (
   return data;
 };
 
-export const getProductById = async (id: number): Promise<Product> => {
+export const getProductById = async (id: string): Promise<Product> => {
   const response = await axiosInstance.get<Product>(`/api/v1/products/${id}`);
   return response.data;
 };
 
 export const updateProduct = async (
-  id: number,
+  id: string,
   data: Partial<Product>,
 ): Promise<Product> => {
   const { data: responseData } = await axiosInstance.put(
@@ -69,7 +69,7 @@ export const updateProduct = async (
   return responseData;
 };
 
-export const deleteProduct = async (id: number): Promise<void> => {
+export const deleteProduct = async (id: string): Promise<void> => {
   await axiosInstance.delete(`/api/v1/products/${id}`);
 };
 
@@ -81,7 +81,7 @@ export const createProduct = async (
 };
 
 export const checkStock = async (
-  cards: { stock_card_id: number; quantity: number }[],
+  cards: { stock_card_id: string; quantity: number }[],
 ): Promise<void> => {
   await axiosInstance.post("/api/v1/products/check-stock", { cards });
 };

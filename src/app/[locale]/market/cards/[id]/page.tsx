@@ -17,16 +17,9 @@ const { Content } = Layout;
 
 export default function CardMarketStatsPage() {
   const params = useParams();
-  const encodedId = params.id as string;
-  let cardId = 0;
+  const cardId = params.id as string;
   
-  try {
-    if (encodedId) {
-      cardId = parseInt(atob(decodeURIComponent(encodedId)));
-    }
-  } catch (e) {
-    console.error("Failed to decode card ID", e);
-  }
+  // Removed decoding logic as we use direct UUIDs now
 
 
   // Fetch Card Details

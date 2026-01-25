@@ -28,14 +28,14 @@ export default function StockPage() {
     {
       title: "Card Name",
       key: "name",
-      render: (_, record) => record.cards?.name || "Unknown",
+      render: (_, record) => record.card?.name || "Unknown",
     },
     {
       title: "Rarity",
       key: "rarity",
       render: (_, record) => (
-        <Tag color={record.cards?.rare === "SSR" ? "gold" : "blue"}>
-          {record.cards?.rare || "N/A"}
+        <Tag color={record.card?.rare === "SSR" ? "gold" : "blue"}>
+          {record.card?.rare || "N/A"}
         </Tag>
       ),
     },

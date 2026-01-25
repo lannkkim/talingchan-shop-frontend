@@ -49,7 +49,7 @@ export default function ShopOrders() {
   const t = useTranslations("Shop.orders");
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const [trackingNo, setTrackingNo] = useState("");
-  const [transportationId, setTransportationId] = useState<number | undefined>(
+  const [transportationId, setTransportationId] = useState<string | undefined>(
     undefined,
   );
 
@@ -73,9 +73,9 @@ export default function ShopOrders() {
       trackingNo,
       transportId,
     }: {
-      orderId: number;
+      orderId: string;
       trackingNo: string;
-      transportId?: number;
+      transportId?: string;
     }) => updateTrackingNo(orderId, trackingNo, transportId),
     onSuccess: () => {
       messageApi.success("อัปเดตหมายเลขติดตามพัสดุเรียบร้อยแล้ว");

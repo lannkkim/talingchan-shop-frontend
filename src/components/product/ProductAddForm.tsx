@@ -133,9 +133,9 @@ export default function ProductAddForm({
   const availableCards = useMemo(() => {
     if (shouldCheckStock && inventory) {
       return inventory
-        .filter((stock) => stock.cards)
+        .filter((stock) => stock.card)
         .map((stock) => ({
-          ...stock.cards!,
+          ...stock.card!,
           stockQuantity: stock.quantity,
           stock_card_id: stock.stock_card_id,
         }));
@@ -183,9 +183,9 @@ export default function ProductAddForm({
       const transactionTypeSelection =
         transactionType === "sell" ? "sell_order" : "buy_order";
 
-      let transactionTypeId: number | undefined;
-      let sellTypeId: number | undefined;
-      let buyTypeId: number | undefined;
+      let transactionTypeId: string | undefined;
+      let sellTypeId: string | undefined;
+      let buyTypeId: string | undefined;
 
       if (transactionTypeSelection === "sell_order") {
         transactionTypeId = transactionTypes.find(

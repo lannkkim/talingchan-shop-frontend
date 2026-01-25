@@ -1,11 +1,12 @@
 export interface ShopProfile {
-  shop_id: number;
-  user_id: number;
+  shop_id: string;
+  user_id: string;
   level: string;
   is_verified: boolean;
   is_stock_check_enabled: boolean;
+  shop_code?: string; // Added code
   shop_profile: {
-    shop_profile_id: number;
+    shop_profile_id: string;
     shop_name: string;
     shop_display?: string;
     shop_email?: string;

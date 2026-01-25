@@ -78,7 +78,7 @@ export default function MarketPage() {
     const firstStock = product.product_stock_card?.[0];
     if (!firstStock) return null;
 
-    return firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name || null;
+    return firstStock.card?.image_name || firstStock.stock_card?.card?.image_name || null;
   };
 
 
@@ -288,7 +288,7 @@ export default function MarketPage() {
                       <Title level={5} className="mb-4">Cards ({selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
                       <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
                         {selectedProduct.product_stock_card?.map(pc => {
-                          const card = pc.stock_card?.cards || pc.card;
+                          const card = pc.stock_card?.card || pc.card;
                           return (
                             <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
                               <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
@@ -314,7 +314,7 @@ export default function MarketPage() {
                                     ราคาเริ่มต้น: <span className="text-blue-500 font-medium">฿{pc.market_price.toLocaleString()}</span>
                                   </div>
                                 )}
-                                <Link href={`/market/cards/${btoa(String(card?.card_id))}`}>
+                                <Link href={`/market/cards/${card?.card_id}`}>
                                   <Button type="link" size="small" className="p-0 h-auto text-[10px]" icon={<LineChartOutlined />}>ข้อมูลตลาด</Button>
                                 </Link>
                               </div>

@@ -16,7 +16,7 @@ export interface CardFilters {
 export const getCards = async (
   page: number = 1,
   limit: number = 20,
-  filters?: CardFilters
+  filters?: CardFilters,
 ): Promise<Card[]> => {
   const params = new URLSearchParams();
   params.append("page", page.toString());
@@ -35,12 +35,13 @@ export const getCards = async (
   }
 
   const response = await axiosInstance.get<Card[]>(
-    `/api/v1/cards/?${params.toString()}`
+    `/api/v1/cards/?${params.toString()}`,
   );
   return response.data;
 };
 
-export const getCardById = async (id: number): Promise<Card> => {
+export const getCardById = async (id: string): Promise<Card> => {
+  // Updated
   const response = await axiosInstance.get<Card>(`/api/v1/cards/${id}`);
   return response.data;
 };

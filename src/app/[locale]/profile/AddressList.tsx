@@ -41,7 +41,7 @@ export default function AddressList() {
     queryFn: getAddresses,
   });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteAddress(id);
       message.success(t("success.deleted"));
@@ -51,7 +51,7 @@ export default function AddressList() {
     }
   };
 
-  const handleSetDefault = async (id: number) => {
+  const handleSetDefault = async (id: string) => {
     try {
       await setDefaultAddress(id);
       message.success(t("success.defaultUpdated"));

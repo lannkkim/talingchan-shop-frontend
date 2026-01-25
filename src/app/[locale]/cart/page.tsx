@@ -53,7 +53,8 @@ export default function CartPage() {
 
   // Queries
   // State
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+  // State
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -87,7 +88,7 @@ export default function CartPage() {
 
   // Mutations
   const updateQtyMutation = useMutation({
-    mutationFn: ({ id, qty }: { id: number; qty: number }) =>
+    mutationFn: ({ id, qty }: { id: string; qty: number }) =>
       updateCartQuantity(id, qty),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -95,7 +96,7 @@ export default function CartPage() {
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => removeFromCart(id),
+    mutationFn: (id: string) => removeFromCart(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       message.success(t("removeSuccess"));
@@ -161,7 +162,7 @@ export default function CartPage() {
       onOk: () => {
         checkoutMutation.mutate({
           shipping_address_id: selectedAddressId,
-          payment_type_id: paymentMethod === "qr_promptpay" ? 1 : 1, // Defaulting to 1 for now as per seed
+          payment_type_id: paymentMethod === "qr_promptpay" ? "1" : "1", // Defaulting to "1" for now as per seed
           cart_item_ids: [], // Checkout all items
         });
       },
@@ -217,7 +218,7 @@ export default function CartPage() {
                     const price = Number(product.price_period?.[0]?.price || 0);
                     const firstCard =
                       product.product_stock_card?.[0]?.card ||
-                      product.product_stock_card?.[0]?.stock_card?.cards;
+                      product.product_stock_card?.[0]?.stock_card?.card;
 
                     return (
                       <div

@@ -7,9 +7,9 @@ export const getShopOrders = async (): Promise<Order[]> => {
 };
 
 export const updateTrackingNo = async (
-  orderId: number,
+  orderId: string,
   trackingNo: string,
-  transportationId?: number
+  transportationId?: string,
 ): Promise<void> => {
   await axiosInstance.put(`/api/v1/orders/${orderId}/tracking`, {
     tracking_no: trackingNo,
@@ -19,7 +19,7 @@ export const updateTrackingNo = async (
 
 export const getTransportations = async (): Promise<Transportation[]> => {
   const response = await axiosInstance.get<Transportation[]>(
-    "/api/v1/transportations"
+    "/api/v1/transportations",
   );
   return response.data;
 };

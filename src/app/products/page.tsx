@@ -50,7 +50,7 @@ export default function ProductsPage() {
   [user]);
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteProduct(id),
+    mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
       msg.success("Product deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["products", "me"] });
@@ -61,7 +61,7 @@ export default function ProductsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Product> }) => updateProduct(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) => updateProduct(id, data),
     onSuccess: () => {
       msg.success("Product updated successfully");
       setIsEditModalOpen(false);
@@ -84,7 +84,7 @@ export default function ProductsPage() {
       : "/images/card-placeholder.png";
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     modal.confirm({
       title: 'Are you sure you want to delete this product?',
       icon: <ExclamationCircleOutlined />,
@@ -136,7 +136,7 @@ export default function ProductsPage() {
         return (
           <div className="space-y-1">
             {displayText?.map(pc => {
-              const card = pc.stock_card?.cards || pc.card;
+              const card = pc.stock_card?.card || pc.card;
               return (
                 <div key={pc.product_stock_card_id} className="text-sm">
                   <Text>{card?.name || `Card #${pc.stock_card?.card_id || pc.product_stock_card_id}`}</Text>
@@ -301,7 +301,7 @@ export default function ProductsPage() {
                   <Title level={5} className="mb-4">Cards ({selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} items)</Title>
                   <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
                     {selectedProduct.product_stock_card?.map(pc => {
-                      const card = pc.stock_card?.cards || pc.card;
+                      const card = pc.stock_card?.card || pc.card;
                       return (
                         <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
                           <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">

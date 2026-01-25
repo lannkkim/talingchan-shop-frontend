@@ -85,7 +85,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
           <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
             {product.product_stock_card?.map((pc) => {
-              const card = pc.card || pc.stock_card?.cards;
+              const card = pc.card || pc.stock_card?.card;
               return (
                 <div
                   key={pc.product_stock_card_id}

@@ -66,7 +66,7 @@ export default function PageHeader({
   const cartItems = data || [];
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => removeFromCart(id),
+    mutationFn: (id: string) => removeFromCart(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
@@ -173,7 +173,7 @@ export default function PageHeader({
               const price = Number(product?.price_period?.[0]?.price || 0);
               const firstCard =
                 product?.product_stock_card?.[0]?.card ||
-                product?.product_stock_card?.[0]?.stock_card?.cards;
+                product?.product_stock_card?.[0]?.stock_card?.card;
 
               return (
                 <div

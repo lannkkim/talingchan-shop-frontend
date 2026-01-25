@@ -1,5 +1,5 @@
 export interface Card {
-  card_id: number;
+  card_id: string; // UUID
   name: string;
   type: string;
   print: string;

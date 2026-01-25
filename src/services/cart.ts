@@ -2,15 +2,15 @@ import axios from "@/lib/axios";
 import { Product } from "@/types/product";
 
 export interface CartItem {
-  cart_id: number;
-  user_id: number;
-  product_id: number;
+  cart_id: string;
+  user_id: string;
+  product_id: string;
   quantity: number;
   product: Product;
 }
 
 export interface AddToCartInput {
-  product_id: number;
+  product_id: string;
   quantity: number;
 }
 
@@ -25,29 +25,29 @@ export const addToCart = async (input: AddToCartInput): Promise<CartItem> => {
 };
 
 export const updateCartQuantity = async (
-  id: number,
-  quantity: number
+  id: string,
+  quantity: number,
 ): Promise<CartItem> => {
   const response = await axios.put(`/api/v1/cart/${id}`, { quantity });
   return response.data;
 };
 
-export const removeFromCart = async (id: number): Promise<void> => {
+export const removeFromCart = async (id: string): Promise<void> => {
   await axios.delete(`/api/v1/cart/${id}`);
 };
 
 export interface CheckoutInput {
-  shipping_address_id: number;
-  payment_type_id: number;
-  cart_item_ids?: number[];
+  shipping_address_id: string;
+  payment_type_id: string;
+  cart_item_ids?: string[];
 }
 
 export interface CheckoutResponse {
-  order_ids: number[];
+  order_ids: string[];
 }
 
 export const checkout = async (
-  input: CheckoutInput
+  input: CheckoutInput,
 ): Promise<CheckoutResponse> => {
   const response = await axios.post("/api/v1/checkout", input);
   return response.data;

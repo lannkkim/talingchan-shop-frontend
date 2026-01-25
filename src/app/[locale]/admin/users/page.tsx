@@ -13,7 +13,7 @@ export default function UsersManagementPage() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {

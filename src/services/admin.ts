@@ -1,19 +1,19 @@
 import axiosInstance from "@/lib/axios";
 
 export interface AdminUser {
-  users_id: number;
+  users_id: string; // Updated
   username: string;
   email: string;
   first_name: string;
   last_name: string;
   role: {
-    roles_id: number;
+    roles_id: string; // Updated
     name: string;
   } | null;
 }
 
 export interface AdminRole {
-  roles_id: number;
+  roles_id: string; // Updated
   name: string;
   description: string;
   role_permissions: {
@@ -24,7 +24,7 @@ export interface AdminRole {
 }
 
 export interface Permission {
-  permissions_id: number;
+  permissions_id: string; // Updated
   name: string;
   description: string;
 }
@@ -35,7 +35,8 @@ export const adminService = {
     return response.data;
   },
 
-  updateUserRole: async (userId: number, roleId: number) => {
+  updateUserRole: async (userId: string, roleId: string) => {
+    // Updated
     await axiosInstance.put(`/api/v1/auth/admin/users/${userId}/role`, {
       role_id: roleId,
     });
@@ -47,10 +48,6 @@ export const adminService = {
   },
 
   createRole: async (name: string, description: string) => {
-    // Re-using existing endpoint or admin endpoint?
-    // Admin endpoint doesn't exist for create role in my backend impl yet?
-    // Ah, `ctrl.CreateRole` exists and is mapped to `/api/v1/auth/roles`.
-    // Let's use that.
     const response = await axiosInstance.post("/api/v1/auth/roles", {
       name,
       description,
@@ -63,7 +60,8 @@ export const adminService = {
     return response.data;
   },
 
-  updateRolePermissions: async (roleId: number, permissions: string[]) => {
+  updateRolePermissions: async (roleId: string, permissions: string[]) => {
+    // Updated
     await axiosInstance.put(`/api/v1/auth/admin/roles/${roleId}/permissions`, {
       permissions,
     });

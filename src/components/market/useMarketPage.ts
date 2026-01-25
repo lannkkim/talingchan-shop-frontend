@@ -29,7 +29,7 @@ export function useMarketPage() {
     if (!firstStock) return "/images/card-placeholder.png";
 
     const imageName =
-      firstStock.card?.image_name || firstStock.stock_card?.cards?.image_name;
+      firstStock.card?.image_name || firstStock.stock_card?.card?.image_name;
     return getCardImageUrl(imageName);
   };
 

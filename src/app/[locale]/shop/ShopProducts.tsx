@@ -74,6 +74,54 @@ export default function ShopProducts() {
     });
   };
 
+  const handleOpenSale = (product: Product) => {
+      modal.confirm({
+        title: "Open Sale",
+        content: `Are you sure you want to start selling "${product.name}" again?`,
+        okText: "Yes, Open Sale",
+        cancelText: "Cancel",
+        onOk: async () => {
+          try {
+             // Just setting to active. Price remains same.
+            await updateProduct(product.product_id, { status: "active" });
+            message.success("Product is now active");
+            refetch();
+          } catch (err: any) {
+            message.error(err.message || "Failed to open sale");
+          }
+        },
+      });
+  };
+
+  const handleDelete = (product: Product) => {
+    modal.confirm({
+        title: "Delete Product",
+        content: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+        okText: "Yes, Delete",
+        okType: 'danger',
+        cancelText: "Cancel",
+        onOk: async () => {
+            // Need deleteProduct service but current import only has updateProduct/getProducts.
+            // Assuming strict separation, I might need to import it or implement it?
+            // Wait, import at top only has getProducts, updateProduct.
+            // I should check if deleteProduct exists in services/product
+             try {
+                // Dynamic import or assume it handles Delete via API? 
+                // Product service usually has delete.
+                // Re-checking imports... 
+                // Need to update import first.
+                // For now, I'll place placeholder and fix imports in next step.
+                 const { deleteProduct } = await import("@/services/product");
+                 await deleteProduct(product.product_id);
+                 message.success("Product deleted successfully");
+                 refetch();
+            } catch (err: any) {
+                message.error(err.message || "Failed to delete product");
+            }
+        }
+    });
+  };
+
   const handleRenewSuccess = () => {
     refetch();
     setIsRenewModalOpen(false);
@@ -255,7 +303,7 @@ export default function ShopProducts() {
                 </Title>
                 <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
                   {selectedProduct.product_stock_card?.map((pc) => {
-                    const card = pc.stock_card?.cards || pc.card;
+                    const card = pc.stock_card?.card || pc.card;
                     const cardImageUrl = getCardImageUrl(card?.image_name);
                     return (
                       <div
