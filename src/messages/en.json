@@ -3,6 +3,7 @@
     "market": "Market",
     "cards": "Card Info",
     "products": "Buying List",
+    "tradingMarket": "Trading Market",
     "stock": "Card Stock",
     "shop": "Shop",
     "admin": "Admin",
@@ -437,15 +438,82 @@
     "subtitle": "Trading Market - Trade cards with other users",
     "groupBy": "Group by: Symbol",
     "stats": {
-      "products": "Products"
+      "products": "Products",
+      "tradeLists": "Trade Lists"
     },
     "actions": {
       "createTrade": "Create Trade",
-      "filterAndGroup": "Filter & Group"
+      "filterAndGroup": "Filter & Group",
+      "viewWishList": "Wish List"
+    },
+    "tabs": {
+      "browse": "Browse Trades",
+      "myTrades": "My Trades",
+      "allTrades": "All Trades",
+      "tradeList": "Trade List"
     },
     "empty": {
       "title": "No Products Found",
       "description": "There are no products in the trading market at the moment"
+    },
+    "modal": {
+      "createTitle": "Create Trade",
+      "createTitleStep1": "Create Trade - Select Your Offer",
+      "createTitleStep2": "Create Trade - Select Desired Item",
+      "next": "Next",
+      "wishListText": "Wish List / Items you want",
+      "wishListRequired": "Please specify what you want",
+      "create": "Create",
+      "cancel": "Cancel",
+      "tradeProduct": "Product to Trade (Yours)",
+      "tradeProductPlaceholder": "Select your product",
+      "tradeProductRequired": "Please select a product to trade",
+      "wishProduct": "Product to Receive (Others)",
+      "wishProductPlaceholder": "Select desired product",
+      "wishProductRequired": "Please select a product to receive",
+      "cash": "Additional Cash (Baht)",
+      "cashExtra": "Default is 0 if not specified",
+      "note": "Note:",
+      "noteText": "Creating a trade will display your trade offer to others. Interested parties will contact you to complete the exchange.",
+      "wishListTitle": "Items for Exchange",
+      "wishListDescription": "This feature will display the items the owner wants to exchange",
+      "wishListPlaceholder": "Desired items will be displayed here",
+      "selectTradeProduct": "1. Select Product to Trade",
+      "selectWishProduct": "2. Select Desired Product",
+      "searchPlaceholder": "Search products, cards, or ID...",
+      "foundProducts": "Found {count} items",
+      "selected": "✓ Selected",
+      "loadMore": "Load More",
+      "remaining": "items",
+      "noProductsFound": "No products found"
+    },
+    "table": {
+      "id": "ID",
+      "tradeProduct": "Offered Product",
+      "wishProduct": "Desired Product",
+      "cashExtra": "Additional Cash",
+      "createdAt": "Created Date",
+      "actions": "Actions",
+      "total": "Total {total} items",
+      "noData": "No trade lists found"
+    },
+    "confirm": {
+      "deleteTitle": "Confirm Delete",
+      "deleteContent": "Do you want to delete this trade?",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "createSuccess": "Trade created successfully",
+      "deleteSuccess": "Trade deleted successfully",
+      "error": "Error: {error}"
+    },
+    "card": {
+      "quantity": "Quantity {count} cards",
+      "remaining": "Remaining {count} sets",
+      "productDetail": "Product Details",
+      "symbol": "Card Symbol",
+      "productCount": "Product Count"
     }
   }
 }

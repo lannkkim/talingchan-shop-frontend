@@ -95,6 +95,11 @@ export default function PageHeader({
       label: <Link href="/products">{tNav("products")}</Link>,
     },
     {
+      key: "/trading-market",
+      //icon: <ShoppingOutlined />,
+      label: <Link href="/trading-market">{tNav("tradingMarket")}</Link>,
+    },
+    {
       key: "/stock",
       //icon: <DatabaseOutlined />,
       label: <Link href="/stock">{tNav("stock")}</Link>,

@@ -3,6 +3,7 @@
     "market": "ตลาดสินค้า",
     "cards": "ข้อมูลการ์ด",
     "products": "ตั้งรับการ์ด",
+    "tradingMarket": "ตลาดเทรด",
     "stock": "คลังการ์ด",
     "shop": "ร้านค้า",
     "admin": "Admin",
@@ -437,15 +438,82 @@
     "subtitle": "Trading Market - แลกเปลี่ยนการ์ดกับผู้ใช้อื่น",
     "groupBy": "จัดกลุ่มโดย : สัญลักษณ์",
     "stats": {
-      "products": "สินค้า"
+      "products": "สินค้า",
+      "tradeLists": "รายการเทรด"
     },
     "actions": {
       "createTrade": "สร้างการเทรด",
-      "filterAndGroup": "ตัวกรอง และ จัดกลุ่ม"
+      "filterAndGroup": "ตัวกรอง และ จัดกลุ่ม",
+      "viewWishList": "ของที่ต้องการ"
+    },
+    "tabs": {
+      "browse": "เรียกดูการเทรด",
+      "myTrades": "การเทรดของฉัน",
+      "allTrades": "รายการเทรดทั้งหมด",
+      "tradeList": "รายการเทรด"
     },
     "empty": {
       "title": "ไม่พบสินค้า",
       "description": "ไม่มีสินค้าในตลาดแลกเปลี่ยนในขณะนี้"
+    },
+    "modal": {
+      "createTitle": "สร้างการเทรด",
+      "createTitleStep1": "สร้างการเทรด - เลือกสินค้าของคุณ",
+      "createTitleStep2": "สร้างการเทรด - เลือกสินค้าที่ต้องการ",
+      "next": "ถัดไป",
+      "wishListText": "สิ่งที่อยากได้ / รายการที่ต้องการ",
+      "wishListRequired": "กรุณาระบุสิ่งที่อยากได้",
+      "create": "สร้าง",
+      "cancel": "ยกเลิก",
+      "tradeProduct": "สินค้าที่ต้องการแลกเปลี่ยน (ของคุณ)",
+      "tradeProductPlaceholder": "เลือกสินค้าของคุณ",
+      "tradeProductRequired": "กรุณาเลือกสินค้าที่ต้องการแลกเปลี่ยน",
+      "wishProduct": "สินค้าที่ต้องการได้รับ (ของคนอื่น)",
+      "wishProductPlaceholder": "เลือกสินค้าที่ต้องการ",
+      "wishProductRequired": "กรุณาเลือกสินค้าที่ต้องการได้รับ",
+      "cash": "จำนวนเงินสดเพิ่มเติม (บาท)",
+      "cashExtra": "ถ้าไม่ใส่จะเป็น 0 บาท",
+      "note": "หมายเหตุ:",
+      "noteText": "การสร้างการเทรดจะแสดงข้อเสนอแลกเปลี่ยนของคุณให้ผู้อื่นเห็น หากมีผู้สนใจจะติดต่อคุณเพื่อทำการแลกเปลี่ยน",
+      "wishListTitle": "สิ่งที่ต้องการแลกเปลี่ยน",
+      "wishListDescription": "ฟีเจอร์นี้จะแสดงรายการสินค้าที่เจ้าของต้องการแลกเปลี่ยน",
+      "wishListPlaceholder": "รายการสินค้าที่ต้องการจะแสดงที่นี่",
+      "selectTradeProduct": "1. เลือกสินค้าที่จะแลก",
+      "selectWishProduct": "2. เลือกสินค้าที่ต้องการ",
+      "searchPlaceholder": "ค้นหาสินค้า การ์ด หรือ ID...",
+      "foundProducts": "พบ {count} รายการ",
+      "selected": "✓ เลือกแล้ว",
+      "loadMore": "โหลดเพิ่มเติม",
+      "remaining": "รายการ",
+      "noProductsFound": "ไม่พบสินค้าที่ค้นหา"
+    },
+    "table": {
+      "id": "ID",
+      "tradeProduct": "สินค้าที่เสนอแลก",
+      "wishProduct": "สินค้าที่ต้องการ",
+      "cashExtra": "เงินสดเพิ่มเติม",
+      "createdAt": "วันที่สร้าง",
+      "actions": "การดำเนินการ",
+      "total": "ทั้งหมด {total} รายการ",
+      "noData": "ไม่พบรายการเทรด"
+    },
+    "confirm": {
+      "deleteTitle": "ยืนยันการลบ",
+      "deleteContent": "คุณต้องการลบการเทรดนี้หรือไม่?",
+      "delete": "ลบ",
+      "cancel": "ยกเลิก"
+    },
+    "messages": {
+      "createSuccess": "สร้างการเทรดสำเร็จ",
+      "deleteSuccess": "ลบการเทรดสำเร็จ",
+      "error": "เกิดข้อผิดพลาด: {error}"
+    },
+    "card": {
+      "quantity": "จำนวน {count} ใบ",
+      "remaining": "เหลือ {count} ชุด",
+      "productDetail": "รายละเอียดสินค้า",
+      "symbol": "สัญลักษณ์การ์ด",
+      "productCount": "จำนวนสินค้า"
     }
   }
 }
