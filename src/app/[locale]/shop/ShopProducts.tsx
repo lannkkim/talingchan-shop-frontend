@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts } from "@/services/product";
+import { getMyProducts } from "@/services/product";
 import {
   Table,
   Button,
@@ -22,7 +22,7 @@ import {
   StopOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { getCardImageUrl } from "@/utils/image";
@@ -46,8 +46,8 @@ export default function ShopProducts() {
     isLoading,
     refetch,
   } = useQuery<Product[]>({
-    queryKey: ["products"],
-    queryFn: () => getProducts(),
+    queryKey: ["myProducts"],
+    queryFn: () => getMyProducts(),
   });
 
   // Filter only sell orders

@@ -38,7 +38,7 @@ export interface ProductFilter {
 export const getProducts = async (
   filter?: ProductFilter,
 ): Promise<Product[]> => {
-  const { data } = await axiosInstance.get("/api/v1/products/", {
+  const { data } = await axiosInstance.get("/api/v1/products", {
     params: filter,
   });
   return data;
@@ -47,7 +47,7 @@ export const getProducts = async (
 export const getMyProducts = async (
   filter?: ProductFilter,
 ): Promise<Product[]> => {
-  const { data } = await axiosInstance.get("/api/v1/products/me", {
+  const { data } = await axiosInstance.get("/api/v1/products/my/all", {
     params: filter,
   });
   return data;
@@ -76,7 +76,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
 export const createProduct = async (
   data: CreateProductInput,
 ): Promise<Product> => {
-  const response = await axiosInstance.post<Product>("/api/v1/products/", data);
+  const response = await axiosInstance.post<Product>("/api/v1/products", data);
   return response.data;
 };
 
