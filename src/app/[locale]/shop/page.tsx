@@ -24,18 +24,20 @@ import ShopStockSettings from "./ShopStockSettings";
 import ShopOrders from "./ShopOrders";
 import ShopProducts from "./ShopProducts";
 import Link from "next/link";
+import ShopRegistrationForm from "./ShopRegistrationForm";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 export default function ShopPage() {
   const { user, isAuthenticated, loading: isAuthLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations("Shop");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const {
     data: shopData,
@@ -109,14 +111,50 @@ export default function ShopPage() {
   }
 
   if (isError || !shopData) {
+    // If user is just a normal user (not shop/admin), show registration landing
+    const isNormalUser = user?.role?.name === "user";
+
+    if (isNormalUser) {
+        if (isRegistering) {
+            return (
+                <Layout className="min-h-screen">
+                    <PageHeader title="Shop Registration" subtitle="สมัครเปิดร้านค้า" onBack={() => setIsRegistering(false)} />
+                    <Content className="container mx-auto max-w-7xl py-8 px-4">
+                        <ShopRegistrationForm />
+                    </Content>
+                </Layout>
+            );
+        }
+
+        return (
+            <Layout className="min-h-screen">
+                <PageHeader title="Shop Management" />
+                <Content className="container mx-auto max-w-7xl py-12 px-4">
+                    <div className="flex flex-col items-center justify-center space-y-8 py-10 bg-white rounded-lg shadow-sm border border-gray-100 max-w-4xl mx-auto">
+                        <ShopOutlined className="text-8xl text-blue-500" />
+                        <div className="text-center space-y-2">
+                             <Title level={2}>ยังไม่มีร้านค้าใช่ไหม?</Title>
+                             <Text className="text-lg text-gray-500 block max-w-lg mx-auto">
+                                เริ่มต้นธุรกิจของคุณกับเราได้ง่ายๆ เพียงสมัครเปิดร้านค้าเพื่อวางขายสินค้าของคุณ
+                             </Text>
+                        </div>
+                        <Button type="primary" size="large" className="h-12 px-8 text-lg bg-blue-600" onClick={() => setIsRegistering(true)}>
+                            สมัครเปิดร้านค้า (Register Shop)
+                        </Button>
+                    </div>
+                </Content>
+            </Layout>
+        );
+    }
+
     return (
       <Layout className="min-h-screen">
         <PageHeader title="Shop Management" />
         <Content className="container mx-auto max-w-7xl py-12 px-4">
           <Result
             status="403"
-            title="คุณยังไม่มีร้านค้า"
-            subTitle="ดูเหมือนว่าบัญชีของคุณยังไม่ได้เปิดใช้งานร้านค้า หรือคุณไม่มีสิทธิ์เข้าถึง"
+            title="คุณไม่มีสิทธิ์เข้าถึง"
+            subTitle="ดูเหมือนว่าคุณไม่มีสิทธิ์เข้าถึงส่วนจัดการร้านค้า"
             extra={
               <Button type="primary" onClick={() => window.location.reload()}>
                 ลองใหม่อีกครั้ง

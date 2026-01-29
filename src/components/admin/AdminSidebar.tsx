@@ -7,6 +7,7 @@ import {
   SafetyCertificateOutlined,
   DashboardOutlined,
   ShoppingOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { Link, usePathname } from "@/navigation";
 import { useTranslations } from "next-intl";
@@ -22,6 +23,7 @@ export default function AdminSidebar() {
     if (pathname.includes("/admin/users")) return "users";
     if (pathname.includes("/admin/roles")) return "roles";
     if (pathname.includes("/admin/products")) return "products";
+    if (pathname.includes("/admin/shops")) return "shops";
     return "dashboard";
   };
 
@@ -45,6 +47,11 @@ export default function AdminSidebar() {
       key: "products",
       icon: <ShoppingOutlined />,
       label: <Link href="/admin/products">{t("products")}</Link>,
+    },
+    {
+      key: "shops",
+      icon: <ShopOutlined />,
+      label: <Link href="/admin/shops">Shops</Link>, // Todo: Add translation
     },
   ];
 

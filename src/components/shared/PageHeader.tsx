@@ -41,12 +41,14 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   backUrl?: string;
+  onBack?: () => void;
 }
 
 export default function PageHeader({
   title,
   subtitle,
   backUrl,
+  onBack,
 }: PageHeaderProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -251,7 +253,14 @@ export default function PageHeader({
       <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
         {/* Logo and Title Section */}
         <div className="flex items-center gap-6">
-          {backUrl ? (
+          {onBack ? (
+            <div
+              onClick={onBack}
+              className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2 cursor-pointer"
+            >
+               <ArrowLeftOutlined style={{ fontSize: "20px" }} />
+            </div>
+          ) : backUrl ? (
             <Link
               href={backUrl}
               className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2"
