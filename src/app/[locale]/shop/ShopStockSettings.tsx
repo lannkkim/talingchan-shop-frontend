@@ -62,10 +62,12 @@ export default function ShopStockSettings({
     <Card className="shadow-sm rounded-xl border-none mt-6">
       <div className="flex items-start justify-between">
         <div className="flex gap-4">
-          <div
-            className={`p-3 rounded-full ${isEnabled ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
-          >
-            <ApiOutlined style={{ fontSize: "24px" }} />
+          <div>
+            <div
+              className={`p-3 rounded-full ${isEnabled ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}
+            >
+              <ApiOutlined style={{ fontSize: "24px" }} />
+            </div>
           </div>
           <div>
             <Title level={4} className="!mb-1">

@@ -8,9 +8,9 @@ import {
   Row,
   Col,
   Upload,
-  message,
   Typography,
   Divider,
+  App,
 } from "antd";
 import {
   UserOutlined,
@@ -34,6 +34,7 @@ interface ShopProfileFormProps {
 export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const t = useTranslations("Shop.form");
 
   useEffect(() => {

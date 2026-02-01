@@ -24,6 +24,8 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
   const [registerForm] = Form.useForm();
   const { message } = App.useApp();
 
+
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   const handleSocialLogin = (provider: string) => {
@@ -199,6 +201,7 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
           >
             <Input prefix={<MailOutlined />} placeholder="Email" />
           </Form.Item>
+
           <div className="flex gap-4">
             <Form.Item
               name="first_name"

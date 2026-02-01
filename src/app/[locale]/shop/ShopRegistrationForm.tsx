@@ -18,6 +18,7 @@ import { UploadOutlined, BankOutlined, ShopOutlined, EnvironmentOutlined } from 
 import { registerShop, getBanks, Bank } from "@/services/shop";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -42,7 +43,19 @@ export default function ShopRegistrationForm() {
       message.error("Failed to load bank list");
     }
   };
-  
+
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user && form) {
+      const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+      if (fullName) {
+        form.setFieldsValue({
+          owner_name: fullName
+        });
+      }
+    }
+  }, [user, form]);
+
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
@@ -52,7 +65,7 @@ export default function ShopRegistrationForm() {
       if (values.shop_email) formData.append("shop_email", values.shop_email);
       if (values.shop_phone) formData.append("shop_phone", values.shop_phone);
       if (values.owner_name) formData.append("owner_name", values.owner_name);
-      
+
       formData.append("bank_id", values.bank_id);
       formData.append("bank_account", values.bank_account);
       if (values.bank_account_name) formData.append("bank_account_name", values.bank_account_name);
@@ -63,7 +76,7 @@ export default function ShopRegistrationForm() {
       }
 
       await registerShop(formData);
-      
+
       modal.success({
         title: "Registration Successful",
         content: "Your shop application has been submitted. Please wait for verification.",
@@ -95,7 +108,7 @@ export default function ShopRegistrationForm() {
 
   return (
     <div className="flex justify-center py-10">
-      <Card 
+      <Card
         className="w-full max-w-3xl shadow-lg border-t-4 border-t-blue-500"
         title={
           <div className="text-center py-4">
@@ -111,9 +124,9 @@ export default function ShopRegistrationForm() {
           requiredMark="optional"
           size="large"
           initialValues={{
-              shop_display: "",
-              shop_email: "",
-              shop_phone: "",
+            shop_display: "",
+            shop_email: "",
+            shop_phone: "",
           }}
         >
           <Divider titlePlacement="left">Shop Information</Divider>
@@ -133,8 +146,8 @@ export default function ShopRegistrationForm() {
               </Form.Item>
             </Col>
             <Col span={12}>
-               <Form.Item name="owner_name" label="Owner Name (Optional)">
-                <Input placeholder="Your full name" />
+              <Form.Item name="owner_name" label="Owner Name">
+                <Input placeholder="Your full name" disabled />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -153,20 +166,20 @@ export default function ShopRegistrationForm() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                 name="bank_id"
-                 label="Bank"
-                 rules={[{ required: true, message: "Please select a bank" }]}
+                name="bank_id"
+                label="Bank"
+                rules={[{ required: true, message: "Please select a bank" }]}
               >
-                 <Select placeholder="Select Bank" showSearch optionFilterProp="children">
-                    {banks.map((bank) => (
-                      <Option key={bank.bank_id} value={bank.bank_id}>
-                         {bank.bank_shortname} - {bank.bank_name}
-                      </Option>
-                    ))}
-                 </Select>
+                <Select placeholder="Select Bank" showSearch optionFilterProp="children">
+                  {banks.map((bank) => (
+                    <Option key={bank.bank_id} value={bank.bank_id}>
+                      {bank.bank_shortname} - {bank.bank_name}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
-             <Col span={12}>
+            <Col span={12}>
               <Form.Item name="bank_branch" label="Branch">
                 <Input placeholder="Bank Branch" prefix={<EnvironmentOutlined />} />
               </Form.Item>

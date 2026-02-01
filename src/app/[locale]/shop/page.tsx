@@ -47,9 +47,7 @@ export default function ShopPage() {
     queryKey: ["myShop"],
     queryFn: getMyShop,
     retry: false,
-    enabled:
-      isAuthenticated &&
-      (user?.role?.name === "shop" || user?.role?.name === "admin"),
+    enabled: isAuthenticated,
   });
 
   const items = [
@@ -110,57 +108,59 @@ export default function ShopPage() {
     );
   }
 
+  if (shopData?.status === "pending_approve") {
+    return (
+      <Layout className="min-h-screen">
+        <PageHeader title="Shop Management" />
+        <Content className="container mx-auto max-w-7xl py-12 px-4">
+          <Result
+            status="info"
+            title="รอการอนุมัติร้านค้า (Waiting for Approval)"
+            subTitle="คำขอเปิดร้านค้าของคุณกำลังอยู่ในระหว่างการตรวจสอบ กรุณารอเจ้าหน้าที่อนุมัติ"
+            extra={
+              <Link href="/">
+                <Button type="primary">กลับสู่หน้าหลัก</Button>
+              </Link>
+            }
+          />
+        </Content>
+      </Layout>
+    );
+  }
+
   if (isError || !shopData) {
-    // If user is just a normal user (not shop/admin), show registration landing
-    const isNormalUser = user?.role?.name === "user";
+    // If user is just a normal user (not shop/admin) AND doesn't have a shopData (implicit from !shopData), show registration landing
+    // But wait, if !shopData, it means 404 or error.
+    // If shopData is present, we already handled pending_approve above.
+    // If shop is approved, it falls through to main render.
 
-    if (isNormalUser) {
-        if (isRegistering) {
-            return (
-                <Layout className="min-h-screen">
-                    <PageHeader title="Shop Registration" subtitle="สมัครเปิดร้านค้า" onBack={() => setIsRegistering(false)} />
-                    <Content className="container mx-auto max-w-7xl py-8 px-4">
-                        <ShopRegistrationForm />
-                    </Content>
-                </Layout>
-            );
-        }
-
-        return (
-            <Layout className="min-h-screen">
-                <PageHeader title="Shop Management" />
-                <Content className="container mx-auto max-w-7xl py-12 px-4">
-                    <div className="flex flex-col items-center justify-center space-y-8 py-10 bg-white rounded-lg shadow-sm border border-gray-100 max-w-4xl mx-auto">
-                        <ShopOutlined className="text-8xl text-blue-500" />
-                        <div className="text-center space-y-2">
-                             <Title level={2}>ยังไม่มีร้านค้าใช่ไหม?</Title>
-                             <Text className="text-lg text-gray-500 block max-w-lg mx-auto">
-                                เริ่มต้นธุรกิจของคุณกับเราได้ง่ายๆ เพียงสมัครเปิดร้านค้าเพื่อวางขายสินค้าของคุณ
-                             </Text>
-                        </div>
-                        <Button type="primary" size="large" className="h-12 px-8 text-lg bg-blue-600" onClick={() => setIsRegistering(true)}>
-                            สมัครเปิดร้านค้า (Register Shop)
-                        </Button>
-                    </div>
-                </Content>
-            </Layout>
-        );
+    if (isRegistering) {
+      return (
+        <Layout className="min-h-screen">
+          <PageHeader title="Shop Registration" subtitle="สมัครเปิดร้านค้า" onBack={() => setIsRegistering(false)} />
+          <Content className="container mx-auto max-w-7xl py-8 px-4">
+            <ShopRegistrationForm />
+          </Content>
+        </Layout>
+      );
     }
 
     return (
       <Layout className="min-h-screen">
         <PageHeader title="Shop Management" />
         <Content className="container mx-auto max-w-7xl py-12 px-4">
-          <Result
-            status="403"
-            title="คุณไม่มีสิทธิ์เข้าถึง"
-            subTitle="ดูเหมือนว่าคุณไม่มีสิทธิ์เข้าถึงส่วนจัดการร้านค้า"
-            extra={
-              <Button type="primary" onClick={() => window.location.reload()}>
-                ลองใหม่อีกครั้ง
-              </Button>
-            }
-          />
+          <div className="flex flex-col items-center justify-center space-y-8 py-10 bg-white rounded-lg shadow-sm border border-gray-100 max-w-4xl mx-auto">
+            <ShopOutlined className="text-8xl text-blue-500" />
+            <div className="text-center space-y-2">
+              <Title level={2}>ยังไม่มีร้านค้าใช่ไหม?</Title>
+              <Text className="text-lg text-gray-500 block max-w-lg mx-auto">
+                เริ่มต้นธุรกิจของคุณกับเราได้ง่ายๆ เพียงสมัครเปิดร้านค้าเพื่อวางขายสินค้าของคุณ
+              </Text>
+            </div>
+            <Button type="primary" size="large" className="h-12 px-8 text-lg bg-blue-600" onClick={() => setIsRegistering(true)}>
+              สมัครเปิดร้านค้า (Register Shop)
+            </Button>
+          </div>
         </Content>
       </Layout>
     );
@@ -170,9 +170,12 @@ export default function ShopPage() {
     <Layout className="min-h-screen">
       <PageHeader
         title="Shop Management"
-        subtitle={`จัดการร้านค้า: ${shopData.shop_profile?.shop_name || ""}`}
       />
       <Content className="container mx-auto max-w-7xl py-6 px-4">
+        <div className="mb-6">
+          <Title level={2}>{shopData.shop_profile?.shop_name || ""}</Title>
+          <Text type="secondary">จัดการร้านค้าของคุณ</Text>
+        </div>
         <Tabs
           defaultActiveKey="1"
           items={items}
