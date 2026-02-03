@@ -1,7 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+).replace(/\/$/, "");
 
 export const getCardImageUrl = (
-  imageName: string | null | undefined
+  imageName: string | null | undefined,
 ): string => {
   return imageName
     ? `${API_URL}/uploads/${
