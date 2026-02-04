@@ -73,8 +73,20 @@ export default function ProductAddForm({
   const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
   const [form] = Form.useForm();
 
+  // Watch all form values to calculate total quantity dynamically
+  const formValues = Form.useWatch([], form);
+
   const isSingle = selectedType?.name === "แยกใบ";
   const isBundle = selectedType?.name === "ประเภทเดี่ยว";
+
+  // Calculate total quantity of all cards
+  const totalCardQuantity = useMemo(() => {
+    if (!selectedCards.length) return 0;
+    return selectedCards.reduce((total, card) => {
+      const qty = form.getFieldValue(`quantity_${card.card_id}`) || 1;
+      return total + Number(qty);
+    }, 0);
+  }, [selectedCards, formValues, form]);
 
   // Auto-fill product name based on card selection
   React.useEffect(() => {
@@ -216,9 +228,9 @@ export default function ProductAddForm({
         })),
         price: values.price
           ? {
-              price: values.price,
-              price_period_ended: values.price_period_ended?.toISOString(),
-            }
+            price: values.price,
+            price_period_ended: values.price_period_ended?.toISOString(),
+          }
           : undefined,
         quantity: values.quantity,
       };
@@ -453,14 +465,14 @@ export default function ProductAddForm({
                     },
                     ...(maxProductQuantity !== undefined
                       ? [
-                          {
-                            type: "number" as const,
+                        {
+                          type: "number" as const,
+                          max: maxProductQuantity,
+                          message: t("basicInfo.errors.maxQuantity", {
                             max: maxProductQuantity,
-                            message: t("basicInfo.errors.maxQuantity", {
-                              max: maxProductQuantity,
-                            }),
-                          },
-                        ]
+                          }),
+                        },
+                      ]
                       : []),
                   ]}
                   help={
@@ -538,9 +550,16 @@ export default function ProductAddForm({
                   : t("selection.setDesc")}
               </Text>
             </div>
-            <Tag color="blue">
-              {t("selection.selected", { count: selectedCards.length })}
-            </Tag>
+            <div className="flex items-center gap-2">
+              <Tag color="blue">
+                {t("selection.selected", { count: selectedCards.length })}
+              </Tag>
+              {!isSingle && (
+                <Tag color="geekblue">
+                  {t("selection.totalItems", { count: totalCardQuantity })}
+                </Tag>
+              )}
+            </div>
           </div>
           <div className="p-6">
             <CardBrowser
@@ -579,7 +598,7 @@ export default function ProductAddForm({
                           placeholder={t("selection.qty")}
                           prefix={
                             <Text type="secondary" className="mr-1 text-xs">
-                              {t("selection.qty")}:
+                              x
                             </Text>
                           }
                         />
@@ -627,7 +646,14 @@ export default function ProductAddForm({
             <Text type="secondary">{t("review.cards")}:</Text>
           </Col>
           <Col span={14}>
-            <Text>{t("review.items", { count: selectedCards.length })}</Text>
+            <Text>
+              {t("review.items", { count: selectedCards.length })}
+              {!isSingle && (
+                <span className="text-gray-400 ml-1">
+                  {t("review.totalItemsSuffix", { count: totalCardQuantity })}
+                </span>
+              )}
+            </Text>
           </Col>
         </Row>
         {form.getFieldValue("price") && (

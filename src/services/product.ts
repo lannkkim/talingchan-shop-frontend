@@ -20,6 +20,11 @@ export interface CreateProductInput {
     price_period_ended?: string;
   };
   quantity?: number;
+  is_auto_extend?: boolean;
+  auto_extend_trigger_min?: number;
+  auto_extend_duration_min?: number;
+  auto_extend_max_count?: number;
+  bid_increment?: number;
 }
 
 export interface ProductFilter {

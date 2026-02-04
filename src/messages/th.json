@@ -305,7 +305,8 @@
         "singleDesc": "เลือกการ์ดที่จะขาย",
         "setDesc": "เลือกการ์ดที่จะจัดชุด",
         "selected": "เลือกแล้ว {count} ใบ",
-        "qty": "จำนวน"
+        "qty": "จำนวน",
+        "totalItems": "รวมทั้งหมด: {count} ใบ"
       },
       "review": {
         "title": "ตรวจสอบข้อมูล",
@@ -318,7 +319,8 @@
         "basePrice": "ราคา",
         "priceUntil": "ราคาใช้ได้ถึง",
         "startedAt": "เริ่มขาย",
-        "endedAt": "สิ้นสุดการขาย"
+        "endedAt": "สิ้นสุดการขาย",
+        "totalItemsSuffix": "(รวมทั้งหมด {count} ใบ)"
       },
       "actions": {
         "back": "ย้อนกลับ",
