@@ -100,7 +100,7 @@ export const FloatingLabelRangePicker: React.FC<
               value={value}
               onChange={onChange}
               onOpenChange={setIsOpen}
-              bordered={false}
+              variant="borderless"
               className="w-full !px-0 !bg-transparent"
               placeholder={isOpen ? placeholder : ["", ""]}
               suffixIcon={null}

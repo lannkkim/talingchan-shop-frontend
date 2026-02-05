@@ -61,7 +61,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
       // Use provided cards and apply search filter if present
       if (filters?.search) {
         const searchLower = filters.search.toLowerCase();
-        return availableCards.filter(card => 
+        return availableCards.filter(card =>
           card.name.toLowerCase().includes(searchLower)
         );
       }
@@ -76,7 +76,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
 
   const handleToggleSelect = (card: CardType) => {
     if (!selectable || !onSelect) return;
-    
+
     if (multiple) {
       const isSelected = selectedCards.find((c) => c.card_id === card.card_id);
       if (isSelected) {
@@ -115,14 +115,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
           const uniqueKey = (card as any).stock_card_id || card.card_id;
           return (
             <Col key={`${uniqueKey}-${index}`} xs={12} sm={8} md={6}>
-              <div 
-                className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${
-                  selectable ? "cursor-pointer" : ""
-                } ${
-                  selectable && isSelected
-                    ? "ring-4 ring-blue-500 ring-offset-2 scale-[1.02]" 
+              <div
+                className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${selectable ? "cursor-pointer" : ""
+                  } ${selectable && isSelected
+                    ? "ring-1 ring-primary ring-offset-1 scale-[1.02]"
                     : "hover:scale-[1.01]"
-                }`}
+                  }`}
                 onClick={() => handleToggleSelect(card)}
               >
                 <CardItem card={card} />

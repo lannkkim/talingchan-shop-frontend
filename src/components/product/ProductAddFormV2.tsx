@@ -19,7 +19,7 @@ import {
 } from "@/services/type";
 import { Card as CardType } from "@/types/card";
 import { getCardImageUrl } from "@/utils/image";
-import { ArrowRightOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, DeleteOutlined, PlusOutlined, DownOutlined, RightOutlined, CloseOutlined } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
@@ -36,6 +36,7 @@ import {
   Checkbox,
   DatePicker,
   Switch,
+  Radio,
 } from "antd";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
@@ -106,7 +107,7 @@ interface ProductAddFormV2Props {
   onSuccess?: () => void;
 }
 
-const SellSummary = ({ form }: { form: any }) => {
+const SellSummary = ({ form, onRemove }: { form: any, onRemove?: (index: number) => void }) => {
   const items = Form.useWatch("items", form) || [];
 
   // Calculate totals
@@ -114,24 +115,64 @@ const SellSummary = ({ form }: { form: any }) => {
   const totalPrice = items.reduce((acc: number, item: any) => acc + ((Number(item?.quantity) || 0) * (Number(item?.price) || 0)), 0);
 
   return (
-    <div className="space-y-2">
-      <Title level={5} className="!mb-2 text-sm">สรุปยอดรวม</Title>
-      <div className="flex justify-between text-sm">
-        <Text type="secondary">จำนวนสินค้าทั้งหมด</Text>
-        <Text strong>{totalQty.toLocaleString()} ชิ้น</Text>
+    <div className="space-y-4">
+      <div>
+        <Title level={5} className="!mb-2 text-sm">รายการสินค้า</Title>
+        <div className="bg-white p-3 rounded border border-gray-200 space-y-2 text-xs">
+          {items.map((item: any, idx: number) => {
+            const qty = Number(item?.quantity || 0);
+            const price = Number(item?.price || 0);
+            const subtotal = qty * price;
+
+            return (
+              <div key={idx} className="pb-2 last:pb-0 border-b border-gray-100 last:border-0">
+                <div className="flex justify-between items-start gap-2 mb-1">
+                  <span className="font-bold truncate flex-1">{idx + 1}. {item?.name || "สินค้าใหม่"}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-gray-900 whitespace-nowrap">{subtotal.toLocaleString()} THB</span>
+                    {onRemove && items.length > 1 && (
+                      <Button
+                        type="text"
+                        danger
+                        icon={<CloseOutlined className="!text-[10px]" />}
+                        className="!w-5 !h-5 p-0 flex items-center justify-center hover:bg-red-50"
+                        onClick={() => onRemove(idx)}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between pl-3 text-gray-500">
+                  <span>ราคา/ชิ้น: {price.toLocaleString()}</span>
+                  <span>จำนวน: x{qty.toLocaleString()}</span>
+                </div>
+              </div>
+            );
+          })}
+          {items.length === 0 && (
+            <div className="text-center py-2 text-gray-400">ยังไม่มีรายการสินค้า</div>
+          )}
+        </div>
       </div>
-      <div className="flex justify-between text-sm">
-        <Text type="secondary">ราคารวมโดยประมาณ</Text>
-        <Text strong className="text-green-600">{totalPrice.toLocaleString()} THB</Text>
-      </div>
-      <div className="text-xs text-gray-400 mt-2 text-center">
-        * ราคานี้ยังไม่รวมค่าธรรมเนียม
+
+      <div className="pt-2 border-t border-dashed border-gray-300">
+        <Title level={5} className="!mb-2 text-sm">สรุปยอดรวม</Title>
+        <div className="flex justify-between text-sm">
+          <Text type="secondary">จำนวนสินค้าทั้งสิ้น</Text>
+          <Text strong>{totalQty.toLocaleString()} ชิ้น</Text>
+        </div>
+        <div className="flex justify-between text-sm">
+          <Text type="secondary">ราคารวมโดยประมาณ</Text>
+          <Text strong className="text-green-600 text-base">{totalPrice.toLocaleString()} THB</Text>
+        </div>
+        <div className="text-xs text-gray-400 mt-2 text-center">
+          * ราคานี้ยังไม่รวมค่าธรรมเนียมการขาย
+        </div>
       </div>
     </div>
   );
 };
 
-const AuctionSummary = ({ form }: { form: any }) => {
+const AuctionSummary = ({ form, onRemove }: { form: any, onRemove?: (index: number) => void }) => {
   const items = Form.useWatch("items", form) || [];
   const startDate = Form.useWatch("auction_start_date", form);
   const endDate = Form.useWatch("auction_end_date", form);
@@ -189,7 +230,18 @@ const AuctionSummary = ({ form }: { form: any }) => {
         <div className="bg-white p-3 rounded border border-gray-200 espacio-y-2 text-xs">
           {items.map((item: any, idx: number) => (
             <div key={idx} className="mb-2 pb-2 last:mb-0 last:pb-0 border-b border-gray-100 last:border-0">
-              <div className="font-bold truncate mb-1">{idx + 1}. {item?.name || "สินค้าใหม่"}</div>
+              <div className="flex justify-between items-start gap-2 mb-1">
+                <span className="font-bold truncate flex-1">{idx + 1}. {item?.name || "สินค้าใหม่"}</span>
+                {onRemove && items.length > 1 && (
+                  <Button
+                    type="text"
+                    danger
+                    icon={<CloseOutlined className="!text-[10px]" />}
+                    className="!w-5 !h-5 p-0 flex items-center justify-center hover:bg-red-50"
+                    onClick={() => onRemove(idx)}
+                  />
+                )}
+              </div>
               <div className="flex justify-between pl-2">
                 <span className="text-gray-500">ราคาเริ่มต้น:</span>
                 <span>{Number(item?.price || 0).toLocaleString()}</span>
@@ -239,41 +291,36 @@ export default function ProductAddFormV2({
   // State for Multi-Product Support
   const [selectedCardsMap, setSelectedCardsMap] = useState<Record<number, CardType[]>>({});
   const [activeFieldIndex, setActiveFieldIndex] = useState<number>(0);
-  const selectedCards = selectedCardsMap[activeFieldIndex] || [];
-  const [saleType, setSaleType] = useState<"sell" | "auction">("sell");
+  const [expandedIndexes, setExpandedIndexes] = useState<Set<number>>(new Set([0]));
   const [form] = Form.useForm();
+  const removeFnRef = React.useRef<any>(null);
+  const items = Form.useWatch("items", form);
+  const saleType = Form.useWatch("saleType", form) || "sell";
 
-  // Queries (Moved up to fix scoping)
-  const { data: types = [], isLoading: loadingTypes } = useQuery({
+  const toggleExpand = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setExpandedIndexes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCardClick = (index: number) => {
+    setActiveFieldIndex(index);
+    setExpandedIndexes(prev => new Set(prev).add(index));
+  };
+  const selectedCards = selectedCardsMap[activeFieldIndex] || [];
+
+  // Queries
+  const { data: types = [] } = useQuery({
     queryKey: ["types"],
     queryFn: getTypes,
   });
-
-  const { data: transactionTypes = [] } = useQuery({
-    queryKey: ["transactionTypes"],
-    queryFn: getTransactionTypes,
-  });
-
-  const { data: sellTypes = [] } = useQuery({
-    queryKey: ["sellTypes"],
-    queryFn: getSellTypes,
-  });
-
-  const { data: buyTypes = [] } = useQuery({
-    queryKey: ["buyTypes"],
-    queryFn: getBuyTypes,
-  });
-
-  // Watch the active product type
-  const activeTypeId = Form.useWatch(['items', activeFieldIndex, 'type_id'], form);
-
-  // Derive Type info from the active item
-  const selectedType = useMemo(() =>
-    types.find(t => t.product_type_id === activeTypeId) || null
-    , [types, activeTypeId]);
-
-  const isSingle = selectedType?.name === "แยกใบ";
-  const isBundle = selectedType?.name === "ประเภทเดี่ยว";
 
   // Resizable Sider State
   const [siderWidth, setSiderWidth] = useState(360);
@@ -305,6 +352,25 @@ export default function ProductAddFormV2({
     };
   }, [resize, stopResizing]);
 
+  const { data: transactionTypes = [] } = useQuery({
+    queryKey: ["transactionTypes"],
+    queryFn: getTransactionTypes,
+  });
+
+  const { data: sellTypes = [] } = useQuery({
+    queryKey: ["sellTypes"],
+    queryFn: getSellTypes,
+  });
+
+  const { data: buyTypes = [] } = useQuery({
+    queryKey: ["buyTypes"],
+    queryFn: getBuyTypes,
+  });
+
+  const productCategory = Form.useWatch(['items', activeFieldIndex, 'product_category'], form);
+  const isSingle = productCategory === "single";
+  const isBundle = productCategory === "bundle";
+
   // Auto-fill product name based on card selection
   React.useEffect(() => {
     if (selectedCards.length > 0) {
@@ -325,6 +391,15 @@ export default function ProductAddFormV2({
       }
     }
   }, [selectedCards, isSingle, isBundle, form, activeFieldIndex]);
+
+  // Reset card quantities when switching to isSingle
+  useEffect(() => {
+    if (isSingle && selectedCards.length > 0) {
+      selectedCards.forEach(card => {
+        form.setFieldValue(['items', activeFieldIndex, `quantity_${card.card_id}`], 1);
+      });
+    }
+  }, [isSingle, selectedCards, form, activeFieldIndex]);
 
   // Fetch shop profile for stock check (only for sell orders)
   const { data: shopProfile } = useQuery({
@@ -487,10 +562,18 @@ export default function ProductAddFormV2({
           itemEnd = e?.toISOString();
         }
 
+        // Resolve Product Type Code
+        const distinctCardIds = new Set(cards.map(c => c.card_id));
+        let resolvedCode = "single";
+        if (item.product_category === "bundle") {
+          resolvedCode = distinctCardIds.size > 1 ? "deck" : "plural";
+        }
+        const resolvedTypeId = types.find(t => t.code === resolvedCode)?.product_type_id;
+
         return {
           name: item.name,
           detail: item.detail,
-          type_id: item.type_id,
+          type_id: resolvedTypeId || item.type_id,
           transaction_type_id: transactionTypeId,
           sell_type_id: sellTypeId,
           buy_type_id: buyTypeId,
@@ -523,10 +606,10 @@ export default function ProductAddFormV2({
     }
   };
 
-  const handleRemoveCard = (cardId: string) => {
-    const currentCards = selectedCardsMap[activeFieldIndex] || [];
+  const handleRemoveCard = (cardId: string, itemIndex: number) => {
+    const currentCards = selectedCardsMap[itemIndex] || [];
     const newCards = currentCards.filter((c) => c.card_id !== cardId);
-    setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: newCards }));
+    setSelectedCardsMap(prev => ({ ...prev, [itemIndex]: newCards }));
   };
 
   const typeOptions = useMemo(() => {
@@ -555,19 +638,11 @@ export default function ProductAddFormV2({
           layout="vertical"
           preserve={true}
           initialValues={{
-            items: [{ bid_increment: 10, quantity: 1 }],
+            items: [{ bid_increment: 10, quantity: 1, product_category: "single" }],
             saleType: "sell"
           }}
-          onValuesChange={(changedValues) => {
-            if (changedValues.saleType) {
-              setSaleType(changedValues.saleType);
-            }
-            if (isBundle && selectedCards.length > 0) {
-              // Check if it's a quantity update
-              // Logic simplified: we might need to verify which item updated
-              // But since we use useWatch/useEffect for name, maybe we don't need this onValuesChange here?
-              // Let's keep it safe.
-            }
+          onValuesChange={() => {
+            // No need to manually setSaleType, useWatch handles it
           }}
           className="uppercase-labels h-full"
         >
@@ -601,32 +676,16 @@ export default function ProductAddFormV2({
                     className="!mb-6 p-4 rounded-lg"
                     name="saleType"
                   >
-                    <div className="flex flex-row gap-6 mt-2">
-                      <Checkbox
-                        checked={saleType === "sell"}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSaleType("sell");
-                            form.setFieldValue("saleType", "sell");
-                          }
-                        }}
-                        className="scale-110"
-                      >
-                        <span className="font-medium text-gray-700">ตั้งขาย</span>
-                      </Checkbox>
-                      <Checkbox
-                        checked={saleType === "auction"}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSaleType("auction");
-                            form.setFieldValue("saleType", "auction");
-                          }
-                        }}
-                        className="scale-110"
-                      >
-                        <span className="font-medium text-gray-700">ประมูล</span>
-                      </Checkbox>
-                    </div>
+                    <Radio.Group className="w-full">
+                      <div className="flex flex-row gap-8 mt-2">
+                        <Radio value="sell">
+                          <span className="font-medium text-gray-700">ตั้งขาย</span>
+                        </Radio>
+                        <Radio value="auction">
+                          <span className="font-medium text-gray-700">ประมูล</span>
+                        </Radio>
+                      </div>
+                    </Radio.Group>
                   </Form.Item>
 
                   {/* Global Auction Settings */}
@@ -666,153 +725,202 @@ export default function ProductAddFormV2({
 
                 {/* Product Items List */}
                 <Form.List name="items">
-                  {(fields, { add, remove }) => (
-                    <div className="space-y-6">
-                      {fields.map((field, index) => {
-                        const isActive = index === activeFieldIndex;
+                  {(fields, { add, remove }) => {
+                    removeFnRef.current = remove;
+                    return (
+                      <div className="space-y-6">
+                        {fields.map((field, index) => {
+                          const isActive = index === activeFieldIndex;
+                          const isExpanded = expandedIndexes.has(index);
 
-                        return (
-                          <Card
-                            key={field.key}
-                            className={`border transition-all duration-200 ${isActive ? 'border-black shadow-md ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'}`}
-                            onClick={() => setActiveFieldIndex(index)}
-                            styles={{ body: { padding: '16px' } }}
-                          >
-                            <div className="flex justify-between items-center mb-4">
-                              <Title level={5} className="!mb-0 text-sm">สินค้าชุดที่ {index + 1}</Title>
-                              {fields.length > 1 && (
-                                <Button
-                                  type="text"
-                                  danger
-                                  icon={<DeleteOutlined />}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    remove(field.name);
-                                    setSelectedCardsMap(prev => {
-                                      const newMap: Record<number, CardType[]> = {};
-                                      Object.keys(prev).forEach(k => {
-                                        const kNum = Number(k);
-                                        if (kNum < index) newMap[kNum] = prev[kNum];
-                                        if (kNum > index) newMap[kNum - 1] = prev[kNum];
-                                      });
-                                      return newMap;
-                                    });
-                                    if (activeFieldIndex >= index && activeFieldIndex > 0) {
-                                      setActiveFieldIndex(activeFieldIndex - 1);
-                                    } else if (activeFieldIndex === index) {
-                                      setActiveFieldIndex(0);
-                                    }
-                                  }}
-                                />
-                              )}
-                            </div>
-
-                            {/* Product Type (Per Item) */}
-                            <Form.Item
-                              name={[field.name, "type_id"]}
-                              label="ประเภทสินค้า"
-                              rules={[{ required: true, message: "Required" }]}
+                          return (
+                            <Card
+                              key={field.key}
+                              className={`border transition-all duration-200 ${isActive ? 'border-black shadow-md ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'}`}
+                              onClick={() => handleCardClick(index)}
+                              styles={{ body: { padding: '16px' } }}
                             >
-                              <Select placeholder="เลือกประเภท" options={typeOptions} />
-                            </Form.Item>
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => toggleExpand(e, index)}>
+                                  {isExpanded ? <DownOutlined className="text-[10px]" /> : <RightOutlined className="text-[10px]" />}
+                                  <Title level={5} className="!mb-0 text-sm">สินค้าชุดที่ {index + 1}</Title>
 
-                            {/* Selected Cards Display */}
-                            <Form.Item label="รายการสินค้า" required>
-                              <div className={`border-2 border-dashed rounded-lg p-4 text-center min-h-[100px] flex flex-col items-center justify-center cursor-pointer transition-colors ${isActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                                {(selectedCardsMap[index] || []).length > 0 ? (
-                                  <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 w-full">
-                                    {(selectedCardsMap[index] || []).map(card => (
-                                      <div key={card.card_id} className="relative group">
-                                        <div className="relative aspect-[3/4] w-full rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                                          <Image
-                                            src={getCardImageUrl(card.image_name)}
-                                            className="w-full h-full object-cover"
-                                            preview={false}
-                                          />
-                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                          <Button
-                                            size="small"
-                                            type="text"
-                                            danger
-                                            icon={<DeleteOutlined />}
-                                            className="absolute top-1 right-1 bg-white/80 hover:bg-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleRemoveCard(card.card_id);
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="text-center mt-2">
-                                          <div className="text-xs font-bold truncate">{card.name}</div>
-                                          <div className="text-[10px] text-gray-500">
-                                            <Form.Item shouldUpdate noStyle>
-                                              {({ getFieldValue }) => {
-                                                const qty = getFieldValue(['items', index, `quantity_${card.card_id}`]) || 1;
-                                                return `x ${qty}`;
-                                              }}
-                                            </Form.Item>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <Text type="secondary" className="text-xs">
-                                    {isActive ? "เลือกการ์ดจากด้านขวา" : "คลิกเพื่อเลือกสินค้า"}
-                                  </Text>
-                                )}
+                                  {!isExpanded && (
+                                    <div className="ml-2 flex items-center gap-2">
+                                      <Form.Item shouldUpdate noStyle>
+                                        {({ getFieldValue }) => {
+                                          const name = getFieldValue(['items', index, 'name']);
+                                          const price = getFieldValue(['items', index, 'price']);
+                                          const qty = getFieldValue(['items', index, 'quantity']);
+                                          const cardsCount = (selectedCardsMap[index] || []).length;
+
+                                          return (
+                                            <Text type="secondary" className="text-[10px] italic truncate max-w-[150px]">
+                                              {name || (cardsCount > 0 ? `การ์ด ${cardsCount} ใบ` : "ยังไม่ได้ระบุ")}
+                                              {price ? ` - ${price} ${qty > 1 ? `x ${qty}` : ""}` : ""}
+                                            </Text>
+                                          );
+                                        }}
+                                      </Form.Item>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {fields.length > 1 && (
+                                    <Button
+                                      type="text"
+                                      danger
+                                      icon={<CloseOutlined />}
+                                      size="small"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        remove(field.name);
+                                        setSelectedCardsMap(prev => {
+                                          const newMap: Record<number, CardType[]> = {};
+                                          Object.keys(prev).forEach(k => {
+                                            const kNum = Number(k);
+                                            if (kNum < index) newMap[kNum] = prev[kNum];
+                                            if (kNum > index) newMap[kNum - 1] = prev[kNum];
+                                          });
+                                          return newMap;
+                                        });
+                                        if (activeFieldIndex >= index && activeFieldIndex > 0) {
+                                          setActiveFieldIndex(activeFieldIndex - 1);
+                                        } else if (activeFieldIndex === index) {
+                                          setActiveFieldIndex(0);
+                                        }
+                                        setExpandedIndexes(prev => {
+                                          const newSet = new Set();
+                                          prev.forEach(i => {
+                                            if (i < index) newSet.add(i);
+                                            if (i > index) newSet.add(i - 1);
+                                          });
+                                          return newSet as Set<number>;
+                                        });
+                                      }}
+                                    />
+                                  )}
+                                </div>
                               </div>
-                            </Form.Item>
 
-                            {/* Name */}
-                            <Form.Item name={[field.name, "name"]} label="ชื่อสินค้า" rules={[{ required: true }]}>
-                              <FloatingLabelInput label="ชื่อสินค้า" disabled={isSingle && isActive} />
-                            </Form.Item>
+                              {isExpanded && (
+                                <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
 
-                            {/* Quantity */}
-                            <Form.Item name={[field.name, "quantity"]} label="จำนวนสินค้า" rules={[{ required: true }]} initialValue={1}>
-                              <FloatingLabelInput label="จำนวนสินค้า" type="number" min={1} />
-                            </Form.Item>
+                                  {/* Product Category (Simplified UI) */}
+                                  <Form.Item
+                                    name={[field.name, "product_category"]}
+                                    label="ประเภทสินค้า"
+                                    rules={[{ required: true, message: "Required" }]}
+                                  >
+                                    <Select placeholder="เลือกประเภท">
+                                      <Select.Option value="single">ใบเดี่ยว (Single)</Select.Option>
+                                      <Select.Option value="bundle">โครง / ชุด (Deck / Set)</Select.Option>
+                                    </Select>
+                                  </Form.Item>
 
-                            <Divider className="!my-4" />
+                                  {/* Selected Cards Display */}
+                                  <Form.Item label="รายการสินค้า" required>
+                                    <div className={`border-2 border-dashed rounded-lg p-4 text-center min-h-[100px] flex flex-col items-center justify-center cursor-pointer transition-colors ${isActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                                      {(selectedCardsMap[index] || []).length > 0 ? (
+                                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 w-full">
+                                          {(selectedCardsMap[index] || []).map(card => (
+                                            <div key={card.card_id} className="relative group">
+                                              <div className="relative aspect-[3/4] w-full">
+                                                <div className="w-full h-full rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                                  <Image
+                                                    src={getCardImageUrl(card.image_name)}
+                                                    className="w-full h-full object-cover"
+                                                    preview={false}
+                                                  />
+                                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                                </div>
+                                                <Button
+                                                  size="small"
+                                                  type="primary"
+                                                  danger
+                                                  shape="circle"
+                                                  icon={<CloseOutlined className="text-[10px]" />}
+                                                  className="absolute -top-1.5 -right-1.5 !w-5 !h-5 flex items-center justify-center p-0 shadow-md z-20 border-white border-2"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemoveCard(card.card_id, index);
+                                                  }}
+                                                />
+                                              </div>
+                                              <div className="text-center mt-2 flex flex-col items-center gap-1">
+                                                <div className="text-xs font-bold truncate max-w-full">{card.name}</div>
+                                                <div className="text-[10px] text-gray-500">
+                                                  <Form.Item shouldUpdate noStyle>
+                                                    {({ getFieldValue }) => {
+                                                      const qty = getFieldValue(['items', index, `quantity_${card.card_id}`]) || 1;
+                                                      return `x ${qty}`;
+                                                    }}
+                                                  </Form.Item>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <Text type="secondary" className="text-xs">
+                                          {isActive ? "เลือกการ์ดจากด้านขวา" : "คลิกเพื่อเลือกสินค้า"}
+                                        </Text>
+                                      )}
+                                    </div>
+                                  </Form.Item>
 
-                            {/* Price & Bid/Date Row */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <Form.Item name={[field.name, "price"]} rules={[{ required: true }]}>
-                                <FloatingLabelInput
-                                  label={`${saleType === "auction" ? "ราคาตั้งต้น" : "ราคา"}*`}
-                                  type="number"
-                                />
-                              </Form.Item>
+                                  {/* Name */}
+                                  <Form.Item name={[field.name, "name"]} label="ชื่อสินค้า" rules={[{ required: true }]}>
+                                    <FloatingLabelInput label="ชื่อสินค้า" disabled={isSingle && isActive} />
+                                  </Form.Item>
 
-                              {saleType === "auction" ? (
-                                <Form.Item name={[field.name, "bid_increment"]} rules={[{ required: true }]} initialValue={10}>
-                                  <FloatingLabelInput label="บิทขั้นต่ำ*" type="number" />
-                                </Form.Item>
-                              ) : (
-                                <Form.Item name={[field.name, "effective_period"]}>
-                                  <FloatingLabelRangePicker label="วันที่ขาย" className="w-full" />
-                                </Form.Item>
+                                  {/* Quantity */}
+                                  <Form.Item name={[field.name, "quantity"]} label="จำนวนสินค้า" rules={[{ required: true }]}>
+                                    <FloatingLabelInput label="จำนวนสินค้า" type="number" min={1} />
+                                  </Form.Item>
+
+                                  <Divider className="!my-4" />
+
+                                  {/* Price & Bid/Date Row */}
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <Form.Item name={[field.name, "price"]} rules={[{ required: true }]}>
+                                      <FloatingLabelInput
+                                        label={`${saleType === "auction" ? "ราคาตั้งต้น" : "ราคา"}*`}
+                                        type="number"
+                                      />
+                                    </Form.Item>
+
+                                    {saleType === "auction" ? (
+                                      <Form.Item name={[field.name, "bid_increment"]} rules={[{ required: true }]}>
+                                        <FloatingLabelInput label="บิทขั้นต่ำ*" type="number" />
+                                      </Form.Item>
+                                    ) : (
+                                      <Form.Item name={[field.name, "effective_period"]}>
+                                        <FloatingLabelRangePicker label="วันที่ขาย" className="w-full" />
+                                      </Form.Item>
+                                    )}
+                                  </div>
+                                </div>
                               )}
-                            </div>
+                            </Card>
+                          )
+                        })}
 
-                          </Card>
-                        )
-                      })}
-
-                      <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="large" className="h-12">
-                        เพิ่มรายการสินค้า
-                      </Button>
-                    </div>
-                  )}
+                        <Button type="dashed" onClick={() => add({ bid_increment: 10, quantity: 1, product_category: "single" })} block icon={<PlusOutlined />} size="large" className="h-12">
+                          เพิ่มรายการสินค้า
+                        </Button>
+                      </div>
+                    );
+                  }}
                 </Form.List>
 
 
                 <div className="mt-8 bg-gray-50 border border-gray-100 rounded-lg p-4">
                   {saleType === "auction" ? (
-                    <AuctionSummary form={form} />
+                    <AuctionSummary form={form} onRemove={removeFnRef.current} />
                   ) : (
-                    <SellSummary form={form} />
+                    <SellSummary form={form} onRemove={removeFnRef.current} />
                   )}
 
                   {saleType === "auction" && (
@@ -848,17 +956,53 @@ export default function ProductAddFormV2({
               <CardBrowser
                 selectedCards={selectedCardsMap[activeFieldIndex] || []}
                 onSelect={(cards) => setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: cards }))}
-                multiple={!isSingle && !isBundle}
+                multiple={!isSingle}
                 availableCards={availableCards}
                 renderCustomActions={(card, isSelected) => isSelected && (
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100">
-                    <Form.Item
-                      name={['items', activeFieldIndex, `quantity_${card.card_id}`]}
-                      initialValue={1}
-                      className="!mb-0"
-                    >
-                      <InputNumber min={1} className="w-full" placeholder="จำนวน" />
-                    </Form.Item>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 flex flex-col items-center gap-2">
+                    {isSingle ? (
+                      <div className="w-full flex flex-col items-center gap-2">
+                        <Text className="text-xs font-bold text-blue-600">จำนวน 1 ใบ</Text>
+                        <Button
+                          danger
+                          size="small"
+                          block
+                          icon={<DeleteOutlined />}
+                          className="!text-[10px] uppercase tracking-tighter"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCard(card.card_id, activeFieldIndex);
+                          }}
+                        >
+                          ลบออกจากชุด
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full">
+                        <div className="flex justify-between items-center mb-1">
+                          <Text className="text-[11px] font-medium text-gray-500">จำนวนที่ต้องการ</Text>
+                          <Button
+                            type="text"
+                            danger
+                            size="small"
+                            className="!p-0 !h-auto text-[10px] hover:bg-transparent"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveCard(card.card_id, activeFieldIndex);
+                            }}
+                          >
+                            ลบออก
+                          </Button>
+                        </div>
+                        <Form.Item
+                          name={['items', activeFieldIndex, `quantity_${card.card_id}`]}
+                          initialValue={1}
+                          className="!mb-0"
+                        >
+                          <InputNumber min={1} size="middle" className="w-full" />
+                        </Form.Item>
+                      </div>
+                    )}
                   </div>
                 )}
               />
@@ -866,6 +1010,6 @@ export default function ProductAddFormV2({
           </Layout>
         </Form>
       </Layout>
-    </ConfigProvider>
+    </ConfigProvider >
   );
 }

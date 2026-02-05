@@ -277,7 +277,7 @@ export default function CardBrowser({
               }}
               className="w-full flex-1 !border-none [&_.ant-input]:!border-none [&_.ant-input-group-addon]:!hidden"
               size="large"
-              bordered={false}
+              variant="borderless"
             />
           </div>
         </div>
