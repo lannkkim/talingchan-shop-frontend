@@ -259,6 +259,81 @@
         "placeholder": "Confirm Connect",
         "confirmText": "Confirm Connect"
       }
+    },
+    "productForm": {
+      "title": "Add New Product",
+      "steps": {
+        "selectType": "Select Type",
+        "config": "Configuration",
+        "review": "Review",
+        "step": "Step {step}"
+      },
+      "types": {
+        "single": "Single Card",
+        "singleDesc": "Sell individual cards",
+        "set": "Card Set",
+        "setDesc": "Sell as a set",
+        "select": "Select",
+        "notFound": "Product type not found",
+        "setTypesNotFound": "Set types not found"
+      },
+      "basicInfo": {
+        "title": "Basic Info",
+        "subtitle": "Product details",
+        "setType": "Set Type",
+        "name": "Product Name",
+        "namePlaceholder": "e.g. Blue Eyes White Dragon",
+        "activeFrom": "Active From",
+        "activeUntil": "Active Until",
+        "immediately": "Immediately",
+        "indefinite": "Indefinite",
+        "basePrice": "Base Price",
+        "quantity": "Quantity",
+        "quantityPlaceholder": "Qty",
+        "priceValidUntil": "Price Valid Until",
+        "description": "Description",
+        "descriptionPlaceholder": "Additional details...",
+        "errors": {
+          "requiredName": "Please enter name",
+          "requiredQuantity": "Please enter quantity",
+          "maxQuantity": "Max quantity is {max}"
+        }
+      },
+      "selection": {
+        "title": "Select Cards",
+        "singleDesc": "Select cards to sell",
+        "setDesc": "Select cards for the set",
+        "selected": "{count} Selected",
+        "qty": "Qty"
+      },
+      "review": {
+        "title": "Review",
+        "subtitle": "Please review your product details",
+        "summary": "Summary",
+        "name": "Product Name",
+        "type": "Type",
+        "cards": "Cards",
+        "items": "{count} Items",
+        "basePrice": "Base Price",
+        "priceUntil": "Price Valid Until",
+        "startedAt": "Starts",
+        "endedAt": "Ends"
+      },
+      "actions": {
+        "back": "Back",
+        "cancel": "Cancel",
+        "prev": "Review",
+        "continue": "Next",
+        "submit": "Submit Sale",
+        "save": "Submit Sale"
+      },
+      "messages": {
+        "success": "Product created successfully",
+        "error": "Error: {error}",
+        "stockCheckFailed": "Stock check failed: {error}",
+        "enterName": "Please enter product name",
+        "selectCard": "Please select at least one card"
+      }
     }
   },
   "Footer": {

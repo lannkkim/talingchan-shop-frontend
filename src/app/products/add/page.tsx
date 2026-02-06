@@ -120,7 +120,6 @@ export default function AddProductPage() {
         })),
         price: values.price ? {
           price: values.price,
-          price_period_ended: values.price_period_ended?.toISOString(),
         } : undefined,
         quantity: values.quantity, // Add product quantity
       };
@@ -314,11 +313,6 @@ export default function AddProductPage() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="price_period_ended" label="Price Valid Until (Optional)">
-                    <DatePicker className="w-full" size="large" showTime />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
                   <Form.Item name="started_at" label="Product Active From" initialValue={null}>
                     <DatePicker className="w-full" size="large" showTime placeholder="Immediately" />
                   </Form.Item>
@@ -417,12 +411,6 @@ export default function AddProductPage() {
               <Col span={10}><Text type="secondary">Base Price:</Text></Col>
               <Col span={14}><Text strong>฿{form.getFieldValue("price").toLocaleString()}</Text></Col>
             </Row>
-            {form.getFieldValue("price_period_ended") && (
-              <Row className="mb-3">
-                <Col span={10}><Text type="secondary">Price Until:</Text></Col>
-                <Col span={14}><Text>{form.getFieldValue("price_period_ended").format("YYYY-MM-DD HH:mm")}</Text></Col>
-              </Row>
-            )}
           </>
         )}
         <Divider className="my-3" />

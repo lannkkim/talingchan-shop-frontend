@@ -147,16 +147,9 @@ export default function ShopProducts() {
     {
       title: t("columns.price"),
       key: "price",
-      render: (_: any, record: Product) => {
-        const activePrice =
-          record.price_period?.find((p) => p.status === "active") ||
-          record.price_period?.[0];
-        return activePrice ? (
-          <Text strong>฿{Number(activePrice.price).toLocaleString()}</Text>
-        ) : (
-          <Text type="secondary">-</Text>
-        );
-      },
+      render: (_: any, record: Product) => (
+        <Text strong>฿{Number(record.price).toLocaleString()}</Text>
+      ),
     },
     {
       title: t("columns.type"),
@@ -364,19 +357,9 @@ export default function ShopProducts() {
                     <Space orientation="vertical" className="w-full">
                       <div className="flex justify-between items-center">
                         <Text type="secondary">{t("columns.price")}</Text>
-                        {(() => {
-                          const activePrice =
-                            selectedProduct.price_period?.find(
-                              (p) => p.status === "active",
-                            ) || selectedProduct.price_period?.[0];
-                          return activePrice ? (
                             <Text strong className="text-lg text-blue-600">
-                              ฿{Number(activePrice.price).toLocaleString()}
+                              ฿{Number(selectedProduct.price).toLocaleString()}
                             </Text>
-                          ) : (
-                            <Text>-</Text>
-                          );
-                        })()}
                       </div>
                       <div className="flex justify-between items-center">
                         <Text type="secondary">{t("columns.type")}</Text>
@@ -418,23 +401,9 @@ export default function ShopProducts() {
                       <Text type="secondary" className="block text-xs">
                         {t("modal.priceValidUntil")}
                       </Text>
-                      {(() => {
-                        const activePrice =
-                          selectedProduct.price_period?.find(
-                            (p) => p.status === "active",
-                          ) || selectedProduct.price_period?.[0];
-                        return activePrice?.price_period_ended ? (
-                          <Text>
-                            {new Date(
-                              activePrice.price_period_ended,
-                            ).toLocaleString()}
-                          </Text>
-                        ) : (
                           <Text type="secondary">
                             {t("modal.indefinite")} (or until changed)
                           </Text>
-                        );
-                      })()}
                     </div>
                   </div>
                 </Space>

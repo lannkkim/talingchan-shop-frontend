@@ -32,7 +32,6 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
       // payload for update
       const payload = {
         price: values.price,
-        price_period_ended: values.price_period_ended?.toISOString(),
         status: "active", // Reactivate product
       };
 
@@ -71,8 +70,8 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
           label={t("newPrice")}
           rules={[{ required: true, message: t("newPriceError") }]}
           initialValue={
-            product?.price_period?.[0]?.price
-              ? Number(product.price_period[0].price)
+            product?.price
+              ? Number(product.price)
               : undefined
           }
         >
@@ -82,20 +81,6 @@ export const RenewPriceModal: React.FC<RenewPriceModalProps> = ({
             placeholder={t("newPricePlaceholder")}
             min={0}
             size="large"
-          />
-        </Form.Item>
-        <Form.Item
-          name="price_period_ended"
-          label={t("priceValidUntil")}
-          dependencies={["price"]}
-        >
-          <DatePicker
-            className="w-full"
-            size="large"
-            disabledDate={(current) => {
-              // Valid date must be >= today
-              return current && current < dayjs().startOf("day");
-            }}
           />
         </Form.Item>
       </Form>

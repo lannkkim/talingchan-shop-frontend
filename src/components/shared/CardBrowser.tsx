@@ -36,6 +36,7 @@ const { Search } = Input;
 interface CardBrowserProps extends Omit<CardSelectorProps, "filters"> {
   // We omit 'filters' from props because CardBrowser manages them internally
   availableCards?: Card[] | null; // Optional filtered card list
+  className?: string;
 }
 
 export default function CardBrowser({
@@ -45,6 +46,7 @@ export default function CardBrowser({
   multiple,
   renderCustomActions,
   availableCards,
+  className,
 }: CardBrowserProps) {
   // activeFilters: Applied to the query
   const [activeFilters, setActiveFilters] = useState<CardFilters>({});
@@ -55,6 +57,7 @@ export default function CardBrowser({
   const handleDrawerFilterChange = (key: keyof CardFilters, value: any) => {
     setDrawerFilters((prev) => ({ ...prev, [key]: value }));
   };
+// ... existing logic ...
 
   const applyFilters = () => {
     setActiveFilters((prev) => ({
@@ -256,7 +259,7 @@ export default function CardBrowser({
         },
       }}
     >
-      <div className="flex flex-col gap-0 border-b border-gray-200 bg-white">
+      <div className={`flex flex-col gap-0 border-b border-gray-200 bg-white h-full ${className || ''}`}>
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 ">
           <div className="flex items-center gap-0 w-full md:w-auto flex-1 border border-gray-200">
             <Button
@@ -282,15 +285,17 @@ export default function CardBrowser({
           </div>
         </div>
 
-        <CardSelector
-          selectable={selectable}
-          onSelect={onSelect}
-          selectedCards={selectedCards}
-          multiple={multiple}
-          renderCustomActions={renderCustomActions}
-          filters={activeFilters}
-          availableCards={availableCards}
-        />
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <CardSelector
+            selectable={selectable}
+            onSelect={onSelect}
+            selectedCards={selectedCards}
+            multiple={multiple}
+            renderCustomActions={renderCustomActions}
+            filters={activeFilters}
+            availableCards={availableCards}
+          />
+        </div>
 
         <Drawer
           title={

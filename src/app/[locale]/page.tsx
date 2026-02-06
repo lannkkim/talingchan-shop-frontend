@@ -11,6 +11,8 @@ export default function LandingPage() {
     isLoadingProducts,
     cards,
     isLoadingCards,
+    tradeProducts,
+    isLoadingTrades,
     carouselRef,
     handleScroll,
     getCardImageUrl,
@@ -32,6 +34,8 @@ export default function LandingPage() {
         isLoadingProducts={isLoadingProducts}
         cards={cards}
         isLoadingCards={isLoadingCards}
+        tradeProducts={tradeProducts}
+        isLoadingTrades={isLoadingTrades}
         carouselRef={carouselRef}
         handleScroll={handleScroll}
         getCardImageUrl={getCardImageUrl}

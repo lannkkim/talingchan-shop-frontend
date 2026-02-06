@@ -147,20 +147,12 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 <div className="flex justify-between items-center">
                   <Text type="secondary">{t("price")}</Text>
                   {(() => {
-                    const activePrice = product.price_period?.[0];
-                    return activePrice ? (
+                    const price = product.price;
+                    return price ? (
                       <div className="text-right">
                         <Text strong className="text-lg text-blue-600 block">
-                          ฿{Number(activePrice.price).toLocaleString()}
+                          ฿{Number(price).toLocaleString()}
                         </Text>
-                        {activePrice.price_period_ended && (
-                          <Text type="secondary" className="text-[10px] block">
-                            {t("validUntil")}:{" "}
-                            {dayjs(activePrice.price_period_ended).format(
-                              "DD/MM/YYYY HH:mm",
-                            )}
-                          </Text>
-                        )}
                       </div>
                     ) : (
                       <Text>-</Text>

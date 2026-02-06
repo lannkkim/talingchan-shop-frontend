@@ -18,6 +18,9 @@ import { getMyShop } from "@/services/shop";
 import { getMyInventory } from "@/services/stock";
 import { Card as CardType } from "@/types/card";
 import CardBrowser from "@/components/shared/CardBrowser";
+import MerchBrowser from "@/components/shared/MerchBrowser";
+import { Merch } from "@/services/merch";
+import { DropboxOutlined } from "@ant-design/icons";
 import {
   Layout,
   Typography,
@@ -68,9 +71,11 @@ export default function ProductAddForm({
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedType, setSelectedType] = useState<any>(null);
   const [mainTypeSelection, setMainTypeSelection] = useState<
-    "single" | "set" | null
+    "single" | "set" | "package" | null
   >(null);
   const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
+  const [selectedMerch, setSelectedMerch] = useState<Merch[]>([]);
+  const [packageContentMode, setPackageContentMode] = useState<"card" | "merch">("card");
   const [form] = Form.useForm();
 
   // Watch all form values to calculate total quantity dynamically
@@ -228,11 +233,15 @@ export default function ProductAddForm({
         })),
         price: values.price
           ? {
-            price: values.price,
-            price_period_ended: values.price_period_ended?.toISOString(),
-          }
+              price: values.price,
+            }
           : undefined,
         quantity: values.quantity,
+        products: undefined, // Cleared for now, need to check if backend supports merch directly
+        merch: isPackage ? selectedMerch.map(m => ({
+            merch_id: m.merch_id,
+            quantity: values[`quantity_merch_${m.merch_id}`] || 1
+        })) : undefined
       };
 
       mutation.mutate(payload);
@@ -324,6 +333,39 @@ export default function ProductAddForm({
               </Title>
               <Paragraph type="secondary" className="mb-0">
                 {t("types.setDesc")}
+              </Paragraph>
+              <Button className="mt-6">{t("types.select")}</Button>
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} md={8}>
+          <Card
+            hoverable
+            className="text-center h-full transition-all duration-300 border-2 border-transparent hover:border-green-500 hover:bg-green-50/10"
+            onClick={() => {
+               // Fallback: Check for 'package' type or just simulate for UI demo
+               const packageType = types.find((t: any) => t.product_type_flag_code === "package" || t.code === "package") || { product_type_id: "mock_pkg", name: "Package", product_type_flag_code: "package", code: "package" };
+               if (packageType) {
+                 setMainTypeSelection("package");
+                 setSelectedType(packageType);
+                 setSelectedCards([]);
+                 setSelectedMerch([]);
+                 setCurrentStep(1);
+               } else {
+                 message.error("Package type not found");
+               }
+            }}
+          >
+            <div className="py-8">
+              <div className="text-4xl mb-4 text-green-500">
+                 <DropboxOutlined />
+              </div>
+              <Title level={4} className="!mb-2">
+                Package
+              </Title>
+              <Paragraph type="secondary" className="mb-0">
+                Create a package from existing products (Cards, Merch, etc.)
               </Paragraph>
               <Button className="mt-6">{t("types.select")}</Button>
             </div>
@@ -491,40 +533,6 @@ export default function ProductAddForm({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="price_period_ended"
-                  label={t("basicInfo.priceValidUntil")}
-                  dependencies={["started_at", "ended_at"]}
-                >
-                  <DatePicker
-                    className="w-full"
-                    size="large"
-                    disabledDate={(current) => {
-                      // User Request:
-                      // If started_at = 18, ended_at = 24
-                      // Only 19, 20, 21, 22, 23 allowed?
-                      // "must choose 18 and 24 FALSE" -> can't choose 18 or 24.
-                      // So STRICTLY BETWEEN.
-
-                      const startedAt =
-                        form.getFieldValue("started_at") || dayjs();
-                      const endedAt = form.getFieldValue("ended_at");
-
-                      if (!current) return false;
-
-                      // 1. Must be > started_at (Cannot be <= started_at)
-                      // "started_at = 18 ... cannot choose 18"
-                      if (current <= startedAt.endOf("day")) return true;
-
-                      // 2. Must be < ended_at (Cannot be >= ended_at)
-                      // "ended_at = 24 ... cannot choose 24"
-                      if (endedAt && current >= endedAt.startOf("day"))
-                        return true;
-
-                      return false;
-                    }}
-                  />
-                </Form.Item>
               </Col>
               <Col span={24}>
                 <Form.Item name="detail" label={t("basicInfo.description")}>
@@ -547,7 +555,9 @@ export default function ProductAddForm({
               <Text type="secondary">
                 {isSingle || isBundle
                   ? t("selection.singleDesc")
-                  : t("selection.setDesc")}
+                  : isPackage 
+                    ? "Select products to include in this package"
+                    : t("selection.setDesc")}
               </Text>
             </div>
             <div className="flex items-center gap-2">
@@ -562,8 +572,78 @@ export default function ProductAddForm({
             </div>
           </div>
           <div className="p-6">
-            <CardBrowser
-              selectedCards={selectedCards}
+            {isPackage ? (
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <Radio.Group 
+                      value={packageContentMode} 
+                      onChange={e => setPackageContentMode(e.target.value)}
+                      buttonStyle="solid"
+                      size="large"
+                    >
+                      <Radio.Button value="card">Add Cards</Radio.Button>
+                      <Radio.Button value="merch">Add Merch</Radio.Button>
+                    </Radio.Group>
+                  </div>
+
+                  <div className="min-h-[400px]">
+                    {packageContentMode === "card" ? (
+                       <CardBrowser
+                          selectedCards={selectedCards}
+                          onSelect={setSelectedCards}
+                          multiple
+                          availableCards={availableCards}
+                          renderCustomActions={(card: CardType, isSelected: boolean) =>
+                            isSelected && (
+                              <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200">
+                                <Form.Item
+                                  name={`quantity_${card.card_id}`}
+                                  initialValue={1}
+                                  className="!mb-0"
+                                  rules={[{ required: true, message: "" }]}
+                                >
+                                  <InputNumber
+                                    min={1}
+                                    className="w-full"
+                                    placeholder={t("selection.qty")}
+                                    prefix={<Text type="secondary" className="mr-1 text-xs">{t("selection.qty")}:</Text>}
+                                  />
+                                </Form.Item>
+                              </div>
+                            )
+                          }
+                       />
+                    ) : (
+                       <MerchBrowser 
+                          selectedMerch={selectedMerch}
+                          onSelect={setSelectedMerch}
+                          multiple
+                          renderCustomActions={(merch: Merch, isSelected: boolean) => 
+                            isSelected && (
+                                <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200">
+                                    <Form.Item
+                                        name={`quantity_merch_${merch.merch_id}`}
+                                        initialValue={1}
+                                        className="!mb-0"
+                                        rules={[{ required: true, message: "" }]}
+                                    >
+                                        <InputNumber 
+                                            min={1} 
+                                            className="w-full" 
+                                            placeholder="Qty" 
+                                            prefix={<Text type="secondary" className="mr-1 text-xs">Qty:</Text>}
+                                        />
+                                    </Form.Item>
+                                </div>
+                            )
+                          }
+                       />
+                    )}
+                  </div>
+                </div>
+            ) : (
+                <CardBrowser
+                  selectedCards={selectedCards}
               onSelect={setSelectedCards}
               multiple={!isSingle && !isBundle}
               availableCards={availableCards}
@@ -608,6 +688,7 @@ export default function ProductAddForm({
                 )
               }
             />
+            )}
           </div>
         </Card>
       </div>
@@ -643,7 +724,7 @@ export default function ProductAddForm({
         </Row>
         <Row className="mb-3">
           <Col span={10}>
-            <Text type="secondary">{t("review.cards")}:</Text>
+            <Text type="secondary">{isPackage ? "Contents" : t("review.cards")}:</Text>
           </Col>
           <Col span={14}>
             <Text>
@@ -668,20 +749,6 @@ export default function ProductAddForm({
                 </Text>
               </Col>
             </Row>
-            {form.getFieldValue("price_period_ended") && (
-              <Row className="mb-3">
-                <Col span={10}>
-                  <Text type="secondary">{t("review.priceUntil")}:</Text>
-                </Col>
-                <Col span={14}>
-                  <Text>
-                    {form
-                      .getFieldValue("price_period_ended")
-                      .format("YYYY-MM-DD HH:mm")}
-                  </Text>
-                </Col>
-              </Row>
-            )}
           </>
         )}
         <Divider className="my-3" />

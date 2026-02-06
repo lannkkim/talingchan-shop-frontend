@@ -198,7 +198,7 @@ export default function AdminProductsPage() {
       title: t("columns.price"),
       key: "price",
       render: (_: any, record: Product) => {
-        const price = record.price_period?.[0]?.price;
+        const price = record.price;
         return price ? `฿${Number(price).toLocaleString()}` : "-";
       },
       sorter: true,

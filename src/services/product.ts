@@ -1,6 +1,11 @@
 import axiosInstance from "@/lib/axios";
 import { Product } from "@/types/product";
 
+export interface CardInput {
+  stock_card_id: string;
+  quantity: number;
+}
+
 export interface CreateProductInput {
   name: string;
   detail?: string;
@@ -11,20 +16,20 @@ export interface CreateProductInput {
   buy_type_id?: string;
   started_at?: string;
   ended_at?: string;
-  cards: {
-    stock_card_id: string;
+  cards: CardInput[];
+  merch?: {
+    merch_id: string;
     quantity: number;
   }[];
   price?: {
     price: number;
-    price_period_ended?: string;
   };
   quantity?: number;
-  is_auto_extend?: boolean;
-  auto_extend_trigger_min?: number;
-  auto_extend_duration_min?: number;
-  auto_extend_max_count?: number;
-  bid_increment?: number;
+  products?: {
+    product_id: string;
+    quantity: number;
+  }[];
+  trade_wants?: { stock_card_id: string; quantity: number }[][];
 }
 
 export interface ProductFilter {
@@ -33,11 +38,13 @@ export interface ProductFilter {
   exclude_ended?: boolean;
   include_shop?: boolean;
   product_type_code?: string;
+  product_type_flag_code?: string;
   limit?: number;
   user_id?: string;
   card_id?: string;
   sort_by?: string;
   sort_order?: string;
+  transaction_type_code?: string;
 }
 
 export const getProducts = async (
@@ -62,6 +69,8 @@ export const getProductById = async (id: string): Promise<Product> => {
   const response = await axiosInstance.get<Product>(`/api/v1/products/${id}`);
   return response.data;
 };
+
+export const getProduct = getProductById;
 
 export const updateProduct = async (
   id: string,

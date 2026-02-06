@@ -172,7 +172,7 @@ export default function PageHeader({
           <div className="divide-y divide-gray-100 bg-white">
             {cartItems.map((item) => {
               const product = item.product;
-              const price = Number(product?.price_period?.[0]?.price || 0);
+              const price = Number(product?.price || 0);
               const firstCard =
                 product?.product_stock_card?.[0]?.card ||
                 product?.product_stock_card?.[0]?.stock_card?.card;
@@ -233,7 +233,7 @@ export default function PageHeader({
                 .reduce(
                   (acc, item) =>
                     acc +
-                    Number(item.product?.price_period?.[0]?.price || 0) *
+                    Number(item.product?.price || 0) *
                       item.quantity,
                   0,
                 )

@@ -43,7 +43,6 @@ function AllMarketProductsContent() {
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
     const imageUrl = getCardImageUrl(imageName);
-    const activePrice = product.price_period?.[0];
 
     return (
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -75,7 +74,7 @@ function AllMarketProductsContent() {
              <div className="flex flex-col mt-1">
                 <div className="flex justify-between items-baseline">
                   <Text className="text-lg text-blue-600 font-semibold">
-                    {activePrice ? `฿${Number(activePrice.price).toLocaleString()}` : "No Price"}
+                    {product.price ? `฿${Number(product.price).toLocaleString()}` : "No Price"}
                   </Text>
                   {product.total_quantity !== undefined && (
                     <Text type="secondary" className="text-xs font-medium">
@@ -199,7 +198,7 @@ function AllMarketProductsContent() {
                          <div className="flex justify-between items-center">
                             <Text type="secondary">Price</Text>
                             <Text strong className="text-lg text-blue-600">
-                               ฿{selectedProduct.price_period?.[0]?.price ? Number(selectedProduct.price_period[0].price).toLocaleString() : "-"}
+                               ฿{selectedProduct.price ? Number(selectedProduct.price).toLocaleString() : "-"}
                             </Text>
                          </div>
                          <div className="flex justify-between items-center">

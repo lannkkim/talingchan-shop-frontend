@@ -22,6 +22,23 @@ export interface Shop {
   shop_profile?: ShopProfile;
 }
 
+// Add missing type definition
+export interface ProductStockMerch {
+  is_auto_extend?: boolean;
+  auto_extend_trigger_min?: number;
+  auto_extend_duration_min?: number;
+  auto_extend_max_count?: number;
+  bid_increment?: number;
+  product_stock_merch_id: string;
+  product_id: string;
+  stock_merch_id: string;
+  stock_merch?: {
+    merch?: {
+      image_name?: string;
+    };
+  };
+}
+
 export interface Product {
   product_id: string;
   product_code?: string; // Added code
@@ -39,11 +56,19 @@ export interface Product {
   transaction_type?: TransactionType;
   // Relationships
   product_stock_card?: ProductStockCard[];
-  price_period?: PricePeriod[];
+  product_stock_merch?: ProductStockMerch[];
+  price: number;
   users?: User & { shop?: Shop };
   market_min_price?: number;
   total_quantity?: number;
   quantity?: number;
+  trade_wants?: Package[];
+}
+
+export interface Package {
+  package_id: string;
+  name: string;
+  products?: Product[];
 }
 
 export interface TransactionType {
@@ -70,14 +95,4 @@ export interface StockCard {
   stock_card_id: string;
   card_id?: string;
   card?: Card;
-}
-
-export interface PricePeriod {
-  price_period_id: string;
-  product_id: string;
-  price: string;
-  status: string;
-  price_period_started: string;
-  price_period_ended?: string;
-  created_at?: string;
 }

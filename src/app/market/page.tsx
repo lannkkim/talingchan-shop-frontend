@@ -115,7 +115,7 @@ export default function MarketPage() {
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
     const imageUrl = getCardImageUrl(imageName);
-    const activePrice = product.price_period?.[0];
+    const price = product.price;
 
     return (
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -144,7 +144,7 @@ export default function MarketPage() {
              <div className="flex flex-col mt-1">
                 <div className="flex justify-between items-baseline">
                   <Text className="text-lg text-blue-600 font-semibold">
-                    {activePrice ? `฿${Number(activePrice.price).toLocaleString()}` : "No Price"}
+                    {price ? `฿${Number(price).toLocaleString()}` : "No Price"}
                   </Text>
                   <div className="text-right">
                     {product.quantity !== undefined && (
@@ -329,9 +329,9 @@ export default function MarketPage() {
                              <div className="flex justify-between items-center">
                                 <Text type="secondary">Price</Text>
                                 {(() => {
-                                    const activePrice = selectedProduct.price_period?.[0];
-                                    return activePrice ? (
-                                      <Text strong className="text-xl text-blue-600">฿{Number(activePrice.price).toLocaleString()}</Text>
+                                    const price = selectedProduct.price;
+                                    return price ? (
+                                      <Text strong className="text-xl text-blue-600">฿{Number(price).toLocaleString()}</Text>
                                     ) : <Text>-</Text>;
                                 })()}
                              </div>

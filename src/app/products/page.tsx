@@ -114,9 +114,9 @@ export default function ProductsPage() {
       title: "Price",
       key: "price",
       render: (_: unknown, record: Product) => {
-        const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
-        return activePrice ? (
-          <Text strong>฿{Number(activePrice.price).toLocaleString()}</Text>
+        const price = record.price;
+        return price ? (
+          <Text strong>฿{Number(price).toLocaleString()}</Text>
         ) : <Text type="secondary">-</Text>;
       },
     },
@@ -164,10 +164,7 @@ export default function ProductsPage() {
       title: "Price Valid Until",
       key: "price_valid_until",
       render: (_: unknown, record: Product) => {
-        const activePrice = record.price_period?.find(p => p.status === "active") || record.price_period?.[0];
-        return activePrice?.price_period_ended ? (
-          <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
-        ) : <Text type="secondary">-</Text>;
+        return <Text type="secondary">-</Text>;
       },
     },
     {
@@ -343,9 +340,9 @@ export default function ProductsPage() {
                          <div className="flex justify-between items-center">
                             <Text type="secondary">Price</Text>
                             {(() => {
-                                const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
-                                return activePrice ? (
-                                  <Text strong className="text-lg text-blue-600">฿{Number(activePrice.price).toLocaleString()}</Text>
+                                const price = selectedProduct.price;
+                                return price ? (
+                                  <Text strong className="text-lg text-blue-600">฿{Number(price).toLocaleString()}</Text>
                                 ) : <Text>-</Text>;
                             })()}
                          </div>
@@ -367,12 +364,7 @@ export default function ProductsPage() {
                        </div>
                        <div>
                           <Text type="secondary" className="block text-xs">Price Valid Until</Text>
-                          {(() => {
-                              const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
-                              return activePrice?.price_period_ended ? (
-                                <Text>{new Date(activePrice.price_period_ended).toLocaleString()}</Text>
-                              ) : <Text type="secondary">Indefinite (or until changed)</Text>;
-                          })()}
+                              return <Text type="secondary">Indefinite (or until changed)</Text>;
                        </div>
                     </div>
                   </Space>

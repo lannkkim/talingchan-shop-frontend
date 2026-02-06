@@ -20,6 +20,18 @@ export function useMarketPage() {
   });
   const cards = cardsRaw || [];
 
+  const { data: tradeProductsRaw, isLoading: isLoadingTrades } = useQuery({
+    queryKey: ["products", "market", "trade", "landing"],
+    queryFn: () =>
+      getProducts({
+        status: "active",
+        transaction_type_code: "trade",
+        include_shop: true,
+        limit: 5,
+      }),
+  });
+  const tradeProducts = tradeProductsRaw || [];
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -34,10 +46,7 @@ export function useMarketPage() {
   };
 
   const getActivePrice = (product: Product) => {
-    const activePrice =
-      product.price_period?.find((p) => p.status === "active") ||
-      product.price_period?.[0];
-    return activePrice ? Number(activePrice.price) : null;
+    return product.price ? Number(product.price) : null;
   };
 
   const handleScroll = () => {
@@ -70,6 +79,8 @@ export function useMarketPage() {
     isLoadingProducts,
     cards,
     isLoadingCards,
+    tradeProducts,
+    isLoadingTrades,
     carouselRef,
     canScrollLeft,
     canScrollRight,

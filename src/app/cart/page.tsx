@@ -100,7 +100,7 @@ export default function CartPage() {
   );
 
   const subtotal = cartItems.reduce((acc, item) => {
-    const price = Number(item.product.price_period?.[0]?.price || 0);
+    const price = Number(item.product.price || 0);
     return acc + price * item.quantity;
   }, 0);
 
@@ -169,7 +169,7 @@ export default function CartPage() {
                 <div className="space-y-4">
                   {cartItems.map((item) => {
                     const product = item.product as Product;
-                    const price = Number(product.price_period?.[0]?.price || 0);
+                    const price = Number(product.price || 0);
                     const firstCard =
                       product.product_stock_card?.[0]?.card ||
                       product.product_stock_card?.[0]?.stock_card?.card;

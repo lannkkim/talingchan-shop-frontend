@@ -9,7 +9,9 @@ import ProductCarouselSection from "./ProductCarouselSection";
 import CardCarouselSection from "@/components/shared/CardCarouselSection";
 import CategoryGridSection from "./CategoryGridSection";
 import MarketFooter from "./MarketFooter";
+import TradeCarouselSection from "./TradeCarouselSection"; // Import
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation"; // Import
 
 const { Content } = Layout;
 
@@ -18,6 +20,8 @@ interface MarketPageUIProps {
   isLoadingProducts: boolean;
   cards: CardType[];
   isLoadingCards: boolean;
+  tradeProducts: Product[]; // New prop
+  isLoadingTrades: boolean; // New prop
   carouselRef: React.RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
   getCardImageUrl: (imageName: string | null | undefined) => string;
@@ -30,6 +34,8 @@ export default function MarketPageUI({
   isLoadingProducts,
   cards,
   isLoadingCards,
+  tradeProducts,
+  isLoadingTrades,
   carouselRef,
   handleScroll,
   getCardImageUrl,
@@ -37,6 +43,7 @@ export default function MarketPageUI({
   getActivePrice,
 }: MarketPageUIProps) {
   const t = useTranslations("Market");
+  const router = useRouter();
 
   return (
     <Layout className="min-h-screen">
@@ -79,14 +86,12 @@ export default function MarketPageUI({
             boxFlatCode="M"
           />
 
-          {/* แลก-เปลี่ยน - Exchange (Small Cards - S) */}
-          <CardCarouselSection
-            cards={cards}
-            isLoading={isLoadingCards}
-            getCardImageUrl={getCardImageUrl}
+          {/* แลก-เปลี่ยน - Exchange (Real Trade Data) */}
+          <TradeCarouselSection
+            products={tradeProducts}
+            isLoading={isLoadingTrades}
             title={t("exchange")}
-            coverImage="/images/exchange.png"
-            boxFlatCode="S"
+            onProductClick={() => router.push("/market/trade")}
           />
 
           {/* Category Grid Component */}

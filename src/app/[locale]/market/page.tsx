@@ -12,12 +12,15 @@ import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
 import { getCardImageUrl } from "@/utils/image";
 import { useAuth } from "@/contexts/AuthContext";
+import TradeCarouselSection from "@/components/market/TradeCarouselSection";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 export default function MarketPage() {
   const { user } = useAuth();
+  const router = useRouter();
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -67,7 +70,19 @@ export default function MarketPage() {
     }),
   });
 
-  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck;
+  // Query for User/Community Market Products - Trade/Exchange
+  const { data: tradeProducts = [], isLoading: loadingTrade } = useQuery({
+    queryKey: ["products", "market", "trade"],
+    queryFn: () => getProducts({
+      status: "active",
+      is_admin_shop: false,
+      transaction_type_code: "trade",
+      limit: 5,
+      include_shop: true,
+    }),
+  });
+
+  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck || loadingTrade;
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -124,7 +139,6 @@ export default function MarketPage() {
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
     const imageUrl = getCardImageUrl(imageName);
-    const activePrice = product.price_period?.[0];
 
     return (
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -153,7 +167,7 @@ export default function MarketPage() {
              <div className="flex flex-col mt-1">
                 <div className="flex justify-between items-baseline">
                   <Text className="text-lg text-blue-600 font-semibold">
-                    {activePrice ? `฿${Number(activePrice.price).toLocaleString()}` : "No Price"}
+                    {product.price ? `฿${Number(product.price).toLocaleString()}` : "No Price"}
                   </Text>
                   <div className="text-right">
                     {product.quantity !== undefined && (
@@ -271,6 +285,24 @@ export default function MarketPage() {
               )}
             </div>
 
+            <div className="mb-10">
+              <div className="flex justify-between items-center">
+                <Title level={3}>แลกเปลี่ยนสินค้า</Title>
+                <Link href="/market/trade">
+                  <Button type="link">ดูเพิ่มเติม</Button>
+                </Link>
+              </div>
+              <Divider className="my-3" />
+               <TradeCarouselSection 
+                  products={tradeProducts} 
+                  isLoading={loadingTrade} 
+                  title="แลกเปลี่ยนสินค้า"
+                  hideHeader={true}
+                  className="!py-0"
+                  onProductClick={() => router.push("/market/trade")}
+               />
+            </div>
+
             {/* Product Details Modal */}
             <Modal
               title={selectedProduct?.name}
@@ -337,12 +369,7 @@ export default function MarketPage() {
                            <Space orientation="vertical" className="w-full">
                              <div className="flex justify-between items-center">
                                 <Text type="secondary">Price</Text>
-                                {(() => {
-                                    const activePrice = selectedProduct.price_period?.[0];
-                                    return activePrice ? (
-                                      <Text strong className="text-xl text-blue-600">฿{Number(activePrice.price).toLocaleString()}</Text>
-                                    ) : <Text>-</Text>;
-                                })()}
+                                <Text strong className="text-xl text-blue-600">฿{Number(selectedProduct.price).toLocaleString()}</Text>
                              </div>
                              <div className="flex justify-between items-center">
                                 <Text type="secondary">In Stock</Text>

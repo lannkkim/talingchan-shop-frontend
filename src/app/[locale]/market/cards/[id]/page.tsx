@@ -49,8 +49,7 @@ export default function CardMarketStatsPage() {
   const prices: number[] = [];
 
   listings.forEach(p => {
-    const activePrice = p.price_period?.find(pp => pp.status === "active") || p.price_period?.[0];
-    const price = activePrice?.price ? Number(activePrice.price) : 0;
+    const price = p.price ? Number(p.price) : 0;
     const stockQty = p.quantity || 1;
     
     const psc = p.product_stock_card?.find(item => 
@@ -109,13 +108,10 @@ export default function CardMarketStatsPage() {
       title: "Price",
       key: "price",
       render: (_: unknown, record: Product) => {
-         const activePrice = record.price_period?.find(pp => pp.status === "active") || record.price_period?.[0];
-         return <Text strong className="text-blue-600">฿{activePrice?.price ? Number(activePrice.price).toLocaleString() : "-"}</Text>;
+         return <Text strong className="text-blue-600">฿{record.price ? Number(record.price).toLocaleString() : "-"}</Text>;
       },
       sorter: (a: Product, b: Product) => {
-         const pa = Number(a.price_period?.find(pp => pp.status === "active")?.price || a.price_period?.[0]?.price || 0);
-         const pb = Number(b.price_period?.find(pp => pp.status === "active")?.price || b.price_period?.[0]?.price || 0);
-         return pa - pb;
+         return (Number(a.price) || 0) - (Number(b.price) || 0);
       },
     },
     {
