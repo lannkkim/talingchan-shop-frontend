@@ -24,8 +24,8 @@ interface MarketPageUIProps {
   isLoadingTrades: boolean; // New prop
   carouselRef: React.RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
-  getCardImageUrl: (imageName: string | null | undefined) => string;
-  getProductImage: (product: Product) => string;
+  getCardImageUrl: (imageName: string | null | undefined, size?: "thumb" | "medium" | "original") => string;
+  getProductImage: (product: Product, size?: "thumb" | "medium" | "original") => string;
   getActivePrice: (product: Product) => number | null;
 }
 

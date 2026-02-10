@@ -144,10 +144,11 @@ export default function TradePage() {
                                         <div key={pc.product_stock_card_id} className="flex gap-3 p-2 border rounded-lg hover:border-blue-200 transition-colors">
                                             <div className="relative w-16 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                                                  <Image
-                                                    src={getCardImageUrl(card?.image_name)}
+                                                    src={getCardImageUrl(card?.image_name, "thumb")}
                                                     alt={card?.name || ""}
                                                     fill
                                                     className="object-contain"
+                                                    unoptimized
                                                 />
                                             </div>
                                             <div>
@@ -182,10 +183,11 @@ export default function TradePage() {
                                                             <div key={pc.product_stock_card_id} className="flex gap-3 items-center bg-white p-2 rounded border">
                                                                  <div className="relative w-10 h-14 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                                                                     <Image
-                                                                        src={getCardImageUrl(card?.image_name)}
+                                                                        src={getCardImageUrl(card?.image_name, "thumb")}
                                                                         alt={card?.name || ""}
                                                                         fill
                                                                         className="object-contain"
+                                                                        unoptimized
                                                                     />
                                                                 </div>
                                                                 <div className="flex-1">

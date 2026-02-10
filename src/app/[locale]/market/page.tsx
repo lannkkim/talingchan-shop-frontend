@@ -31,40 +31,43 @@ export default function MarketPage() {
   // Query for Admin/Official Store Products
   const { data: adminProducts = [], isLoading: loadingAdmin } = useQuery({
     queryKey: ["products", "market", "admin"],
-    queryFn: () => getProducts({ status: "active", is_admin_shop: true, include_shop: true }),
+    queryFn: () => getProducts({ status: "active", is_admin_shop: true, include_shop: true, transaction_type_code: "sell" }),
   });
 
-  // Query for User/Community Market Products - Single Cards
+  // Query for User/Community Market Products - Single Cards (Sell Only)
   const { data: singleProducts = [], isLoading: loadingSingle } = useQuery({
     queryKey: ["products", "market", "single"],
     queryFn: () => getProducts({
       status: "active",
       is_admin_shop: false,
       product_type_code: "single",
+      transaction_type_code: "sell",
       limit: 10,
       include_shop: true,
     }),
   });
 
-  // Query for User/Community Market Products - Bundles (Single Type Set)
+  // Query for User/Community Market Products - Bundles (Single Type Set) (Sell Only)
   const { data: bundleProducts = [], isLoading: loadingBundle } = useQuery({
     queryKey: ["products", "market", "bundle"],
     queryFn: () => getProducts({
       status: "active",
       is_admin_shop: false,
       product_type_code: "bundle",
+      transaction_type_code: "sell",
       limit: 10,
       include_shop: true,
     }),
   });
 
-  // Query for User/Community Market Products - Decks (Multi Type Set)
+  // Query for User/Community Market Products - Decks (Multi Type Set) (Sell Only)
   const { data: deckProducts = [], isLoading: loadingDeck } = useQuery({
     queryKey: ["products", "market", "deck"],
     queryFn: () => getProducts({
       status: "active",
       is_admin_shop: false,
       product_type_code: "deck",
+      transaction_type_code: "sell",
       limit: 10,
       include_shop: true,
     }),
@@ -82,7 +85,19 @@ export default function MarketPage() {
     }),
   });
 
-  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck || loadingTrade;
+  // Query for Buy Requests
+  const { data: buyRequests = [], isLoading: loadingBuy } = useQuery({
+    queryKey: ["products", "market", "buy"],
+    queryFn: () => getProducts({
+      status: "active",
+      is_admin_shop: false,
+      transaction_type_code: "buy",
+      limit: 10,
+      include_shop: true,
+    }),
+  });
+
+  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck || loadingTrade || loadingBuy;
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -138,7 +153,7 @@ export default function MarketPage() {
 
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
-    const imageUrl = getCardImageUrl(imageName);
+    const imageUrl = getCardImageUrl(imageName, "thumb");
 
     return (
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -153,6 +168,7 @@ export default function MarketPage() {
                 fill
                 className="object-contain p-4"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
+                unoptimized
               />
             </div>
           }
@@ -287,6 +303,21 @@ export default function MarketPage() {
 
             <div className="mb-10">
               <div className="flex justify-between items-center">
+                <Title level={3}>ประกาศรับซื้อล่าสุด</Title>
+                <Link href="/market/products?transaction_type=buy">
+                  <Button type="link">ดูเพิ่มเติม</Button>
+                </Link>
+              </div>
+              <Divider className="my-3" />
+              {buyRequests && buyRequests.length > 0 ? (
+                <Row gutter={[16, 24]}>{buyRequests.map((p: Product) => renderProductCard(p))}</Row>
+              ) : (
+                <Text type="secondary">No buy requests available.</Text>
+              )}
+            </div>
+
+            <div className="mb-10">
+              <div className="flex justify-between items-center">
                 <Title level={3}>แลกเปลี่ยนสินค้า</Title>
                 <Link href="/market/trade">
                   <Button type="link">ดูเพิ่มเติม</Button>
@@ -325,11 +356,12 @@ export default function MarketPage() {
                             <div key={pc.product_stock_card_id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
                               <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                                 <Image
-                                  src={getCardImageUrl(card?.image_name)}
+                                  src={getCardImageUrl(card?.image_name, "thumb")}
                                   alt={card?.name || "Card"}
                                   fill
                                   className="object-contain"
                                   sizes="48px"
+                                  unoptimized
                                 />
                               </div>
                               <div className="flex-1 min-w-0">

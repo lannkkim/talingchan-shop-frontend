@@ -14,7 +14,7 @@ export type BoxFlatCode = "S" | "M";
 interface CardCarouselSectionProps {
   cards: CardType[];
   isLoading: boolean;
-  getCardImageUrl: (imageName: string | null | undefined) => string;
+  getCardImageUrl: (imageName: string | null | undefined, size?: "thumb" | "medium" | "original") => string;
   title?: string;
   coverImage?: string;
   boxFlatCode?: BoxFlatCode;
@@ -28,7 +28,7 @@ function SmallCardItem({
   isDark,
 }: {
   card: CardType;
-  getCardImageUrl: (imageName: string | null | undefined) => string;
+  getCardImageUrl: (imageName: string | null | undefined, size?: "thumb" | "medium" | "original") => string;
   isDark: boolean;
 }) {
   const bgColor = isDark ? "#1f2937" : "#ffffff";
@@ -39,11 +39,12 @@ function SmallCardItem({
       cover={
         <div className="relative h-[180px]" style={{ background: bgColor }}>
           <Image
-            src={getCardImageUrl(card.image_name)}
+            src={getCardImageUrl(card.image_name, "thumb")}
             alt={card.name}
             fill
             className="object-contain p-3"
             sizes="200px"
+            unoptimized
           />
           {card.rare && (
             <Tag
@@ -97,7 +98,7 @@ function LargeCardItem({
   isDark,
 }: {
   card: CardType;
-  getCardImageUrl: (imageName: string | null | undefined) => string;
+  getCardImageUrl: (imageName: string | null | undefined, size?: "thumb" | "medium" | "original") => string;
   isDark: boolean;
 }) {
   const bgColor = isDark ? "#1f2937" : "#ffffff";
@@ -112,11 +113,12 @@ function LargeCardItem({
         {/* Image Section - Square 280x280 */}
         <div className="relative w-[280px] h-full overflow-hidden flex-shrink-0 rounded-l-lg">
           <Image
-            src={getCardImageUrl(card.image_name)}
+            src={getCardImageUrl(card.image_name, "medium")}
             alt={card.name}
             fill
             className="object-cover scale-x-185 scale-y-185 object-top"
             sizes="280px"
+            unoptimized
           />
           {card.rare && (
             <Tag

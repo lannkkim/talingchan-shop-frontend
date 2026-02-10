@@ -36,13 +36,16 @@ export function useMarketPage() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const getProductImage = (product: Product) => {
+  const getProductImage = (
+    product: Product,
+    size: "thumb" | "medium" | "original" = "medium",
+  ) => {
     const firstStock = product.product_stock_card?.[0];
     if (!firstStock) return "/images/card-placeholder.png";
 
     const imageName =
       firstStock.card?.image_name || firstStock.stock_card?.card?.image_name;
-    return getCardImageUrl(imageName);
+    return getCardImageUrl(imageName, size);
   };
 
   const getActivePrice = (product: Product) => {

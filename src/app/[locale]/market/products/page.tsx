@@ -17,18 +17,20 @@ const { Content } = Layout;
 
 function AllMarketProductsContent() {
   const searchParams = useSearchParams();
-  const typeCode = searchParams.get("type"); // 'single' or 'deck'
+  const typeCode = searchParams.get("type"); // 'single' or 'deck' or 'bundle'
+  const transactionTypeCode = searchParams.get("transaction_type") || "sell";
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", "all-market", typeCode],
+    queryKey: ["products", "all-market", typeCode, transactionTypeCode],
     queryFn: () => getProducts({
       status: "active",
       is_admin_shop: false,
       product_type_code: typeCode || undefined,
+      transaction_type_code: transactionTypeCode,
       include_shop: true,
     }),
   });
@@ -102,10 +104,18 @@ function AllMarketProductsContent() {
     );
   };
 
-  const title = typeCode === "single" ? "แยกใบทั้งหมด" 
+  let title = "สินค้าทั้งหมด";
+  if (transactionTypeCode === "buy") {
+    title = "ประกาศรับซื้อทั้งหมด";
+  } else if (transactionTypeCode === "trade") {
+    title = "รายการแลกเปลี่ยนทั้งหมด";
+  } else {
+    // Sell
+    title = typeCode === "single" ? "แยกใบทั้งหมด" 
     : typeCode === "bundle" ? "ชุดประเภทเดี่ยวทั้งหมด"
     : typeCode === "deck" ? "ชุดหลายประเภททั้งหมด" 
     : "สินค้าทั้งหมด";
+  }
 
   return (
     <Layout className="min-h-screen">

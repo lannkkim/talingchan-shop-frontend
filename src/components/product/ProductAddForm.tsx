@@ -83,6 +83,7 @@ export default function ProductAddForm({
 
   const isSingle = selectedType?.name === "แยกใบ";
   const isBundle = selectedType?.name === "ประเภทเดี่ยว";
+  const isPackage = selectedType?.name === "แพ็คเกจ";
 
   // Calculate total quantity of all cards
   const totalCardQuantity = useMemo(() => {

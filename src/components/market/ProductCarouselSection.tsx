@@ -12,7 +12,7 @@ interface ProductCarouselSectionProps {
   isLoading: boolean;
   carouselRef: React.RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
-  getProductImage: (product: Product) => string;
+  getProductImage: (product: Product, size?: "thumb" | "medium" | "original") => string;
   getActivePrice: (product: Product) => number | null;
 }
 
@@ -54,11 +54,12 @@ export default function ProductCarouselSection({
                     cover={
                       <div className="relative h-[250px] bg-gray-100">
                         <Image
-                          src={getProductImage(product)}
+                          src={getProductImage(product, "thumb")}
                           alt={product.name}
                           fill
                           className="object-contain p-2"
                           sizes="200px"
+                          unoptimized
                         />
                         {product.status === "active" && (
                           <Tag

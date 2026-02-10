@@ -14,7 +14,7 @@ const ProductItem: React.FC<ProductItemProps> = ({ product }) => {
   const cardImage = product.product_stock_card?.[0]?.card?.image_name;
   const merchImage = product.product_stock_merch?.[0]?.stock_merch?.merch?.image_name;
   const imageName = cardImage || merchImage || "default_card_back";
-  const imageUrl = getCardImageUrl(imageName);
+  const imageUrl = getCardImageUrl(imageName, "thumb");
   const price = product.price;
 
   return (

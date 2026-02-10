@@ -165,7 +165,7 @@ const SellSummary = ({ form, onRemove }: { form: any, onRemove?: (index: number)
           <Text strong className="text-green-600 text-base">{totalPrice.toLocaleString()} THB</Text>
         </div>
         <div className="text-xs text-gray-400 mt-2 text-center">
-          * ราคานี้ยังไม่รวมค่าธรรมเนียมการขาย
+          * ราคานี้ยังไม่รวมค่าธรรมเนียม
         </div>
       </div>
     </div>
@@ -453,7 +453,7 @@ export default function ProductAddFormV2({
   }, [shouldCheckStock, selectedCards, form, activeFieldIndex]);
 
   const mutation = useMutation({
-    mutationFn: (data: CreateProductInput) => createProduct(data),
+    mutationFn: (data: CreateProductInput) => createProduct(data, transactionType),
     onSuccess: () => {
       message.success(t("messages.success"));
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -622,7 +622,7 @@ export default function ProductAddFormV2({
   return (
     <ConfigProvider theme={bottegaTheme}>
       <Layout className="min-h-screen bg-white">
-        <PageHeader title="เพิ่มสินค้า" />
+        <PageHeader title={transactionType === "sell" ? "เพิ่มสินค้า (ขาย)" : "สร้างรายการรับซื้อ (Buy Request)"} />
 
         {/* Secondary action bar */}
         <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-16 z-20">
@@ -668,25 +668,27 @@ export default function ProductAddFormV2({
                 {/* Global Settings */}
                 <Card className="border-0 !rounded-none mb-4">
                   <Title level={4} className="!mb-4 uppercase tracking-[0.15em] text-sm">
-                    ตั้งสินค้าขาย
+                    {transactionType === "sell" ? "ตั้งสินค้าขาย" : "ข้อมูลการรับซื้อ"}
                   </Title>
-                  {/* Sale Type Selection - Global */}
-                  <Form.Item
-                    label={<span className="text-base font-bold text-gray-800">ประเภทการขาย</span>}
-                    className="!mb-6 p-4 rounded-lg"
-                    name="saleType"
-                  >
-                    <Radio.Group className="w-full">
-                      <div className="flex flex-row gap-8 mt-2">
-                        <Radio value="sell">
-                          <span className="font-medium text-gray-700">ตั้งขาย</span>
-                        </Radio>
-                        <Radio value="auction">
-                          <span className="font-medium text-gray-700">ประมูล</span>
-                        </Radio>
-                      </div>
-                    </Radio.Group>
-                  </Form.Item>
+                  {/* Sale Type Selection - Global (Only for Sell) */}
+                  {transactionType === "sell" && (
+                    <Form.Item
+                        label={<span className="text-base font-bold text-gray-800">ประเภทการขาย</span>}
+                        className="!mb-6 p-4 rounded-lg"
+                        name="saleType"
+                    >
+                        <Radio.Group className="w-full">
+                        <div className="flex flex-row gap-8 mt-2">
+                            <Radio value="sell">
+                            <span className="font-medium text-gray-700">ตั้งขาย</span>
+                            </Radio>
+                            <Radio value="auction">
+                            <span className="font-medium text-gray-700">ประมูล</span>
+                            </Radio>
+                        </div>
+                        </Radio.Group>
+                    </Form.Item>
+                  )}
 
                   {/* Global Auction Settings */}
                   {saleType === "auction" && (
@@ -886,7 +888,7 @@ export default function ProductAddFormV2({
                                   <div className="grid grid-cols-2 gap-4">
                                     <Form.Item name={[field.name, "price"]} rules={[{ required: true }]}>
                                       <FloatingLabelInput
-                                        label={`${saleType === "auction" ? "ราคาตั้งต้น" : "ราคา"}*`}
+                                        label={`${saleType === "auction" ? "ราคาตั้งต้น" : (transactionType === "buy" ? "ราคารับซื้อ" : "ราคา")}*`}
                                         type="number"
                                       />
                                     </Form.Item>
@@ -897,7 +899,7 @@ export default function ProductAddFormV2({
                                       </Form.Item>
                                     ) : (
                                       <Form.Item name={[field.name, "effective_period"]}>
-                                        <FloatingLabelRangePicker label="วันที่ขาย" className="w-full" />
+                                        <FloatingLabelRangePicker label={transactionType === "buy" ? "ระยะเวลารับซื้อ" : "วันที่ขาย"} className="w-full" />
                                       </Form.Item>
                                     )}
                                   </div>

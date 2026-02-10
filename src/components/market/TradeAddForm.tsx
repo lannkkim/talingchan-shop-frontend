@@ -179,14 +179,16 @@ export default function TradeAddForm({ userId }: TradeAddFormProps) {
       for (let i = 0; i < wantItems.length; i++) {
          const globalIndex = i + 1;
          const cards = selectedCardsMap[globalIndex] || [];
+         const wantItemValues = values.want_items?.[i] || {};
+
          if (cards.length > 0) {
             finalWantOptions.push({
                cards: cards.map(c => ({
                   stock_card_id: c.card_id,
-                  quantity: values.want_items[i][`quantity_${c.card_id}`] || 1
+                  quantity: wantItemValues[`quantity_${c.card_id}`] || 1
                })),
-               cash_wish: values.want_items[i]?.cash_wish ? Number(values.want_items[i].cash_wish) : undefined,
-               wishlist_wish: values.want_items[i]?.wishlist_wish,
+               cash_wish: wantItemValues.cash_wish ? Number(wantItemValues.cash_wish) : undefined,
+               wishlist_wish: wantItemValues.wishlist_wish,
             });
          }
       }
@@ -343,7 +345,7 @@ export default function TradeAddForm({ userId }: TradeAddFormProps) {
                                {(selectedCardsMap[0] || []).map(card => (
                                   <div key={card.card_id} className="relative group">
                                      <div className="relative aspect-[3/4] w-full rounded overflow-hidden shadow-sm">
-                                        <Image src={getCardImageUrl(card.image_name)} className="w-full h-full object-cover" preview={false} />
+                                        <Image src={getCardImageUrl(card.image_name, "thumb")} className="w-full h-full object-cover" preview={false} />
                                         <Button
                                             size="small" type="text" danger icon={<DeleteOutlined />}
                                             className="absolute top-0 right-0 bg-white/80 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -426,7 +428,7 @@ export default function TradeAddForm({ userId }: TradeAddFormProps) {
                                              {(selectedCardsMap[globalIndex] || []).map(card => (
                                                 <div key={card.card_id} className="relative group">
                                                     <div className="relative aspect-[3/4] w-full rounded overflow-hidden shadow-sm">
-                                                        <Image src={getCardImageUrl(card.image_name)} className="w-full h-full object-cover" preview={false} />
+                                                        <Image src={getCardImageUrl(card.image_name, "thumb")} className="w-full h-full object-cover" preview={false} />
                                                         <Button
                                                             size="small" type="text" danger icon={<DeleteOutlined />}
                                                             className="absolute top-0 right-0 bg-white/80 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"

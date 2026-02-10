@@ -27,7 +27,7 @@ export default function TradeProductCard({ product, onClick }: TradeProductCardP
   };
 
   const imageName = getProductImage(product);
-  const imageUrl = getCardImageUrl(imageName);
+  const imageUrl = getCardImageUrl(imageName, "thumb");
   
   // Extract info
   const firstCard = product.product_stock_card?.[0]?.card || product.product_stock_card?.[0]?.stock_card?.card;
@@ -52,6 +52,7 @@ export default function TradeProductCard({ product, onClick }: TradeProductCardP
             fill
             className="object-cover object-top transition-transform duration-500 group-hover:scale-110"
             sizes="(max-width: 768px) 40vw, 280px"
+            unoptimized
           />
           
           {/* Rarity Tag (Top Left) */}

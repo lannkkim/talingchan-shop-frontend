@@ -11,7 +11,7 @@ interface CardItemProps {
 }
 
 const CardItem: React.FC<CardItemProps> = ({ card }) => {
-  const imageUrl = getCardImageUrl(card.image_name);
+  const imageUrl = getCardImageUrl(card.image_name, "medium");
 
   return (
     <Card
@@ -25,6 +25,7 @@ const CardItem: React.FC<CardItemProps> = ({ card }) => {
             className="object-contain p-2"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             loading="lazy"
+            unoptimized
           />
         </div>
       }

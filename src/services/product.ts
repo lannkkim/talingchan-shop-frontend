@@ -89,8 +89,13 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
 export const createProduct = async (
   data: CreateProductInput,
+  transactionType: "sell" | "buy" = "sell",
 ): Promise<Product> => {
-  const response = await axiosInstance.post<Product>("/api/v1/products", data);
+  const endpoint =
+    transactionType === "buy"
+      ? "/api/v1/products/buy"
+      : "/api/v1/products/sell";
+  const response = await axiosInstance.post<Product>(endpoint, data);
   return response.data;
 };
 
