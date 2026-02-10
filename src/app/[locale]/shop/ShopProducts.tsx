@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getMyProducts } from "@/services/product";
+import { getMyProducts, updateProduct, deleteProduct } from "@/services/product";
 import {
-  Table,
   Button,
   Tag,
   Empty,
@@ -14,20 +13,21 @@ import {
   Modal,
   Row,
   Col,
-  Divider,
+  App,
+  Tooltip
 } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
   StopOutlined,
   ReloadOutlined,
+  DeleteOutlined,
+  MoreOutlined
 } from "@ant-design/icons";
 import { Link } from "@/navigation";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import { getCardImageUrl } from "@/utils/image";
-import { updateProduct } from "@/services/product";
-import { App, Tooltip, message } from "antd";
 import { RenewPriceModal } from "./RenewPriceModal";
 import { useTranslations } from "next-intl";
 
@@ -74,51 +74,22 @@ export default function ShopProducts() {
     });
   };
 
-  const handleOpenSale = (product: Product) => {
-      modal.confirm({
-        title: "Open Sale",
-        content: `Are you sure you want to start selling "${product.name}" again?`,
-        okText: "Yes, Open Sale",
-        cancelText: "Cancel",
-        onOk: async () => {
-          try {
-             // Just setting to active. Price remains same.
-            await updateProduct(product.product_id, { status: "active" });
-            message.success("Product is now active");
-            refetch();
-          } catch (err: any) {
-            message.error(err.message || "Failed to open sale");
-          }
-        },
-      });
-  };
-
   const handleDelete = (product: Product) => {
     modal.confirm({
-        title: "Delete Product",
-        content: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-        okText: "Yes, Delete",
-        okType: 'danger',
-        cancelText: "Cancel",
-        onOk: async () => {
-            // Need deleteProduct service but current import only has updateProduct/getProducts.
-            // Assuming strict separation, I might need to import it or implement it?
-            // Wait, import at top only has getProducts, updateProduct.
-            // I should check if deleteProduct exists in services/product
-             try {
-                // Dynamic import or assume it handles Delete via API? 
-                // Product service usually has delete.
-                // Re-checking imports... 
-                // Need to update import first.
-                // For now, I'll place placeholder and fix imports in next step.
-                 const { deleteProduct } = await import("@/services/product");
-                 await deleteProduct(product.product_id);
-                 message.success("Product deleted successfully");
-                 refetch();
-            } catch (err: any) {
-                message.error(err.message || "Failed to delete product");
-            }
+      title: "Delete Product",
+      content: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+      okText: "Yes, Delete",
+      okType: 'danger',
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await deleteProduct(product.product_id);
+          message.success("Product deleted successfully");
+          refetch();
+        } catch (err: any) {
+          message.error(err.message || "Failed to delete product");
         }
+      }
     });
   };
 
@@ -128,285 +99,274 @@ export default function ShopProducts() {
     setRenewProduct(null);
   };
 
-  const columns = [
-    {
-      title: t("columns.name"),
-      dataIndex: "name",
-      key: "name",
-      render: (text: string, record: Product) => (
-        <Space orientation="vertical" size={0}>
-          <Text strong>{text}</Text>
-          {record.description && (
-            <Text type="secondary" className="text-xs">
-              {record.description}
-            </Text>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: t("columns.price"),
-      key: "price",
-      render: (_: any, record: Product) => (
-        <Text strong>฿{Number(record.price).toLocaleString()}</Text>
-      ),
-    },
-    {
-      title: t("columns.type"),
-      dataIndex: "product_type",
-      key: "type",
-      render: (type: any) =>
-        type ? <Tag color="blue">{type.name}</Tag> : <Tag>N/A</Tag>,
-    },
-    {
-      title: t("columns.cards"),
-      key: "cards",
-      render: (_: any, record: Product) => {
-        const count = record.product_stock_card?.length || 0;
-        return (
-          <Text>
-            {count} card{count !== 1 ? "s" : ""}
-          </Text>
-        );
-      },
-    },
-    {
-      title: t("columns.quantity"),
-      dataIndex: "quantity",
-      key: "quantity",
-      render: (quantity: number) => <Text strong>{quantity || 1}</Text>,
-    },
-    {
-      title: t("columns.status"),
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag color={status === "active" ? "green" : "orange"}>
-          {status?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: t("columns.actions"),
-      key: "actions",
-      render: (_: any, record: Product) => (
-        <Space size="small">
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => {
-              setSelectedProduct(record);
-              setIsModalOpen(true);
-            }}
-          >
-            {t("actions.view")}
-          </Button>
-          {record.status === "active" && (
-            <Tooltip title={t("actions.close")}>
-              <Button
-                danger
-                icon={<StopOutlined />}
-                size="small"
-                onClick={() => handleCloseSale(record)}
-              />
-            </Tooltip>
-          )}
-          {(record.status === "expired" || record.status === "inactive") && (
-            <Tooltip title={t("actions.renew")}>
-              <Button
-                type="primary"
-                ghost
-                icon={<ReloadOutlined />}
-                size="small"
-                onClick={() => {
-                  setRenewProduct(record);
-                  setIsRenewModalOpen(true);
-                }}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
-    },
-  ];
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <Title level={5} className="!mb-1">
+          <Title level={2} className="!mb-1">
             {t("title")}
           </Title>
           <Text type="secondary">{t("description")}</Text>
         </div>
         <Link href="/shop/product/add">
-          <Button type="primary" icon={<PlusOutlined />} size="large">
+          <Button type="primary" icon={<PlusOutlined />} size="large" className="px-6">
             {t("add")}
           </Button>
         </Link>
       </div>
 
       {sellProducts.length > 0 ? (
-        <Table
-          columns={columns}
-          dataSource={sellProducts}
-          rowKey="product_id"
-          loading={isLoading}
-          pagination={{ pageSize: 10 }}
-        />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {sellProducts.map((product) => {
+            const activePrice = product.price_period?.find((p) => p.status === "active") || product.price_period?.[0];
+            const cardImage = product.product_stock_card?.[0]?.card?.image_name || product.product_stock_card?.[0]?.stock_card?.card?.image_name;
+            const imageUrl = getCardImageUrl(cardImage);
+            const isInactive = product.status !== 'active';
+
+            return (
+              <div key={product.product_id} className="group relative bg-white border border-gray-200 hover:border-black transition-all duration-200">
+                {/* Status Badge */}
+                <div className="absolute top-2 left-2 z-10">
+                  <Tag color={product.status === 'active' ? 'green' : 'orange'} className="mr-0 border-0 shadow-sm">
+                    {product.status?.toUpperCase()}
+                  </Tag>
+                </div>
+
+                {/* Image Area */}
+                <div className="aspect-[3/4] relative bg-gray-50 overflow-hidden cursor-pointer" onClick={() => {
+                  setSelectedProduct(product);
+                  setIsModalOpen(true);
+                }}>
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={product.name}
+                      fill
+                      className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isInactive ? 'grayscale' : ''}`}
+                      sizes="(max-width: 768px) 100vw, 20vw"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <div className="text-center">
+                        <StopOutlined className="text-2xl mb-2" />
+                        <div className="text-xs">No Image</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hover Overlay with Actions */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      shape="circle"
+                      icon={<EyeOutlined />}
+                      className="bg-white border-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProduct(product);
+                        setIsModalOpen(true);
+                      }}
+                    />
+                    {product.status === 'active' && (
+                      <Tooltip title={t("actions.close")}>
+                        <Button
+                          shape="circle"
+                          danger
+                          icon={<StopOutlined />}
+                          className="bg-white border-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCloseSale(product);
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                    {(product.status === "expired" || product.status === "inactive") && (
+                      <Tooltip title={t("actions.renew")}>
+                        <Button
+                          type="primary"
+                          shape="circle"
+                          icon={<ReloadOutlined />}
+                          className="border-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenewProduct(product);
+                            setIsRenewModalOpen(true);
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Delete">
+                      <Button
+                        shape="circle"
+                        danger
+                        icon={<DeleteOutlined />}
+                        className="bg-white border-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(product);
+                        }}
+                      />
+                    </Tooltip>
+                  </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="p-3">
+                  <div className="mb-1">
+                    <Text strong className="block truncate text-sm" title={product.name}>{product.name}</Text>
+                    <Text type="secondary" className="text-xs">{product.product_type?.name || "N/A"}</Text>
+                  </div>
+
+                  <div className="flex justify-between items-end mt-2">
+                    <div>
+                      {activePrice ? (
+                        <Text strong className="block text-base">฿{Number(activePrice.price).toLocaleString()}</Text>
+                      ) : (
+                        <Text type="secondary">-</Text>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      x{product.quantity || 1}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
-        <Card className="text-center py-12">
+        <Card className="text-center py-20 border-dashed border-2">
           <Empty
             description={
-              <Space orientation="vertical">
-                <Text strong>{t("empty.title")}</Text>
-                <Text type="secondary">{t("empty.description")}</Text>
+              <Space orientation="vertical" size="large">
+                <Text type="secondary" className="text-lg">{t("empty.description")}</Text>
+                <Link href="/shop/product/add">
+                  <Button type="primary" icon={<PlusOutlined />} size="large" className="px-8">
+                    {t("add")}
+                  </Button>
+                </Link>
               </Space>
             }
           />
-          <Link href="/shop/product/add" className="mt-4 inline-block">
-            <Button type="primary" icon={<PlusOutlined />} size="large">
-              {t("add")}
-            </Button>
-          </Link>
         </Card>
       )}
 
       {/* Product Detail Modal */}
       <Modal
-        title={selectedProduct?.name}
+        title={null}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={800}
+        width={900}
         destroyOnHidden
+        centered
+        className="product-detail-modal"
       >
         {selectedProduct && (
-          <div className="mt-4">
-            <Row gutter={24}>
-              {/* Left Column: Cards List */}
-              <Col span={12} className="border-r border-gray-100">
-                <Title level={5} className="mb-4">
-                  {t("columns.cards")} (
-                  {selectedProduct.product_stock_card?.reduce(
-                    (sum, pc) => sum + pc.quantity,
-                    0,
-                  ) || 0}{" "}
-                  {t("items", { count: 0 }).replace("0 ", "")})
-                </Title>
-                <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3">
+          <div className="p-4">
+            <Row gutter={48}>
+              {/* Left Column: Cards List as Visual Grid */}
+              <Col span={10}>
+                <div className="grid grid-cols-2 gap-3 mb-4">
                   {selectedProduct.product_stock_card?.map((pc) => {
                     const card = pc.stock_card?.card || pc.card;
                     const cardImageUrl = getCardImageUrl(card?.image_name);
                     return (
-                      <div
-                        key={pc.product_stock_card_id}
-                        className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all"
-                      >
-                        <div className="relative w-12 h-16 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                          <Image
-                            src={cardImageUrl}
-                            alt={card?.name || "Card"}
-                            fill
-                            className="object-contain"
-                            sizes="48px"
-                          />
+                      <div key={pc.product_stock_card_id} className="relative aspect-[3/4] rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+                        <Image
+                          src={cardImageUrl}
+                          alt={card?.name || "Card"}
+                          fill
+                          className="object-cover"
+                          sizes="150px"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 text-center truncate">
+                          {card?.name}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <Text
-                            strong
-                            className="block truncate"
-                            title={card?.name}
-                          >
-                            {card?.name}
-                          </Text>
-                          <div className="flex items-center gap-2 mt-1">
-                            {card?.rare && (
-                              <Tag className="m-0 text-[10px]" color="gold">
-                                {card.rare}
-                              </Tag>
-                            )}
-                            <Text type="secondary" className="text-xs">
-                              {card?.type}
-                            </Text>
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <Tag color="blue">x{pc.quantity}</Tag>
+                        <div className="absolute top-1 right-1 bg-black text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                          x{pc.quantity}
                         </div>
                       </div>
                     );
                   })}
                 </div>
+                <div className="text-center">
+                  <Text type="secondary" className="text-xs">
+                    Includes {selectedProduct.product_stock_card?.reduce((sum, pc) => sum + pc.quantity, 0) || 0} cards
+                  </Text>
+                </div>
               </Col>
 
               {/* Right Column: Product Details */}
-              <Col span={12}>
-                <Title level={5} className="mb-4">
-                  {t("modal.details")}
-                </Title>
-                <Space orientation="vertical" size="middle" className="w-full">
+              <Col span={14}>
+                <div className="h-full flex flex-col">
                   <div>
-                    <Text type="secondary" className="block text-xs">
-                      {t("modal.description")}
-                    </Text>
-                    <Text>{selectedProduct.description || "-"}</Text>
+                    <Tag color="blue" className="mb-2">{selectedProduct.product_type?.name || "Product"}</Tag>
+                    <Title level={3} className="!mt-0 !mb-2">{selectedProduct.name}</Title>
+                    {(() => {
+                      const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
+                      return activePrice ? (
+                        <Text className="text-2xl font-medium block mb-6">
+                          ฿{Number(activePrice.price).toLocaleString()}
+                        </Text>
+                      ) : null;
+                    })()}
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <Space orientation="vertical" className="w-full">
-                      <div className="flex justify-between items-center">
-                        <Text type="secondary">{t("columns.price")}</Text>
-                            <Text strong className="text-lg text-blue-600">
-                              ฿{Number(selectedProduct.price).toLocaleString()}
-                            </Text>
+                  <div className="space-y-6 flex-1">
+                    <div>
+                      <Text strong className="block mb-2 text-xs uppercase tracking-wider text-gray-500">Description</Text>
+                      <p className="text-gray-700 leading-relaxed">
+                        {selectedProduct.description || "No description provided."}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Stock</Text>
+                        <Text className="text-base">{selectedProduct.quantity || 1} units</Text>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <Text type="secondary">{t("columns.type")}</Text>
-                        <Tag color="blue">
-                          {selectedProduct.product_type?.name || "N/A"}
-                        </Tag>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <Text type="secondary">{t("columns.quantity")}</Text>
-                        <Text strong>{selectedProduct.quantity || 1}</Text>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <Text type="secondary">{t("columns.status")}</Text>
-                        <Tag
-                          color={
-                            selectedProduct.status === "active"
-                              ? "green"
-                              : "orange"
-                          }
-                        >
+                      <div>
+                        <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Status</Text>
+                        <Tag color={selectedProduct.status === 'active' ? 'green' : 'orange'}>
                           {selectedProduct.status?.toUpperCase()}
                         </Tag>
                       </div>
-                    </Space>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-2">
-                    <div>
-                      <Text type="secondary" className="block text-xs">
-                        {t("modal.activeUntil")}
-                      </Text>
-                      <Text>
-                        {selectedProduct.ended_at
-                          ? new Date(selectedProduct.ended_at).toLocaleString()
-                          : t("modal.indefinite")}
-                      </Text>
-                    </div>
-                    <div>
-                      <Text type="secondary" className="block text-xs">
-                        {t("modal.priceValidUntil")}
-                      </Text>
-                          <Text type="secondary">
-                            {t("modal.indefinite")} (or until changed)
-                          </Text>
-                    </div>
+                  <div className="pt-6 mt-6 border-t border-gray-100 flex gap-3">
+                    {selectedProduct.status === "active" && (
+                      <Button
+                        danger
+                        size="large"
+                        className="flex-1"
+                        icon={<StopOutlined />}
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          handleCloseSale(selectedProduct);
+                        }}
+                      >
+                        Close Sale
+                      </Button>
+                    )}
+                    {(selectedProduct.status === "expired" || selectedProduct.status === "inactive") && (
+                      <Button
+                        type="primary"
+                        size="large"
+                        className="flex-1"
+                        icon={<ReloadOutlined />}
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setRenewProduct(selectedProduct);
+                          setIsRenewModalOpen(true);
+                        }}
+                      >
+                        Renew Sale
+                      </Button>
+                    )}
                   </div>
-                </Space>
+                </div>
               </Col>
             </Row>
           </div>

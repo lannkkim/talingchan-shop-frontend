@@ -1,580 +1,897 @@
 "use client";
 
-import CardBrowser from "@/components/shared/CardBrowser";
-import { FloatingLabelInput } from "@/components/shared/FloatingLabelInput";
-import { FloatingLabelRangePicker } from "@/components/shared/FloatingLabelRangePicker";
-import PageHeader from "@/components/shared/PageHeader";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
-  createTrade,
-  CreatePackageTradeInput,
-} from "@/services/packages";
+   Form,
+   Button,
+   Input,
+   InputNumber,
+   Typography,
+   Card,
+   Divider,
+   Layout,
+   ConfigProvider,
+   Switch,
+   Tag,
+   Space,
+   Badge,
+   Collapse,
+   DatePicker,
+   Select
+} from "antd";
+import dayjs, { Dayjs } from "dayjs";
+import {
+   PlusOutlined,
+   CloseOutlined,
+   DeleteOutlined,
+   InfoCircleOutlined,
+   WarningOutlined,
+   CheckCircleOutlined,
+   CaretRightOutlined,
+   DownOutlined
+} from "@ant-design/icons";
+import { FloatingLabelInput } from "@/components/shared/FloatingLabelInput";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Link } from "@/navigation";
+
+import { createTrade, CreatePackageTradeInput } from "@/services/packages";
 import { getMyInventory } from "@/services/stock";
 import { Card as CardType } from "@/types/card";
 import { getCardImageUrl } from "@/utils/image";
-import { DeleteOutlined, PlusOutlined, SwapOutlined, DollarOutlined, FileTextOutlined } from "@ant-design/icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  App,
-  Button,
-  Card,
-  ConfigProvider,
-  Divider,
-  Form,
-  Image,
-  InputNumber,
-  Layout,
-  Typography,
-} from "antd";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import CardBrowser from "@/components/shared/CardBrowser";
+import PageHeader from "@/components/shared/PageHeader";
 
-const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Sider, Content } = Layout;
 
-// Reusing the theme from ProductAddFormV2 for consistency
+// --- Theme ---
 const bottegaTheme = {
-  token: {
-    borderRadius: 0,
-    colorPrimary: "#000000",
-    fontFamily: "var(--font-inter)",
-    colorText: "#000000",
-    colorBgContainer: "#ffffff",
-    colorBorder: "#e5e5e5",
-  },
-  components: {
-    Button: {
+   token: {
       borderRadius: 0,
-      controlHeight: 48,
-      fontWeight: 500,
-      primaryColor: "#ffffff",
-      defaultBorderColor: "#000000",
-      defaultColor: "#000000",
-    },
-    Input: {
-      borderRadius: 0,
-      controlHeight: 48,
-      activeBorderColor: "#000000",
-      hoverBorderColor: "#000000",
-    },
-    InputNumber: {
-      borderRadius: 0,
-      controlHeight: 48,
-      activeBorderColor: "#000000",
-      hoverBorderColor: "#000000",
-    },
-    Card: {
-      borderRadius: 0,
-      boxShadow: "none",
-    },
-    Form: {
-      labelColor: "#000000",
-      labelFontSize: 12,
-    },
-    Typography: {
+      colorPrimary: "#000000",
       fontFamily: "var(--font-inter)",
-    },
-  },
+      colorText: "#000000",
+      colorBgContainer: "#ffffff",
+      colorBorder: "#e5e5e5",
+   },
+   components: {
+      Button: {
+         borderRadius: 0,
+         controlHeight: 48,
+         fontWeight: 500,
+         primaryColor: "#ffffff",
+         defaultBorderColor: "#000000",
+         defaultColor: "#000000",
+      },
+      Input: {
+         borderRadius: 0,
+         controlHeight: 48,
+      },
+      Card: {
+         borderRadius: 0,
+         boxShadow: "none",
+      },
+      Select: {
+         borderRadius: 0,
+         controlHeight: 48,
+      },
+      Collapse: {
+         borderRadius: 0,
+         headerBg: "#ffffff",
+         contentBg: "#ffffff"
+      }
+   },
 };
 
-interface TradeAddFormProps {
-  userId: string;
+// --- Types ---
+
+interface OfferItem {
+   id: string;
+   product: CardType;
+   quantity: number;
 }
 
-export default function TradeAddForm({ userId }: TradeAddFormProps) {
-  const router = useRouter();
-  const { message } = App.useApp();
-  const queryClient = useQueryClient();
-  const t = useTranslations("Market.Trade"); // Assuming translations exist or fallback
+interface OfferSectionState {
+   id: string;
+   type: 'card' | 'bot'; // Merged single/set into card
+   items: OfferItem[];
+   isCollapsed: boolean;
+}
 
-  const [form] = Form.useForm();
-  
-  // State for Card Selections
-  // key 0: "Have"
-  // key 1, 2, 3...: "Want Option 1", "Want Option 2"...
-  const [selectedCardsMap, setSelectedCardsMap] = useState<Record<number, CardType[]>>({});
-  const [activeFieldIndex, setActiveFieldIndex] = useState<number>(0);
-  
-  const selectedCards = selectedCardsMap[activeFieldIndex] || [];
-  
-  // Resizable Sider State
-  const [siderWidth, setSiderWidth] = useState(360);
-  const isResizing = useRef(false);
+interface RequestItemState {
+   id: string;
+   type: "BUNDLE" | "TEXT";
+   // If Bundle
+   bundleSections?: OfferSectionState[];
+   bundleCash?: number;
+   maxSections?: number; // Control sections per item
+   // If TEXT
+   bullets?: string[];
+   isCollapsed: boolean;
+}
 
-  const startResizing = useCallback(() => {
-    isResizing.current = true;
-  }, []);
+interface TradeState {
+   info: {
+      name: string;
+      range: [Dayjs | null, Dayjs | null] | null;
+      forceCentral: boolean;
+   };
+   offer: {
+      sections: OfferSectionState[];
+   };
+   want: RequestItemState[];
+}
 
-  const stopResizing = useCallback(() => {
-    isResizing.current = false;
-  }, []);
+type SelectionContext = {
+   target: 'OFFER' | 'REQUEST';
+   requestId?: string; // If target REQUEST
+   sectionId?: string; // If target OFFER
+}
 
-  const resize = useCallback((mouseMoveEvent: MouseEvent) => {
-    if (isResizing.current) {
-      const newWidth = mouseMoveEvent.clientX;
-      if (newWidth >= 300 && newWidth <= 600) {
-        setSiderWidth(newWidth);
+const { RangePicker } = DatePicker;
+
+// Utility to get image url safely
+const getImageUrl = (product: CardType) => product.image_name ? getCardImageUrl(product.image_name) : "";
+
+export default function TradeAddForm() {
+   const router = useRouter();
+   const queryClient = useQueryClient();
+
+   // --- State ---
+   const [tradeState, setTradeState] = useState<TradeState>({
+      info: { name: "", range: null, forceCentral: true },
+      offer: { sections: [] },
+      want: []
+   });
+
+   const [collapsedSections, setCollapsedSections] = useState({ offer: false, request: false });
+
+   const [activeSelection, setActiveSelection] = useState<SelectionContext | null>(null);
+   const [siderWidth, setSiderWidth] = useState(480);
+   const isResizing = useRef(false);
+
+   // --- Handlers ---
+   const startResizing = useCallback((e: React.MouseEvent) => {
+      e.preventDefault();
+      isResizing.current = true;
+      document.addEventListener("mousemove", resize);
+      document.addEventListener("mouseup", stopResizing);
+   }, []);
+
+   const resize = useCallback((e: MouseEvent) => {
+      if (isResizing.current) {
+         setSiderWidth(prev => Math.max(300, Math.min(800, e.clientX)));
       }
-    }
-  }, []);
+   }, []);
 
-  useEffect(() => {
-    window.addEventListener("mousemove", resize);
-    window.addEventListener("mouseup", stopResizing);
-    return () => {
-      window.removeEventListener("mousemove", resize);
-      window.removeEventListener("mouseup", stopResizing);
-    };
-  }, [resize, stopResizing]);
+   const stopResizing = useCallback(() => {
+      isResizing.current = false;
+      document.removeEventListener("mousemove", resize);
+      document.removeEventListener("mouseup", stopResizing);
+   }, []);
 
-  // Fetch inventory for "Have" section (index 0)
-  const { data: inventory } = useQuery({
-    queryKey: ["myInventory"],
-    queryFn: getMyInventory,
-  });
+   // 1. Info Handlers
+   const updateInfo = (updates: Partial<TradeState['info']>) => {
+      setTradeState(prev => ({ ...prev, info: { ...prev.info, ...updates } }));
+   };
 
-  // Prepare Available Cards for "Have" section
-  const availableCards = useMemo(() => {
-    if (activeFieldIndex === 0 && inventory) {
-       return inventory
-        .filter((stock) => stock.card)
-        .map((stock) => ({
-          ...stock.card!,
-          stockQuantity: stock.quantity,
-          stock_card_id: stock.stock_card_id,
-        }));
-    }
-    return undefined; // Undefined means Global Mode (for Want sections)
-  }, [inventory, activeFieldIndex]);
+   // 2. Section Management Helpers
+   const addSectionToContainer = (
+      containerType: 'OFFER' | 'REQUEST',
+      sectionType: 'card' | 'bot',
+      requestId?: string
+   ) => {
+      const newSectionId = `sec-${Date.now()}-${Math.random()}`;
+      setTradeState(prev => {
+         const newSection: OfferSectionState = {
+            id: newSectionId,
+            type: sectionType,
+            items: [],
+            isCollapsed: false
+         };
 
-  const mutation = useMutation({
-    mutationFn: (data: CreatePackageTradeInput) => createTrade(data),
-    onSuccess: () => {
-      message.success("สร้างรายการแลกเปลี่ยนสำเร็จ");
-      queryClient.invalidateQueries({ queryKey: ["tradeProducts"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      router.push("/market/trade");
-    },
-    onError: (err: any) => {
-      message.error("Failed to create trade: " + (err.response?.data?.error || err.message));
-    },
-  });
+         if (containerType === 'OFFER') {
+            // Unique Type Check
+            if (prev.offer.sections.some(s => s.type === sectionType)) return prev;
+            if (prev.offer.sections.length >= 3) return prev;
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      
-      const haveCards = selectedCardsMap[0] || [];
-      if (haveCards.length === 0) {
-        message.warning("กรุณาเลือกการ์ดที่คุณมี (Items You Have)");
-        setActiveFieldIndex(0);
-        return;
-      }
+            return {
+               ...prev,
+               offer: { sections: [...prev.offer.sections, newSection] }
+            };
+         } else if (containerType === 'REQUEST' && requestId) {
+            return {
+               ...prev,
+               want: prev.want.map(req => {
+                  if (req.id !== requestId || req.type !== 'BUNDLE') return req;
+                  const currentSections = req.bundleSections || [];
 
-      // Collect Want Options
-      const wantItems = form.getFieldValue("want_items") || [];
-      
-      // REFACTOR: Re-build payload logic to include metadata
-      const finalWantOptions = [];
-      for (let i = 0; i < wantItems.length; i++) {
-         const globalIndex = i + 1;
-         const cards = selectedCardsMap[globalIndex] || [];
-         const wantItemValues = values.want_items?.[i] || {};
+                  // Check maxSections from Request Item state
+                  if (req.maxSections && currentSections.length >= req.maxSections) return req;
+                  if (currentSections.length >= 3) return req; // Fallback hard limit
 
-         if (cards.length > 0) {
-            finalWantOptions.push({
-               cards: cards.map(c => ({
-                  stock_card_id: c.card_id,
-                  quantity: wantItemValues[`quantity_${c.card_id}`] || 1
-               })),
-               cash_wish: wantItemValues.cash_wish ? Number(wantItemValues.cash_wish) : undefined,
-               wishlist_wish: wantItemValues.wishlist_wish,
-            });
+                  if (currentSections.some(s => s.type === sectionType)) return req;
+
+                  return { ...req, bundleSections: [...currentSections, newSection] };
+               })
+            };
          }
-      }
+         return prev;
+      });
 
-      if (finalWantOptions.length === 0) {
-        message.warning("กรุณาเลือกสิ่งที่อยากได้ (Items You Want) อย่างน้อย 1 ตัวเลือก");
-        return;
+      // Auto-select the new section if it's a card section
+      if (sectionType === 'card') {
+         setActiveSelection({ target: containerType, requestId, sectionId: newSectionId });
       }
+   };
 
-      const finalPayload: CreatePackageTradeInput = {
-        name: values.name,
-        detail: values.description,
-        started_at: values.effective_period?.[0]?.toISOString(),
-        ended_at: values.effective_period?.[1]?.toISOString(),
-        cash_trade: values.cash_trade ? Number(values.cash_trade) : undefined,
-        wishlist_trade: values.wishlist_trade,
-        have_cards: haveCards.map(c => ({
-            stock_card_id: c.card_id,
-            quantity: values[`quantity_have_${c.card_id}`] || 1
-        })),
-        want_options: finalWantOptions
+   const removeSection = (containerType: 'OFFER' | 'REQUEST', sectionId: string, requestId?: string) => {
+      setTradeState(prev => {
+         if (containerType === 'OFFER') {
+            return { ...prev, offer: { sections: prev.offer.sections.filter(s => s.id !== sectionId) } };
+         } else {
+            return {
+               ...prev,
+               want: prev.want.map(req => {
+                  if (req.id !== requestId) return req;
+                  return { ...req, bundleSections: (req.bundleSections || []).filter(s => s.id !== sectionId) };
+               })
+            };
+         }
+      });
+      // Deselect if removing active section
+      if (activeSelection?.sectionId === sectionId) {
+         setActiveSelection(null);
+      }
+   };
+
+   const handleAddRequestItem = (type: 'card' | 'bot' | 'bundle') => {
+      const newReqId = `req-${Date.now()}`;
+      const newSectionId = `sec-${Date.now()}`;
+
+      const newRequestItem: RequestItemState = {
+         id: newReqId,
+         type: 'BUNDLE',
+         bundleSections: type === 'bundle' ? [] : [{
+            id: newSectionId,
+            type: type as 'card' | 'bot',
+            items: [],
+            isCollapsed: false
+         }],
+         maxSections: type === 'bundle' ? 3 : 1,
+         isCollapsed: false
       };
 
-      mutation.mutate(finalPayload);
+      setTradeState(p => ({
+         ...p,
+         want: [...p.want, newRequestItem]
+      }));
 
-    } catch (err) {
-      console.error("Validation Error:", err);
-    }
-  };
+      // If adding 'card' type request item, auto-select it
+      if (type === 'card') {
+         setActiveSelection({ target: 'REQUEST', requestId: newReqId, sectionId: newSectionId });
+      } else {
+         // Maybe just focus on the request item? For now do nothing or select the bucket?
+         // If bundle (empty), user needs to add section manually.
+         // If bot, browser doesn't support bot selection yet (usually).
+      }
+   };
 
-  const handleRemoveCard = (cardId: string, globalIndex: number) => {
-    const currentCards = selectedCardsMap[globalIndex] || [];
-    const newCards = currentCards.filter((c) => c.card_id !== cardId);
-    setSelectedCardsMap(prev => ({ ...prev, [globalIndex]: newCards }));
-  };
+   // 3. Selection Logic (Smart Add)
+   const { data: availableInventory } = useQuery({
+      queryKey: ["my-inventory"],
+      queryFn: getMyInventory,
+      initialData: [],
+   });
 
-  return (
-    <ConfigProvider theme={bottegaTheme}>
-      <Layout className="min-h-screen bg-white">
-        <PageHeader title="สร้างข้อเสนอแลกเปลี่ยน (Create Trade)" onBack={() => router.back()} />
+   // --- Derived State for Browser ---
+   const stockCards = useMemo(() => {
+      // Safely handle potentially null/undefined inventory
+      const inventory = availableInventory || [];
+      return inventory.filter(s => s.card).map(s => ({
+         ...s.card!,
+         stockQuantity: s.quantity
+      }));
+   }, [availableInventory]);
 
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{
-            want_items: [{}] // Start with 1 want option
-          }}
-          className="h-full"
-        >
-          <Layout className="bg-white h-full">
-            <Sider
-              width={siderWidth}
-              className="!bg-white border-r border-gray-200 p-0 relative"
-              style={{
-                height: "calc(100vh - 113px)",
-                position: "sticky",
-                top: 113,
-                overflow: "visible",
-              }}
-            >
-               {/* Resize Handle */}
+   const activeSectionItems = useMemo(() => {
+      if (!activeSelection) return [];
+      if (activeSelection.target === 'OFFER' && activeSelection.sectionId) {
+         const section = tradeState.offer.sections.find(s => s.id === activeSelection.sectionId);
+         return section ? section.items : [];
+      }
+      if (activeSelection.target === 'REQUEST' && activeSelection.requestId) {
+         const req = tradeState.want.find(r => r.id === activeSelection.requestId);
+         if (req?.type === 'BUNDLE' && activeSelection.sectionId) {
+            const section = req.bundleSections?.find(s => s.id === activeSelection.sectionId);
+            return section ? section.items : [];
+         }
+      }
+      return [];
+   }, [activeSelection, tradeState]);
+
+   const activeSelectedCards = useMemo(() => activeSectionItems.map(i => i.product), [activeSectionItems]);
+
+   const handleBrowserSelect = (selectedCards: CardType[]) => {
+      if (!activeSelection) return;
+
+      const target = activeSelection.target;
+      const requestId = activeSelection.requestId;
+      const sectionId = activeSelection.sectionId;
+
+      setTradeState(prev => {
+         // Helper to sync items
+         const syncItems = (currentItems: OfferItem[]) => {
+            const currentCardIds = new Set(currentItems.map(i => i.product.card_id));
+            const selectedIds = new Set(selectedCards.map(c => c.card_id));
+
+            // Keep existing items that are still selected
+            let newItems = currentItems.filter(i => selectedIds.has(i.product.card_id));
+
+            // Add new items
+            selectedCards.forEach(card => {
+               if (!currentCardIds.has(card.card_id)) {
+                  newItems.push({
+                     id: `item-${Date.now()}-${card.card_id}`,
+                     product: card,
+                     quantity: 1
+                  });
+               }
+            });
+            return newItems;
+         };
+
+         if (target === 'OFFER') {
+            return {
+               ...prev,
+               offer: {
+                  sections: prev.offer.sections.map(s => {
+                     if (s.id !== sectionId) return s;
+                     return { ...s, items: syncItems(s.items) };
+                  })
+               }
+            };
+         } else if (target === 'REQUEST' && requestId) {
+            return {
+               ...prev,
+               want: prev.want.map(req => {
+                  if (req.id !== requestId || req.type !== 'BUNDLE') return req;
+                  return {
+                     ...req,
+                     bundleSections: (req.bundleSections || []).map(s => {
+                        if (s.id !== sectionId) return s;
+                        return { ...s, items: syncItems(s.items) };
+                     })
+                  };
+               })
+            };
+         }
+         return prev;
+      });
+   };
+
+   // 4. Validation
+   const mutation = useMutation({
+      mutationFn: createTrade,
+      onSuccess: () => {
+         router.push("/th/market/trade");
+         queryClient.invalidateQueries({ queryKey: ["trades"] });
+      },
+      onError: (error) => {
+         console.error(error);
+         alert("Failed to create trade");
+      },
+   });
+
+   const isInfoValid = !!tradeState.info.name && !!tradeState.info.range && !!tradeState.info.range[0] && !!tradeState.info.range[1];
+   const isOfferValid = tradeState.offer.sections.length > 0 && tradeState.offer.sections.every(s => s.items.length > 0);
+   const isRequestValid = tradeState.want.length > 0 && tradeState.want.every(req => {
+      if (req.type === 'TEXT') return (req.bullets?.filter(b => b.trim()).length || 0) > 0;
+      if (req.type === 'BUNDLE') return (req.bundleSections?.length || 0) > 0 && req.bundleSections!.every(s => s.items.length > 0);
+      return false;
+   });
+
+   const isValid = isInfoValid && isOfferValid && isRequestValid;
+   const totalOffers = tradeState.offer.sections.length;
+   const totalWantItems = tradeState.want.length;
+
+   const handleSubmit = () => {
+      if (!isValid || !tradeState.info.range || !tradeState.info.range[0] || !tradeState.info.range[1]) return;
+
+      const payload: CreatePackageTradeInput = {
+         tradeType: "MIXED",
+         name: tradeState.info.name,
+         forceCentralTrade: tradeState.info.forceCentral,
+         started_at: tradeState.info.range[0].toISOString(),
+         ended_at: tradeState.info.range[1].toISOString(),
+         sections: tradeState.offer.sections.map(s => ({
+            sectionType: (s.type === 'bot' ? "BOT" : s.items.length === 1 ? "SINGLE" : "DECK") as any,
+            items: s.items.map(i => ({
+               itemType: "PRODUCT",
+               productId: i.product.card_id,
+               quantity: 1
+            }))
+         })),
+         want: tradeState.want.map(w => ({
+            type: w.type === 'BUNDLE' ? "PRODUCT" : "TEXT",
+            bullets: w.type === 'TEXT' ? w.bullets?.filter(b => b.trim()) : undefined,
+            bundle: w.type === 'BUNDLE' ? {
+               sections: (w.bundleSections || []).map(s => ({
+                  sectionType: (s.type === 'bot' ? "BOT" : s.items.length === 1 ? "SINGLE" : "DECK") as any,
+                  items: s.items.map(i => ({ productId: i.product.card_id }))
+               })),
+               addCash: w.bundleCash || 0
+            } : undefined
+         }))
+      };
+
+      mutation.mutate(payload);
+   };
+
+   // --- Renderers ---
+   const renderSectionList = (
+      sections: OfferSectionState[],
+      containerType: 'OFFER' | 'REQUEST',
+      requestId?: string,
+      maxSections: number = 3
+   ) => {
+      const usedTypes = new Set(sections.map(s => s.type));
+
+      return (
+         <div className="space-y-4">
+            {sections.length === 0 && (
                <div
-                className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-50 hover:bg-blue-400 transition-colors opacity-0 hover:opacity-100 active:opacity-100 active:bg-blue-600"
-                style={{ transform: "translateX(50%)" }}
-                onMouseDown={startResizing}
-              />
+                  className="text-center py-4 border-2 border-dashed border-gray-200 rounded text-gray-400 text-xs cursor-pointer hover:border-gray-400 hover:text-gray-500 transition-colors"
+                  onClick={() => {
+                     // Auto add 'card' section if clicked on empty
+                     if (containerType === 'REQUEST' && requestId) {
+                        addSectionToContainer(containerType, 'card', requestId);
+                     }
+                  }}
+               >
+                  เลือกประเภทเพื่อเริ่ม หรือ คลิกเพื่อเพิ่มการ์ด
+               </div>
+            )}
 
-              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                 {/* 1. Global Trade Info */}
-                 <Card className="border-0 !rounded-none mb-4">
-                    <Title level={4} className="!mb-4 uppercase tracking-[0.15em] text-sm">
-                      ข้อมูลทั่วไป
-                    </Title>
-                    <Form.Item name="name" label="หัวข้อแลกเปลี่ยน" rules={[{ required: true }]}>
-                       <FloatingLabelInput label="Trade Title" />
-                    </Form.Item>
-                    <Form.Item name="description" label="รายละเอียด">
-                       <FloatingLabelInput label="Description" />
-                    </Form.Item>
-                    <Form.Item name="effective_period" label="ระยะเวลา" rules={[{ required: true, message: "กรุณาระบุระยะเวลา" }]}>
-                       <FloatingLabelRangePicker label="Start - End Date" className="w-full" />
-                    </Form.Item>
-                 </Card>
-                 
-                 <Divider className="!my-2" />
+            {sections.map((section, idx) => {
+               // Special rendering for Card Sections (Both OFFER and REQUEST)
+               if (section.type === 'card') {
+                  const isActive = activeSelection?.sectionId === section.id;
 
-                 {/* 2. Items You Have (Fixed Section - Index 0) */}
-                 <Card 
-                    className={`border transition-all duration-200 mb-4 ${activeFieldIndex === 0 ? 'border-black shadow-md ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'}`}
-                    styles={{ body: { padding: '16px' } }}
-                    onClick={() => setActiveFieldIndex(0)}
-                 >
-                    <div className="flex justify-between items-center mb-4">
-                       <Title level={5} className="!mb-0 text-sm font-bold text-gray-800">
-                          items You Have (ของที่มี)
-                       </Title>
-                       <Text type="secondary" className="text-xs">Index 0</Text>
-                    </div>
-                    
-                    {/* Toggles for Have Section */}
-                    {/* Toggles for Have Section */}
-                    {/* Use Form.Item shouldUpdate to safely read values for button styling without causing connection warning */ }
-                    <Form.Item noStyle shouldUpdate>
-                        {({ getFieldValue }) => (
-                            <div className="flex gap-2 mb-4">
-                                <Button 
-                                    size="small" 
-                                    type={getFieldValue("show_cash_trade") ? "primary" : "dashed"}
-                                    icon={<DollarOutlined />}
-                                    onClick={() => {
-                                        const curr = getFieldValue("show_cash_trade");
-                                        form.setFieldValue("show_cash_trade", !curr);
-                                        // Force UI Update
-                                        form.setFieldsValue({ show_cash_trade: !curr });
-                                    }}
-                                >
-                                    Add Cash
-                                </Button>
-                                <Button 
-                                    size="small" 
-                                    type={getFieldValue("show_note_trade") ? "primary" : "dashed"}
-                                    icon={<FileTextOutlined />}
-                                    onClick={() => {
-                                        const curr = getFieldValue("show_note_trade");
-                                        form.setFieldValue("show_note_trade", !curr);
-                                        form.setFieldsValue({ show_note_trade: !curr });
-                                    }}
-                                >
-                                    Add Note
-                                </Button>
-                            </div>
-                        )}
-                    </Form.Item>
+                  return (
+                     <div key={section.id} className="space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                           <span className="font-bold text-gray-600">การ์ด #{idx + 1}</span>
+                           <Button
+                              type="text"
+                              size="small"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => removeSection(containerType, section.id, requestId)}
+                           />
+                        </div>
 
-                    <Form.Item noStyle shouldUpdate>
-                        {({ getFieldValue }) => getFieldValue("show_cash_trade") && (
-                            <Form.Item name="cash_trade" label="เงินสดที่คุณให้ (Offer Cash)" className="mb-4 animate-in fade-in slide-in-from-top-1">
-                                <FloatingLabelInput label="จำนวนเงิน (THB)" type="number" min={0} />
-                            </Form.Item>
-                        )}
-                    </Form.Item>
+                        <div
+                           className={`border-2 border-dashed rounded-lg p-4 text-center min-h-[100px] flex flex-col items-center justify-center cursor-pointer transition-colors ${isActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                           onClick={() => setActiveSelection({ target: containerType, requestId, sectionId: section.id })}
+                        >
+                           {section.items.length > 0 ? (
+                              <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-3 w-full">
+                                 {section.items.map(item => (
+                                    <div key={item.id} className="relative group">
+                                       <div className="relative aspect-[3/4] w-full">
+                                          <div className="w-full h-full rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-gray-200">
+                                             {getImageUrl(item.product) && (
+                                                <Image
+                                                   src={getImageUrl(item.product)}
+                                                   alt=""
+                                                   fill
+                                                   className="object-cover"
+                                                />
+                                             )}
+                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                          </div>
+                                          <Button
+                                             size="small"
+                                             type="primary"
+                                             danger
+                                             shape="circle"
+                                             icon={<CloseOutlined className="text-[10px]" />}
+                                             className="absolute -top-1.5 -right-1.5 !w-5 !h-5 flex items-center justify-center p-0 shadow-md z-20 border-white border-2"
+                                             onClick={(e) => {
+                                                e.stopPropagation();
+                                                setTradeState(prev => {
+                                                   const filterItems = (secs: OfferSectionState[]) => secs.map(s => s.id === section.id ? { ...s, items: s.items.filter(i => i.id !== item.id) } : s);
 
-                    <Form.Item noStyle shouldUpdate>
-                        {({ getFieldValue }) => getFieldValue("show_note_trade") && (
-                            <Form.Item name="wishlist_trade" label="ข้อความเพิ่มเติม (Note)" className="mb-4 animate-in fade-in slide-in-from-top-1">
-                                <FloatingLabelInput label="ระบุรายละเอียด (เช่น สภาพการ์ด)" type="textarea" rows={3} />
-                            </Form.Item>
-                        )}
-                    </Form.Item>
+                                                   if (containerType === 'OFFER') {
+                                                      return { ...prev, offer: { sections: filterItems(prev.offer.sections) } };
+                                                   }
 
-                    <div className={`border-2 border-dashed rounded-lg p-2 text-center min-h-[100px] flex flex-col items-center justify-center cursor-pointer transition-colors ${activeFieldIndex === 0 ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                         {(selectedCardsMap[0] || []).length > 0 ? (
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2 w-full">
-                               {(selectedCardsMap[0] || []).map(card => (
-                                  <div key={card.card_id} className="relative group">
-                                     <div className="relative aspect-[3/4] w-full rounded overflow-hidden shadow-sm">
-                                        <Image src={getCardImageUrl(card.image_name, "thumb")} className="w-full h-full object-cover" preview={false} />
-                                        <Button
-                                            size="small" type="text" danger icon={<DeleteOutlined />}
-                                            className="absolute top-0 right-0 bg-white/80 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => { e.stopPropagation(); handleRemoveCard(card.card_id, 0); }}
-                                        />
-                                     </div>
-                                     <div className="text-[10px] mt-1 truncate font-medium">
-                                        <Form.Item shouldUpdate noStyle>
-                                           {({ getFieldValue }) => `x${getFieldValue(`quantity_have_${card.card_id}`) || 1}`}
-                                        </Form.Item>
-                                     </div>
-                                  </div>
-                               ))}
-                            </div>
-                         ) : (
-                            <Text type="secondary" className="text-xs">คลิกเพื่อเลือกการ์ดที่มี</Text>
-                         )}
-                    </div>
-                 </Card>
-
-                 <Divider className="!my-2" />
-                 <Title level={4} className="!mb-4 uppercase tracking-[0.15em] text-sm mt-4">
-                   Items You Want (สิ่งที่อยากได้)
-                 </Title>
-
-                 {/* 3. Items You Want (Dynamic List - Index 1+) */}
-                 <Form.List name="want_items">
-                    {(fields, { add, remove }) => (
-                       <div className="space-y-4">
-                          {fields.map((field, index) => {
-                             const globalIndex = index + 1; // Map index = list index + 1
-                             const isActive = activeFieldIndex === globalIndex;
-                             
-                             return (
-                                <Card
-                                  key={field.key}
-                                  className={`border transition-all duration-200 ${isActive ? 'border-black shadow-md ring-1 ring-black' : 'border-gray-200 hover:border-gray-300'}`}
-                                  styles={{ body: { padding: '16px' } }}
-                                  onClick={() => setActiveFieldIndex(globalIndex)}
-                                >
-                                   <div className="flex justify-between items-center mb-4">
-                                      <Title level={5} className="!mb-0 text-sm">Option {index + 1}</Title>
-                                      {fields.length > 1 && (
-                                         <Button type="text" danger icon={<DeleteOutlined />} onClick={(e) => {
-                                            e.stopPropagation();
-                                            remove(field.name);
-                                            // Cleanup map? Optional but good practice.
-                                            // Ideally we should shift keys but for simplicity we just remove and let user re-select if needed or just handle orphan keys.
-                                            // The simplest way is to NOT shift map keys but rely on Form List order. 
-                                            // Actually re-indexing map is complex.
-                                            // Let's just reset map for this index for now, or live with logic complexity.
-                                            // If I remove index 0 from list, index 1 becomes 0. But map key 2 stays 2? No.
-                                            // To avoid bugs, maybe better to clear map or re-build it.
-                                            // For V1, let's just warn or handle it simply:
-                                            setSelectedCardsMap(prev => {
-                                                const newMap: Record<number, CardType[]> = {};
-                                                // Keep Have (0)
-                                                if (prev[0]) newMap[0] = prev[0];
-                                                
-                                                // Re-index others
-                                                // If we remove 'index' from fields, then field at index+1 becomes index.
-                                                // So we need to shift map entries > globalIndex down by 1.
-                                                Object.keys(prev).forEach(kStr => {
-                                                    const k = Number(kStr);
-                                                    if (k === 0) return;
-                                                    if (k < globalIndex) newMap[k] = prev[k];
-                                                    if (k > globalIndex) newMap[k - 1] = prev[k];
+                                                   return {
+                                                      ...prev,
+                                                      want: prev.want.map(r => {
+                                                         if (r.id !== requestId) return r;
+                                                         return { ...r, bundleSections: filterItems(r.bundleSections || []) };
+                                                      })
+                                                   };
                                                 });
-                                                return newMap;
-                                            });
-                                            setActiveFieldIndex(0); // Reset focus
-                                         }} />
-                                      )}
-                                   </div>
-                                    
-                                    {/* Thumbnails */}
-                                   <div className={`border-2 border-dashed rounded-lg p-2 text-center min-h-[80px] flex flex-col items-center justify-center cursor-pointer transition-colors ${isActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                                       {(selectedCardsMap[globalIndex] || []).length > 0 ? (
-                                          <div className="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] gap-2 w-full">
-                                             {(selectedCardsMap[globalIndex] || []).map(card => (
-                                                <div key={card.card_id} className="relative group">
-                                                    <div className="relative aspect-[3/4] w-full rounded overflow-hidden shadow-sm">
-                                                        <Image src={getCardImageUrl(card.image_name, "thumb")} className="w-full h-full object-cover" preview={false} />
-                                                        <Button
-                                                            size="small" type="text" danger icon={<DeleteOutlined />}
-                                                            className="absolute top-0 right-0 bg-white/80 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            onClick={(e) => { e.stopPropagation(); handleRemoveCard(card.card_id, globalIndex); }}
-                                                        />
-                                                    </div>
-                                                    <div className="text-[10px] mt-1 truncate">
-                                                      <Form.Item shouldUpdate noStyle>
-                                                          {({ getFieldValue }) => `x${getFieldValue(['want_items', index, `quantity_${card.card_id}`]) || 1}`}
-                                                      </Form.Item>
-                                                    </div>
-                                                </div>
+                                             }}
+                                          />
+                                       </div>
+                                       <div className="text-center mt-2 flex flex-col items-center gap-1">
+                                          <div className="text-[10px] font-bold truncate max-w-full w-full">{item.product.name}</div>
+                                          <div className="text-[9px] text-gray-500">
+                                             x {item.quantity}
+                                          </div>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           ) : (
+                              <div className="text-xs text-gray-400">
+                                 {isActive ? "เลือกการ์ดจากด้านขวา" : "คลิกเพื่อเลือกสินค้า"}
+                              </div>
+                           )}
+                        </div>
+                     </div>
+                  );
+               }
+
+               // Default List Rendering (for BOT)
+               return (
+                  <div key={section.id} className="border rounded bg-white overflow-hidden">
+                     <div className="flex justify-between items-center p-2 bg-gray-50 border-b">
+                        <div className="flex items-center gap-2">
+                           <span className="text-xs font-bold text-gray-600">
+                              บอท #{idx + 1}
+                           </span>
+                           {section.items.length === 0 ? <WarningOutlined className="text-orange-500" /> : <CheckCircleOutlined className="text-green-500" />}
+                        </div>
+                        <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => removeSection(containerType, section.id, requestId)} />
+                     </div>
+                     <div className="p-2 space-y-2">
+                        {section.items.map(item => (
+                           <div key={item.id} className="flex gap-2 items-center border p-1 rounded">
+                              <div className="w-8 h-10 bg-gray-200 relative flex-shrink-0">
+                                 {getImageUrl(item.product) && <Image src={getImageUrl(item.product)} alt="" fill className="object-cover" />}
+                              </div>
+                              <div className="flex-1 min-w-0 text-xs">
+                                 <div className="truncate font-medium">{item.product.name}</div>
+                                 <div className="text-[10px] text-gray-500">{item.product.rare}</div>
+                              </div>
+                              <Button
+                                 type="text" danger size="small" icon={<CloseOutlined className="text-[10px]" />}
+                                 onClick={() => {
+                                    setTradeState(prev => {
+                                       const filterItems = (secs: OfferSectionState[]) => secs.map(s => s.id === section.id ? { ...s, items: s.items.filter(i => i.id !== item.id) } : s);
+
+                                       if (containerType === 'OFFER') return { ...prev, offer: { sections: filterItems(prev.offer.sections) } };
+                                       return {
+                                          ...prev,
+                                          want: prev.want.map(r => {
+                                             if (r.id !== requestId) return r;
+                                             return { ...r, bundleSections: filterItems(r.bundleSections || []) };
+                                          })
+                                       };
+                                    })
+                                 }}
+                              />
+                           </div>
+                        ))}
+
+                        {/* Add Item Action */}
+                        <Button
+                           type="dashed" block size="small" icon={<PlusOutlined />}
+                           onClick={() => setActiveSelection({ target: containerType, requestId, sectionId: section.id })}
+                           className={`text-xs ${activeSelection?.sectionId === section.id ? 'border-black text-black' : ''}`}
+                        >
+                           เลือกการ์ด
+                        </Button>
+                     </div>
+                  </div>
+               );
+            })}
+
+            {sections.length < maxSections && (
+               <div className="grid grid-cols-2 gap-2 mt-2">
+                  {[
+                     { key: 'card', label: 'การ์ด' },
+                     { key: 'bot', label: 'BOT' }
+                  ].map(t => (
+                     <Button
+                        key={t.key}
+                        size="small"
+                        disabled={usedTypes.has(t.key as any)}
+                        onClick={() => addSectionToContainer(containerType, t.key as any, requestId)}
+                     >
+                        + {t.label}
+                     </Button>
+                  ))}
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   return (
+      <ConfigProvider theme={bottegaTheme}>
+         <Layout className="min-h-screen bg-white">
+            <PageHeader title="สร้างรายการแลกเปลี่ยน" onBack={() => router.back()} />
+
+            <Layout className="h-[calc(100vh-64px)] bg-white">
+               {/* SIDER */}
+               <Sider width={siderWidth} theme="light" className="border-r border-gray-200 !bg-white relative z-20 p-0 flex flex-col h-full">
+                  {/* Resize Handle */}
+                  <div
+                     className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-50 hover:bg-blue-400 opacity-0 hover:opacity-100"
+                     style={{ transform: "translateX(50%)" }}
+                     onMouseDown={startResizing}
+                  />
+
+                  <div className="flex flex-col h-full overflow-hidden">
+                     <div className="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+                        <Title level={4} className="!mb-0">ตั้งสินค้าแลก-เปลี่ยน</Title>
+                     </div>
+
+                     <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+
+                        {/* 1. INFO */}
+                        <Card title="1. รายละเอียด" size="small">
+                           <div className="space-y-4">
+                              <FloatingLabelInput
+                                 label="ชื่อรายการ"
+                                 value={tradeState.info.name}
+                                 onChange={e => updateInfo({ name: e.target.value })}
+                              />
+                              <div className="flex flex-col gap-1">
+                                 <span className="text-xs text-gray-500">ระยะเวลา</span>
+                                 <RangePicker
+                                    className="w-full"
+                                    value={tradeState.info.range}
+                                    onChange={v => updateInfo({ range: v })}
+                                 />
+                              </div>
+                           </div>
+                        </Card>
+
+                        {/* 2. OFFER */}
+                        <Card
+                           title={
+                              <div
+                                 className="flex items-center gap-2 cursor-pointer select-none"
+                                 onClick={() => setCollapsedSections(prev => ({ ...prev, offer: !prev.offer }))}
+                              >
+                                 <span>2. สิ่งที่ฉันมี (เสนอให้)</span>
+                                 {collapsedSections.offer ? <CaretRightOutlined /> : <DownOutlined />}
+                              </div>
+                           }
+                           size="small"
+                           className={`transition-all ${activeSelection?.target === 'OFFER' ? 'border-black ring-1 ring-black' : ''}`}
+                        >
+                           {!collapsedSections.offer && renderSectionList(tradeState.offer.sections, 'OFFER')}
+                        </Card>
+
+                        {/* 3. REQUEST */}
+                        <Card
+                           title={
+                              <div
+                                 className="flex items-center gap-2 cursor-pointer select-none"
+                                 onClick={() => setCollapsedSections(prev => ({ ...prev, request: !prev.request }))}
+                              >
+                                 <span>3. สิ่งที่ฉันอยากได้ (ข้อเสนอที่รับ)</span>
+                                 {collapsedSections.request ? <CaretRightOutlined /> : <DownOutlined />}
+                              </div>
+                           }
+                           size="small"
+                        >
+                           {!collapsedSections.request && (
+                              <div className="space-y-4">
+                                 {tradeState.want.map((req, idx) => (
+                                    <div key={req.id} className="border rounded p-3 bg-gray-50">
+                                       <div className="flex justify-between mb-2">
+                                          <span className="font-bold text-sm">รายการที่ขอ #{idx + 1}</span>
+                                          <Button type="text" danger icon={<DeleteOutlined />} size="small" onClick={() => setTradeState(p => ({ ...p, want: p.want.filter(i => i.id !== req.id) }))} />
+                                       </div>
+
+                                       {req.type === 'TEXT' ? (
+                                          <div className="space-y-2">
+                                             {(req.bullets || []).map((b, bIdx) => (
+                                                <Input key={bIdx} value={b} size="small" onChange={e => {
+                                                   const newBullets = [...(req.bullets || [])];
+                                                   newBullets[bIdx] = e.target.value;
+                                                   setTradeState(p => ({ ...p, want: p.want.map(i => i.id === req.id ? { ...i, bullets: newBullets } : i) }));
+                                                }} />
                                              ))}
+                                             <Button type="dashed" block size="small" onClick={() => {
+                                                setTradeState(p => ({ ...p, want: p.want.map(i => i.id === req.id ? { ...i, bullets: [...(i.bullets || []), ""] } : i) }));
+                                             }}>+ เพิ่มข้อความ</Button>
                                           </div>
                                        ) : (
-                                          <Text type="secondary" className="text-xs">เลือกสิ่งที่อยากได้</Text>
+                                          <div onClick={() => setActiveSelection({ target: 'REQUEST', requestId: req.id })}>
+                                             <div className={`p-2 border rounded mb-2 ${activeSelection?.target === 'REQUEST' && activeSelection.requestId === req.id ? 'bg-blue-50 border-blue-500' : 'bg-white'}`}>
+                                                <span className="text-xs text-gray-500">กล่องชุดสินค้า (คลิกเพื่อเลือก)</span>
+                                             </div>
+                                             {renderSectionList(req.bundleSections || [], 'REQUEST', req.id, req.maxSections || 3)}
+
+                                             <div className="mt-2 pt-2 border-t">
+                                                <div className="flex justify-between items-center">
+                                                   <span className="text-xs">เพิ่มเงินสด</span>
+                                                   <InputNumber
+                                                      size="small"
+                                                      formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                      parser={value => value?.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                                                      value={req.bundleCash}
+                                                      onChange={v => setTradeState(p => ({ ...p, want: p.want.map(i => i.id === req.id ? { ...i, bundleCash: v || 0 } : i) }))}
+                                                   />
+                                                </div>
+                                             </div>
+                                          </div>
                                        )}
-                                   </div>
-                                    
-                                    {/* Toggles for Want Option */}
-                                    <div className="mt-4">
-                                        <Form.Item shouldUpdate noStyle>
-                                            {({ getFieldValue, setFieldValue }) => {
-                                                const showCash = getFieldValue(['want_items', index, 'show_cash_wish']);
-                                                const showNote = getFieldValue(['want_items', index, 'show_note_wish']);
-                                                
-                                                return (
-                                                    <div className="space-y-3">
-                                                        <div className="flex gap-2">
-                                                            <Button 
-                                                                size="small" 
-                                                                type={showCash ? "primary" : "dashed"}
-                                                                icon={<DollarOutlined />}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setFieldValue(['want_items', index, 'show_cash_wish'], !showCash);
-                                                                    if(showCash) setFieldValue(['want_items', index, 'cash_wish'], undefined);
-                                                                }}
-                                                            >
-                                                                Request Cash
-                                                            </Button>
-                                                            <Button 
-                                                                size="small" 
-                                                                type={showNote ? "primary" : "dashed"}
-                                                                icon={<FileTextOutlined />}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setFieldValue(['want_items', index, 'show_note_wish'], !showNote);
-                                                                    if(showNote) setFieldValue(['want_items', index, 'wishlist_wish'], undefined);
-                                                                }}
-                                                            >
-                                                                Add Note
-                                                            </Button>
-                                                        </div>
-
-                                                        {showCash && (
-                                                            <div onClick={e => e.stopPropagation()}>
-                                                                <Form.Item name={[field.name, "cash_wish"]} label="เงินที่คุณขอเพิ่ม (Request Cash)" className="mb-0 animate-in fade-in">
-                                                                    <FloatingLabelInput label="จำนวนเงิน (THB)" type="number" min={0} />
-                                                                </Form.Item>
-                                                            </div>
-                                                        )}
-
-                                                        {showNote && (
-                                                            <div onClick={e => e.stopPropagation()}>
-                                                                <Form.Item name={[field.name, "wishlist_wish"]} label="รายละเอียดเพิ่มเติม (Note)" className="mb-0 animate-in fade-in">
-                                                                    <FloatingLabelInput label="ระบุสิ่งที่อยากได้ (เช่น สภาพการ์ด)" type="textarea" rows={3} />
-                                                                </Form.Item>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            }}
-                                        </Form.Item>
                                     </div>
-                                </Card>
-                             );
-                          })}
-                          
-                          <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add()} disabled={fields.length >= 3}>
-                             เพิ่มทางเลือก (Add Option)
-                          </Button>
-                       </div>
-                    )}
-                 </Form.List>
+                                 ))}
 
-                 <Divider className="!my-2" />
-                 
+                                 {tradeState.want.length < 3 && (
+                                    <div className="flex flex-col gap-2">
+                                       <div className="grid grid-cols-3 gap-2">
+                                          <Button
+                                             size="small"
+                                             type="dashed"
+                                             onClick={() => handleAddRequestItem('card')}
+                                          >
+                                             + การ์ด
+                                          </Button>
+                                          <Button
+                                             size="small"
+                                             type="dashed"
+                                             onClick={() => handleAddRequestItem('bot')}
+                                          >
+                                             + BOT
+                                          </Button>
+                                          <Button
+                                             size="small"
+                                             type="dashed"
+                                             onClick={() => handleAddRequestItem('bundle')}
+                                          >
+                                             + ชุดสินค้า
+                                          </Button>
+                                       </div>
+                                       <Button type="dashed" block size="small" onClick={() => setTradeState(p => ({ ...p, want: [...p.want, { id: `req-${Date.now()}`, type: 'TEXT', bullets: [""], isCollapsed: false }] }))}>+ ข้อความระบุ</Button>
+                                    </div>
+                                 )}
+                              </div>
 
-                 <div className="h-20" /> {/* Spacer */}
-                 
-                 <div className="sticky bottom-0 bg-white pt-4 pb-0 border-t border-gray-100">
-                    <Button type="primary" block size="large" onClick={handleSubmit} loading={mutation.isPending} className="!bg-black hover:!bg-gray-800 !border-none">
-                       สร้างข้อเสนอ (Create Trade)
-                    </Button>
-                 </div>
-              </div>
-            </Sider>
+                           )}
+                        </Card>
 
-            <Content className="p-6 bg-gray-50/30" style={{ minHeight: "calc(100vh - 113px)" }}>
-                {activeFieldIndex >= 0 ? (
+                     </div>
+
+
+                     {/* FOOTER (Conclusion / Summary) */}
+                     <div className="border-t border-gray-200 bg-white p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] space-y-4">
+
+                        {/* Summary */}
+                        <div className="bg-gray-50 p-3 rounded text-xs space-y-1">
+                           <div className="flex justify-between">
+                              <span className="text-gray-500">จำนวนส่วนที่เสนอ:</span>
+                              <span className="font-medium">{totalOffers}</span>
+                           </div>
+                           <div className="flex justify-between">
+                              <span className="text-gray-500">จำนวนข้อเสนอที่รับ:</span>
+                              <span className="font-medium">{totalWantItems}</span>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                           <span className="text-xs font-bold uppercase">บังคับใช้ระบบกลาง</span>
+                           <Switch
+                              size="small"
+                              checked={tradeState.info.forceCentral}
+                              onChange={v => updateInfo({ forceCentral: v })}
+                           />
+                        </div>
+
+                        <Button
+                           type="primary" block size="large" className="bg-black"
+                           disabled={!isValid || mutation.isPending}
+                           onClick={handleSubmit}
+                           loading={mutation.isPending}
+                        >
+                           สร้างรายการ
+                        </Button>
+                     </div>
+                  </div>
+               </Sider>
+
+               {/* BROWSER */}
+               <Content className="bg-white flex flex-col h-full overflow-hidden">
+                  <div className="p-2 border-b bg-gray-50 text-xs flex items-center gap-2">
+                     <InfoCircleOutlined />
+                     {activeSelection ? `กำลังเลือกสำหรับ: ${activeSelection.target === 'OFFER' ? 'สิ่งที่ฉันมี' : 'สิ่งที่ฉันอยากได้'}` : 'เลือกกล่องเพื่อดูสินค้า'}
+                  </div>
+                  <div className="flex-1 overflow-hidden relative">
+                     {!activeSelection && <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center text-gray-400">เลือกส่วนทางซ้าย</div>}
                      <CardBrowser
-                        key={activeFieldIndex} // Force re-mount when switching sections to clear/reset View if needed, or keeping it is fine but might be confusing. Re-mount ensures cleanliness.
-                        selectedCards={selectedCardsMap[activeFieldIndex] || []}
-                        onSelect={(cards) => setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: cards as CardType[] }))}
-                        multiple
-                        availableCards={availableCards} // Only defined for index 0
+                        selectable={!!activeSelection}
+                        multiple={true}
+                        onSelect={handleBrowserSelect}
+                        selectedCards={activeSelectedCards}
+                        availableCards={activeSelection?.target === 'REQUEST' ? undefined : stockCards}
+                        headerActions={activeSelection?.target === 'OFFER' ? (
+                           <Link href="/stock" target="_blank">
+                              <Button type="primary" size="small" icon={<PlusOutlined />}>
+                                 เพิ่มการ์ดที่มี
+                              </Button>
+                           </Link>
+                        ) : undefined}
+                        className="h-full"
                         renderCustomActions={(card, isSelected) => isSelected && (
-                           <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-200">
-                              {activeFieldIndex === 0 ? (
-                                 // Have Items (Global Field Name)
-                                 <Form.Item
-                                    name={`quantity_have_${card.card_id}`}
-                                    initialValue={1}
-                                    className="!mb-0"
-                                    rules={[{ required: true }]}
-                                 >
-                                    <InputNumber min={1} className="w-full" placeholder="Qty" size="small" />
-                                 </Form.Item>
-                              ) : (
-                                 // Want Items (Array Field Name)
-                                 // GlobalIndex 1 -> Want Item Index 0
-                                 <Form.Item
-                                    name={['want_items', activeFieldIndex - 1, `quantity_${card.card_id}`]}
-                                    initialValue={1}
-                                    className="!mb-0"
-                                    rules={[{ required: true }]}
-                                 >
-                                    <InputNumber min={1} className="w-full" placeholder="Qty" size="small" />
-                                 </Form.Item>
-                              )}
+                           <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 flex flex-col items-center gap-2">
+                              <div className="w-full">
+                                 <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[11px] font-medium text-gray-500">
+                                       จำนวน
+                                    </span>
+                                    <Button
+                                       type="text" danger size="small"
+                                       className="!p-0 !h-auto text-[10px]"
+                                       onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBrowserSelect(activeSelectedCards.filter(c => c.card_id !== card.card_id));
+                                       }}
+                                    >
+                                       ลบออก
+                                    </Button>
+                                 </div>
+
+                                 <InputNumber
+                                    min={1} size="small" className="w-full"
+                                    max={activeSelection?.target === 'OFFER' ? (card as any).stockQuantity : undefined}
+                                    value={activeSectionItems.find(i => i.product.card_id === card.card_id)?.quantity || 1}
+                                    onChange={(val) => {
+                                       if (!val || !activeSelection) return;
+                                       setTradeState(prev => {
+                                          const updateQty = (items: OfferItem[]) => items.map(i => i.product.card_id === card.card_id ? { ...i, quantity: val } : i);
+
+                                          if (activeSelection.target === 'OFFER' && activeSelection.sectionId) {
+                                             return {
+                                                ...prev,
+                                                offer: {
+                                                   sections: prev.offer.sections.map(s => {
+                                                      if (s.id !== activeSelection.sectionId) return s;
+                                                      return { ...s, items: updateQty(s.items) };
+                                                   })
+                                                }
+                                             };
+                                          } else if (activeSelection.target === 'REQUEST' && activeSelection.requestId && activeSelection.sectionId) {
+                                             return {
+                                                ...prev,
+                                                want: prev.want.map(req => {
+                                                   if (req.id !== activeSelection.requestId) return req;
+                                                   return {
+                                                      ...req,
+                                                      bundleSections: (req.bundleSections || []).map(s => {
+                                                         if (s.id !== activeSelection.sectionId) return s;
+                                                         return { ...s, items: updateQty(s.items) };
+                                                      })
+                                                   };
+                                                })
+                                             };
+                                          }
+                                          return prev;
+                                       });
+                                    }}
+                                 />
+                              </div>
                            </div>
                         )}
                      />
-                ) : (
-                   <div className="h-full flex items-center justify-center text-gray-400">
-                      <div className="text-center">
-                         <SwapOutlined className="text-4xl mb-4 opacity-50" />
-                         <p>เลือกหัวข้อทางซ้ายมือเพื่อเริ่มจัดการการ์ด</p>
-                      </div>
-                   </div>
-                )}
-            </Content>
-          </Layout>
-        </Form>
-      </Layout>
-    </ConfigProvider>
-  );
+                  </div>
+               </Content>
+            </Layout>
+         </Layout>
+      </ConfigProvider >
+   );
 }

@@ -178,7 +178,7 @@ export default function ShopStockSettings({
             <Text>
               {t.rich("modal.typeInstruction", {
                 text: t("modal.confirmText"),
-                b: (chunks) => (
+                confirm: (chunks) => (
                   <Text code strong>
                     {chunks}
                   </Text>

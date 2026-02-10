@@ -37,6 +37,7 @@ interface CardBrowserProps extends Omit<CardSelectorProps, "filters"> {
   // We omit 'filters' from props because CardBrowser manages them internally
   availableCards?: Card[] | null; // Optional filtered card list
   className?: string;
+  headerActions?: React.ReactNode;
 }
 
 export default function CardBrowser({
@@ -47,6 +48,7 @@ export default function CardBrowser({
   renderCustomActions,
   availableCards,
   className,
+  headerActions,
 }: CardBrowserProps) {
   // activeFilters: Applied to the query
   const [activeFilters, setActiveFilters] = useState<CardFilters>({});
@@ -57,7 +59,7 @@ export default function CardBrowser({
   const handleDrawerFilterChange = (key: keyof CardFilters, value: any) => {
     setDrawerFilters((prev) => ({ ...prev, [key]: value }));
   };
-// ... existing logic ...
+  // ... existing logic ...
 
   const applyFilters = () => {
     setActiveFilters((prev) => ({
@@ -283,6 +285,11 @@ export default function CardBrowser({
               variant="borderless"
             />
           </div>
+          {headerActions && (
+            <div className="flex-shrink-0">
+              {headerActions}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">

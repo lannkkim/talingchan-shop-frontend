@@ -25,6 +25,10 @@ import {
   message,
   Modal,
   App,
+  ConfigProvider,
+  Menu,
+  Avatar,
+  Badge
 } from "antd";
 import {
   DeleteOutlined,
@@ -32,6 +36,10 @@ import {
   ArrowLeftOutlined,
   WalletOutlined,
   SafetyOutlined,
+  EnvironmentOutlined,
+  HistoryOutlined,
+  HeartOutlined,
+  ShoppingOutlined
 } from "@ant-design/icons";
 import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
@@ -44,15 +52,60 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
-const { Content } = Layout;
+const { Content, Sider } = Layout;
+
+const bottegaTheme = {
+  token: {
+    borderRadius: 0,
+    colorPrimary: "#000000",
+    fontFamily: "var(--font-inter)",
+    colorText: "#000000",
+    colorBgContainer: "#ffffff",
+    colorBorder: "#e5e5e5",
+  },
+  components: {
+    Button: {
+      borderRadius: 0,
+      controlHeight: 48,
+      fontWeight: 500,
+      primaryColor: "#ffffff",
+      defaultBorderColor: "#000000",
+      defaultColor: "#000000",
+    },
+    Input: {
+      borderRadius: 0,
+      controlHeight: 48,
+      activeBorderColor: "#000000",
+      hoverBorderColor: "#000000",
+    },
+    Layout: {
+      bodyBg: "#ffffff",
+      siderBg: "#ffffff",
+    },
+    Menu: {
+      itemSelectedColor: "#000000",
+      itemSelectedBg: "#f5f5f5",
+      itemActiveBg: "#f5f5f5",
+      itemHoverBg: "#fafafa",
+      subMenuItemBg: "#ffffff",
+    },
+    Typography: {
+      fontFamily: "var(--font-inter)",
+    },
+    InputNumber: {
+      borderRadius: 0,
+      activeBorderColor: "#000000",
+      hoverBorderColor: "#000000",
+    }
+  },
+};
 
 export default function CartPage() {
   const queryClient = useQueryClient();
   const t = useTranslations("CartPage");
   const tCart = useTranslations("Cart");
+  const [selectedKey, setSelectedKey] = useState("cart");
 
-  // Queries
-  // State
   // State
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
@@ -60,7 +113,6 @@ export default function CartPage() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>("qr_promptpay");
 
-  // Queries
   // Queries
   const { data: cartData, isLoading } = useQuery({
     queryKey: ["cart"],
@@ -113,15 +165,6 @@ export default function CartPage() {
     return acc + price * item.quantity;
   }, 0);
 
-  const totalCards = cartItems.reduce((acc, item) => {
-    const cardsPerItem =
-      item.product.product_stock_card?.reduce(
-        (sum: number, psc: any) => sum + (psc.quantity || 0),
-        0,
-      ) || 0;
-    return acc + cardsPerItem * item.quantity;
-  }, 0);
-
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { modal } = App.useApp();
   const router = useRouter();
@@ -134,8 +177,6 @@ export default function CartPage() {
         title: t("success"),
         content: t("successContent", { orderIds: data.order_ids.join(", ") }),
         onOk: () => {
-          // Navigate to purchase history or clear cart UI
-          // For now, reload or navigate to market
           router.push("/profile?tab=purchases");
         },
       });
@@ -162,307 +203,306 @@ export default function CartPage() {
       onOk: () => {
         checkoutMutation.mutate({
           shipping_address_id: selectedAddressId,
-          payment_type_id: paymentMethod === "qr_promptpay" ? "1" : "1", // Defaulting to "1" for now as per seed
+          payment_type_id: paymentMethod === "qr_promptpay" ? "1" : "1",
           cart_item_ids: [], // Checkout all items
         });
       },
     });
   };
 
+  const menuItems = [
+    {
+      key: "cart",
+      icon: <ShoppingOutlined />,
+      label: (
+        <div className="flex justify-between items-center w-full">
+          <span>{t("myCart")}</span>
+          <Badge count={cartItems.length} showZero size="small" color="#000" />
+        </div>
+      ),
+    },
+    {
+      key: "saved",
+      icon: <HeartOutlined />,
+      label: "Saved Items",
+      disabled: true,
+    },
+    {
+      key: "history",
+      icon: <HistoryOutlined />,
+      label: "Purchase History",
+      onClick: () => router.push("/profile?tab=purchases")
+    }
+  ];
+
   if (isLoading) {
     return (
-      <Layout className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spin size="large" />
-          <Text type="secondary">{t("loading")}</Text>
-        </div>
+      <Layout className="min-h-screen flex items-center justify-center bg-white">
+        <Spin size="large" />
       </Layout>
     );
   }
 
   return (
-    <Layout className="min-h-screen">
-      <PageHeader title={tCart("title")} subtitle={t("subtitle")} />
-      <Content className="container mx-auto max-w-7xl py-8 px-4">
-        <Row gutter={24}>
-          {/* Left Column: Cart Items */}
-          <Col xs={24} lg={16}>
-            <Card className="shadow-sm rounded-xl overflow-hidden border-none mb-4">
-              <div className="flex justify-between items-center mb-6">
-                <Title level={4} className="m-0 flex items-center gap-2">
-                  <ShoppingCartOutlined /> {t("myCart")} ({cartItems.length}{" "}
-                  {t("items")})
-                </Title>
-                <Link href="/market">
-                  <Button type="link" icon={<ArrowLeftOutlined />}>
-                    {t("backToMarket")}
-                  </Button>
-                </Link>
-              </div>
+    <ConfigProvider theme={bottegaTheme}>
+      <Layout className="min-h-screen bg-white">
+        <PageHeader title={tCart("title")} subtitle={t("subtitle")} />
 
+        <Layout className="has-sider">
+          <Sider
+            width={280}
+            theme="light"
+            className="border-r border-gray-100 !bg-white sticky top-[64px] h-[calc(100vh-64px)] overflow-y-auto"
+            breakpoint="lg"
+            collapsedWidth="0"
+          >
+            <div className="p-6 border-b border-gray-100">
+              <Title level={4} className="!mb-0">Shopping Bag</Title>
+              <Text type="secondary">{cartItems.length} items</Text>
+              <div className="mt-4 pt-4 border-t border-gray-50">
+                <Text type="secondary" className="block text-xs uppercase tracking-wider mb-1">Total Value</Text>
+                <Title level={3} className="!mb-0">฿{subtotal.toLocaleString()}</Title>
+              </div>
+            </div>
+            <Menu
+              mode="inline"
+              selectedKeys={[selectedKey]}
+              items={menuItems}
+              className="border-none px-2 py-4"
+            />
+          </Sider>
+
+          <Content className="p-8 bg-white overflow-y-auto h-[calc(100vh-64px)]">
+            <div className="max-w-6xl mx-auto">
               {cartItems.length === 0 ? (
-                <div className="py-12 bg-white rounded-lg">
-                  <Empty
-                    description={t("empty")}
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  >
+                <div className="text-center py-20">
+                  <Empty description={t("empty")} image={Empty.PRESENTED_IMAGE_SIMPLE}>
                     <Link href="/market">
-                      <Button type="primary">{t("goToMarketToShop")}</Button>
+                      <Button type="primary" size="large" className="px-8">{t("goToMarketToShop")}</Button>
                     </Link>
                   </Empty>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {cartItems.map((item) => {
-                    const product = item.product as Product;
-                    const price = Number(product.price || 0);
-                    const firstCard =
-                      product.product_stock_card?.[0]?.card ||
-                      product.product_stock_card?.[0]?.stock_card?.card;
+                <Row gutter={48}>
+                  {/* Left Column: Cart Items List */}
+                  <Col xs={24} lg={15}>
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center mb-6">
+                        <Title level={3} className="!mb-0 font-light">Your Items</Title>
+                        <Link href="/market">
+                          <Button type="text" icon={<ArrowLeftOutlined />}>Continue Shopping</Button>
+                        </Link>
+                      </div>
 
-                    return (
-                      <div
-                        key={item.cart_id}
-                        className="p-4 rounded-xl border border-gray-100 hover:border-blue-200 transition-all flex gap-4 items-center bg-white"
-                      >
-                        <div className="relative w-20 h-28 bg-gray-50 rounded flex-shrink-0">
-                          <Image
-                            src={getCardImageUrl(firstCard?.image_name)}
-                            alt={product.name}
-                            fill
-                            className="object-contain p-2"
-                            sizes="80px"
-                          />
+                      <div className="divide-y divide-gray-100">
+                        {cartItems.map((item) => {
+                          const product = item.product as Product;
+                          const price = Number(product.price_period?.[0]?.price || 0);
+                          const firstCard = product.product_stock_card?.[0]?.card || product.product_stock_card?.[0]?.stock_card?.card;
+
+                          return (
+                            <div key={item.cart_id} className="py-6 flex gap-6 group">
+                              <div className="relative w-24 aspect-[3/4] bg-gray-50 border border-gray-200 flex-shrink-0">
+                                <Image
+                                  src={getCardImageUrl(firstCard?.image_name)}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover p-2"
+                                  sizes="96px"
+                                />
+                              </div>
+
+                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                                <div>
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <Link href={`/market/cards/${btoa(String(firstCard?.card_id))}`}>
+                                        <Text strong className="text-lg hover:underline cursor-pointer">{product.name}</Text>
+                                      </Link>
+                                      <Text type="secondary" className="block text-sm">{product.product_type?.name}</Text>
+                                    </div>
+                                    <Text strong className="text-lg">฿{(price * item.quantity).toLocaleString()}</Text>
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-between items-end">
+                                  <div className="flex items-center gap-3">
+                                    <div className="border border-gray-200 flex items-center">
+                                      <Button
+                                        type="text"
+                                        size="small"
+                                        className="px-2"
+                                        onClick={() => item.quantity > 1 && updateQtyMutation.mutate({ id: item.cart_id, qty: item.quantity - 1 })}
+                                      >-</Button>
+                                      <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                      <Button
+                                        type="text"
+                                        size="small"
+                                        className="px-2"
+                                        onClick={() => updateQtyMutation.mutate({ id: item.cart_id, qty: item.quantity + 1 })}
+                                      >+</Button>
+                                    </div>
+                                    <Button
+                                      type="text"
+                                      danger
+                                      icon={<DeleteOutlined />}
+                                      className="text-xs text-gray-400 hover:text-red-500"
+                                      onClick={() => removeMutation.mutate(item.cart_id)}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                  <Text type="secondary" className="text-xs">
+                                    Unit Price: ฿{price.toLocaleString()}
+                                  </Text>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Col>
+
+                  {/* Right Column: Summary */}
+                  <Col xs={24} lg={9}>
+                    <div className="bg-gray-50 p-8 sticky top-0 h-full min-h-[500px] flex flex-col">
+                      <Title level={4} className="mb-6 uppercase tracking-wide">Order Summary</Title>
+
+                      <div className="space-y-6 flex-1">
+                        {/* Shipping Address */}
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <Text strong className="uppercase text-xs tracking-wider text-gray-500">{t("shippingAddress")}</Text>
+                            <Button type="link" size="small" className="p-0 h-auto text-black underline" onClick={() => setIsAddressModalOpen(true)}>
+                              Change
+                            </Button>
+                          </div>
+                          {selectedAddress ? (
+                            <div className="text-sm text-gray-800">
+                              <p className="font-medium mb-1">{selectedAddress.name}</p>
+                              <p className="text-gray-600 leading-relaxed">
+                                {selectedAddress.address} {selectedAddress.sub_district}<br />
+                                {selectedAddress.district}, {selectedAddress.province} {selectedAddress.zipcode}
+                              </p>
+                              <p className="text-gray-500 mt-1">{selectedAddress.phone}</p>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400 italic py-2">
+                              {t("selectShippingAddress")}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/market/cards/${btoa(
-                              String(firstCard?.card_id),
-                            )}`}
+                        <Divider className="my-0" />
+
+                        {/* Payment */}
+                        <div>
+                          <Text strong className="block mb-3 uppercase text-xs tracking-wider text-gray-500">{t("paymentMethod")}</Text>
+                          <div
+                            className={`p-3 border transition-all cursor-pointer flex items-center gap-3 ${paymentMethod === 'qr_promptpay' ? 'border-black bg-white' : 'border-gray-200'}`}
+                            onClick={() => setPaymentMethod("qr_promptpay")}
                           >
-                            <Text
-                              strong
-                              className="text-lg block truncate hover:text-blue-600 transition-colors"
-                            >
-                              {product.name}
-                            </Text>
-                          </Link>
-                          <Text
-                            type="secondary"
-                            className="text-xs italic block mb-2"
-                          >
-                            {product.product_type?.name}
-                          </Text>
-                          <div className="flex items-center gap-4">
-                            <Text className="text-blue-600 font-bold text-base">
-                              ฿{price.toLocaleString()}
-                            </Text>
-                            <div className="h-4 w-px bg-gray-200" />
-                            <Space size="middle">
-                              <InputNumber
-                                min={1}
-                                max={product.quantity || 99}
-                                value={item.quantity}
-                                onChange={(val) => {
-                                  if (val)
-                                    updateQtyMutation.mutate({
-                                      id: item.cart_id,
-                                      qty: val,
-                                    });
-                                }}
-                                size="small"
-                                className="w-16"
-                              />
-                              <Button
-                                danger
-                                icon={<DeleteOutlined />}
-                                size="small"
-                                type="text"
-                                onClick={() =>
-                                  removeMutation.mutate(item.cart_id)
-                                }
-                              />
-                            </Space>
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'qr_promptpay' ? 'border-black' : 'border-gray-300'}`}>
+                              {paymentMethod === 'qr_promptpay' && <div className="w-2 h-2 rounded-full bg-black" />}
+                            </div>
+                            <div className="flex-1">
+                              <Text strong>QR PromptPay</Text>
+                              <Text type="secondary" className="block text-xs">Scan to pay instantly</Text>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="text-right flex-shrink-0 hidden md:block">
-                          <Text type="secondary" className="text-xs block">
-                            {t("total")}
-                          </Text>
-                          <Text strong className="text-lg">
-                            ฿{(price * item.quantity).toLocaleString()}
-                          </Text>
+                        <Divider className="my-0" />
+
+                        {/* Totals */}
+                        <div className="space-y-2 pt-2">
+                          <div className="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span>฿{subtotal.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-600">
+                            <span>Shipping</span>
+                            <span className="text-green-600">Free</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-4">
+                            <span className="font-medium text-lg uppercase">Total</span>
+                            <span className="font-bold text-2xl">฿{subtotal.toLocaleString()}</span>
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <Button
+                        type="primary"
+                        size="large"
+                        block
+                        className="mt-8 shadow-xl"
+                        onClick={handleCheckout}
+                        disabled={cartItems.length === 0 || !selectedAddress}
+                      >
+                        CHECKOUT
+                      </Button>
+                    </div>
+                  </Col>
+                </Row>
               )}
-            </Card>
-          </Col>
+            </div>
+          </Content>
 
-          {/* Right Column: Summary */}
-          <Col xs={24} lg={8}>
-            <Card className="shadow-sm rounded-xl border-none sticky">
-              <Title level={4} className="mb-6">
-                {t("summary")}
-              </Title>
-
-              <div className="space-y-6 mb-6">
-                {/* Shipping Address Section */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <Text strong>{t("shippingAddress")}</Text>
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() => setIsAddressModalOpen(true)}
-                    >
-                      {t("change")}
-                    </Button>
-                  </div>
-                  {selectedAddress ? (
-                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <Text strong className="block">
-                        {selectedAddress.name}
-                      </Text>
-                      <Text type="secondary" className="text-xs block mb-1">
-                        {selectedAddress.phone}
-                      </Text>
-                      <Text className="text-sm block text-gray-600 leading-snug">
-                        {selectedAddress.address} {selectedAddress.sub_district}{" "}
-                        {selectedAddress.district} {selectedAddress.province}{" "}
-                        {selectedAddress.zipcode}
-                      </Text>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
-                      <Text type="secondary">{t("selectShippingAddress")}</Text>
-                    </div>
-                  )}
-                </div>
-
-                {/* Payment Method Section */}
-                <div>
-                  <Text strong className="block mb-2">
-                    {t("paymentMethod")}
-                  </Text>
-                  <div className="space-y-2">
-                    <div
-                      className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${
-                        paymentMethod === "qr_promptpay"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-blue-300"
-                      }`}
-                      onClick={() => setPaymentMethod("qr_promptpay")}
-                    >
-                      <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center">
-                        {paymentMethod === "qr_promptpay" && (
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <Text strong>QR PromptPay</Text>
-                        <Text type="secondary" className="text-xs block">
-                          {t("scanToPay")}
-                        </Text>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Divider className="my-2" />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-gray-500">
-                    <Text>{t("subtotal")}</Text>
-                    <Text>฿{subtotal.toLocaleString()}</Text>
-                  </div>
-                  <div className="flex justify-between items-center text-gray-500">
-                    <Text>{t("fee")}</Text>
-                    <Text className="text-green-500">{t("free")}</Text>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Text strong className="text-lg uppercase">
-                      {t("netTotal")}
-                    </Text>
-                    <Text strong className="text-2xl text-blue-600">
-                      ฿{subtotal.toLocaleString()}
-                    </Text>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                type="primary"
-                size="large"
-                block
-                className="h-12 text-lg rounded-xl shadow-lg bg-blue-600 hover:bg-blue-700"
-                icon={<WalletOutlined />}
-                onClick={handleCheckout}
-                disabled={cartItems.length === 0 || !selectedAddress}
-              >
-                {t("checkout")}
-              </Button>
-            </Card>
-
-            {/* Address Selection Modal */}
-            <Modal
-              title={t("selectAddress")}
-              open={isAddressModalOpen}
-              onCancel={() => setIsAddressModalOpen(false)}
-              footer={null}
-            >
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-                {addresses.map((addr) => (
-                  <div
-                    key={addr.address_id}
-                    className={`p-3 rounded-lg border cursor-pointer hover:border-blue-400 transition-all ${
-                      selectedAddressId === addr.address_id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200"
+          {/* Address Selection Modal - Styled to match */}
+          <Modal
+            title={<span className="text-lg font-medium">{t("selectAddress")}</span>}
+            open={isAddressModalOpen}
+            onCancel={() => setIsAddressModalOpen(false)}
+            footer={null}
+            centered
+            width={500}
+          >
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pt-4">
+              {addresses.map((addr) => (
+                <div
+                  key={addr.address_id}
+                  className={`p-4 border transition-all cursor-pointer group ${selectedAddressId === addr.address_id
+                    ? "border-black bg-gray-50"
+                    : "border-gray-200 hover:border-gray-400"
                     }`}
-                    onClick={() => {
-                      setSelectedAddressId(addr.address_id);
-                      setIsAddressModalOpen(false);
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <Text strong>{addr.name}</Text>
+                  onClick={() => {
+                    setSelectedAddressId(addr.address_id);
+                    setIsAddressModalOpen(false);
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Text strong className="text-base">{addr.name}</Text>
                         {addr.is_default && (
-                          <span className="ml-2 text-xs bg-gray-200 px-1 rounded text-gray-600">
+                          <span className="text-[10px] bg-black text-white px-1.5 py-0.5 uppercase tracking-wider">
                             {t("default")}
                           </span>
                         )}
-                        <Text className="block text-sm text-gray-600 mt-1">
-                          {addr.address} {addr.sub_district} {addr.district}{" "}
-                          {addr.province} {addr.zipcode}
-                        </Text>
                       </div>
-                      {selectedAddressId === addr.address_id && (
-                        <div className="text-blue-500">✓</div>
-                      )}
+                      <Text className="block text-sm text-gray-600 leading-relaxed">
+                        {addr.address} {addr.sub_district} <br />
+                        {addr.district} {addr.province} {addr.zipcode}
+                      </Text>
                     </div>
+                    {selectedAddressId === addr.address_id && (
+                      <div className="text-black"><SafetyOutlined /></div>
+                    )}
                   </div>
-                ))}
+                </div>
+              ))}
+              <div className="pt-2">
                 <Link href="/profile">
-                  <Button
-                    block
-                    type="dashed"
-                    icon={<WalletOutlined />}
-                    className="mt-2"
-                  >
+                  <Button block type="dashed" size="large">
                     {t("manageAddress")}
                   </Button>
                 </Link>
               </div>
-            </Modal>
-          </Col>
-        </Row>
-      </Content>
-    </Layout>
+            </div>
+          </Modal>
+        </Layout>
+      </Layout>
+    </ConfigProvider>
   );
 }
