@@ -139,11 +139,12 @@ export default function ShopProducts() {
                 }}>
                   {imageUrl ? (
                     <Image
-                      src={imageUrl}
+                      src={getCardImageUrl(cardImage, "thumb")}
                       alt={product.name}
                       fill
                       className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isInactive ? 'grayscale' : ''}`}
                       sizes="(max-width: 768px) 100vw, 20vw"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -279,6 +280,7 @@ export default function ShopProducts() {
                           fill
                           className="object-cover"
                           sizes="150px"
+                          unoptimized
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1 text-center truncate">
                           {card?.name}

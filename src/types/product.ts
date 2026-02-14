@@ -58,6 +58,10 @@ export interface Product {
   product_stock_card?: ProductStockCard[];
   product_stock_merch?: ProductStockMerch[];
   price: number;
+  price_period?: Array<{
+    price: number;
+    status: string;
+  }>;
   users?: User & { shop?: Shop };
   market_min_price?: number;
   total_quantity?: number;
