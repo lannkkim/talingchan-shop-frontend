@@ -589,6 +589,7 @@ export default function ProductAddFormV2({
               price_period_ended: itemEnd,
             }
             : undefined,
+          shipping_fee: (item.shipping_fee !== undefined && item.shipping_fee !== null && item.shipping_fee !== "") ? Number(item.shipping_fee) : undefined,
           quantity: item.quantity,
 
           is_auto_extend: values.is_auto_extend,
@@ -890,6 +891,14 @@ export default function ProductAddFormV2({
                                       <FloatingLabelInput
                                         label={`${saleType === "auction" ? "ราคาตั้งต้น" : (transactionType === "buy" ? "ราคารับซื้อ" : "ราคา")}*`}
                                         type="number"
+                                      />
+                                    </Form.Item>
+
+                                    <Form.Item name={[field.name, "shipping_fee"]}>
+                                      <FloatingLabelInput
+                                        label="ค่าส่ง (ถ้ามี)"
+                                        type="number"
+                                        min={0}
                                       />
                                     </Form.Item>
 

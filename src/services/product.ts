@@ -24,6 +24,7 @@ export interface CreateProductInput {
   price?: {
     price: number;
   };
+  shipping_fee?: number;
   quantity?: number;
   products?: {
     product_id: string;

@@ -305,35 +305,52 @@ export default function ShopProducts() {
                   <div>
                     <Tag color="blue" className="mb-2">{selectedProduct.product_type?.name || "Product"}</Tag>
                     <Title level={3} className="!mt-0 !mb-2">{selectedProduct.name}</Title>
-                    {(() => {
-                      const activePrice = selectedProduct.price_period?.find(p => p.status === "active") || selectedProduct.price_period?.[0];
-                      return activePrice ? (
-                        <Text className="text-2xl font-medium block mb-6">
-                          ฿{Number(activePrice.price).toLocaleString()}
-                        </Text>
-                      ) : null;
-                    })()}
+                    <Text className="text-2xl font-medium block mb-6">
+                      ฿{Number(selectedProduct.price).toLocaleString()}
+                    </Text>
                   </div>
 
-                  <div className="space-y-6 flex-1">
+                  <div className="space-y-6 flex-1 overflow-y-auto pr-2 max-h-[600px]">
                     <div>
                       <Text strong className="block mb-2 text-xs uppercase tracking-wider text-gray-500">Description</Text>
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                         {selectedProduct.description || "No description provided."}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Stock</Text>
-                        <Text className="text-base">{selectedProduct.quantity || 1} units</Text>
-                      </div>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                       <div>
                         <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Status</Text>
                         <Tag color={selectedProduct.status === 'active' ? 'green' : 'orange'}>
                           {selectedProduct.status?.toUpperCase()}
                         </Tag>
                       </div>
+                      <div>
+                        <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Stock Quantity</Text>
+                        <Text className="text-base">{selectedProduct.quantity || 1} units</Text>
+                      </div>
+                      <div>
+                        <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Total Cards</Text>
+                        <Text className="text-base">{selectedProduct.total_quantity || "-"}</Text>
+                      </div>
+                      <div>
+                         <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Shipping Fee</Text>
+                         <Text className="text-base">
+                           {selectedProduct.shipping_fee ? `฿${Number(selectedProduct.shipping_fee).toLocaleString()}` : "Free Shipping"}
+                         </Text>
+                      </div>
+                      {selectedProduct.started_at && (
+                        <div>
+                          <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Started At</Text>
+                          <Text className="text-sm">{new Date(selectedProduct.started_at).toLocaleString()}</Text>
+                        </div>
+                      )}
+                      {selectedProduct.ended_at && (
+                        <div>
+                          <Text strong className="block mb-1 text-xs uppercase tracking-wider text-gray-500">Ended At</Text>
+                          <Text className="text-sm">{new Date(selectedProduct.ended_at).toLocaleString()}</Text>
+                        </div>
+                      )}
                     </div>
                   </div>
 

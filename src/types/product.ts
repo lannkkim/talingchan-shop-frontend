@@ -62,6 +62,7 @@ export interface Product {
     price: number;
     status: string;
   }>;
+  shipping_fee?: number;
   users?: User & { shop?: Shop };
   market_min_price?: number;
   total_quantity?: number;
