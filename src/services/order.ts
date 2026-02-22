@@ -23,3 +23,19 @@ export const getTransportations = async (): Promise<Transportation[]> => {
   );
   return response.data;
 };
+export const getUserOrders = async (): Promise<Order[]> => {
+  const response = await axiosInstance.get<Order[]>("/api/v1/orders/me");
+  return response.data;
+};
+
+export const getAdminOrders = async (): Promise<Order[]> => {
+  const response = await axiosInstance.get<Order[]>("/api/v1/orders/admin");
+  return response.data;
+};
+
+export const updateAdminOrderStatus = async (
+  orderId: string,
+  status: string,
+): Promise<void> => {
+  await axiosInstance.put(`/api/v1/orders/admin/${orderId}/status`, { status });
+};

@@ -28,7 +28,8 @@ import {
   ConfigProvider,
   Menu,
   Avatar,
-  Badge
+  Badge,
+  Tag
 } from "antd";
 import {
   DeleteOutlined,
@@ -48,7 +49,7 @@ import { getCardImageUrl } from "@/utils/image";
 import { Product } from "@/types/product";
 import { getAddresses } from "@/services/address";
 import { Address } from "@/types/address";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
@@ -160,54 +161,64 @@ export default function CartPage() {
     (a) => a.address_id === selectedAddressId,
   );
 
+  const groupedCartItems = useMemo(() => {
+    const groups: Record<
+      string,
+      {
+        shopName: string;
+        isOfficial: boolean;
+        items: CartItem[];
+        shopImage?: string;
+      }
+    > = {};
+    cartItems.forEach((item) => {
+      const product = item.product;
+      const user = product?.users;
+      let shopId = "unknown";
+      let shopName = "Unknown Shop";
+      let isOfficial = false;
+
+      if (product?.is_admin_shop) {
+        shopId = "admin";
+        shopName = "Talingchan Official";
+        isOfficial = true;
+      } else if (user) {
+        shopId = user.users_id;
+        shopName =
+          user.shop?.shop_profile?.shop_name ||
+          user.username ||
+          "Community Member";
+      }
+
+      if (!groups[shopId]) {
+        groups[shopId] = { shopName, isOfficial, items: [] };
+      }
+      groups[shopId].items.push(item);
+    });
+    return Object.values(groups);
+  }, [cartItems]);
+
   const subtotal = cartItems.reduce((acc, item) => {
     const price = Number(item.product.price || 0);
     return acc + price * item.quantity;
   }, 0);
 
+  const shippingFee = cartItems.reduce((acc, item) => {
+    return acc + Number(item.product.shipping_fee || 0) * item.quantity;
+  }, 0);
+
+  const total = subtotal + shippingFee;
+
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { modal } = App.useApp();
   const router = useRouter();
-
-  const checkoutMutation = useMutation({
-    mutationFn: (data: CheckoutInput) => checkout(data),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      modal.success({
-        title: t("success"),
-        content: t("successContent", { orderIds: data.order_ids.join(", ") }),
-        onOk: () => {
-          router.push("/profile?tab=purchases");
-        },
-      });
-    },
-    onError: (error: any) => {
-      modal.error({
-        title: t("error"),
-        content: error.response?.data?.error || "ไม่สามารถทำรายการได้",
-      });
-    },
-  });
 
   const handleCheckout = () => {
     if (!selectedAddressId) {
       message.error(t("selectShippingAddress"));
       return;
     }
-
-    modal.confirm({
-      title: t("confirmOrder"),
-      content: t("confirmOrderContent", { amount: subtotal.toLocaleString() }),
-      okText: t("confirm"),
-      cancelText: t("cancel"),
-      onOk: () => {
-        checkoutMutation.mutate({
-          shipping_address_id: selectedAddressId,
-          payment_type_id: paymentMethod === "qr_promptpay" ? "1" : "1",
-          cart_item_ids: [], // Checkout all items
-        });
-      },
-    });
+    router.push(`/cart/pay?addressId=${selectedAddressId}`);
   };
 
   const menuItems = [
@@ -294,70 +305,103 @@ export default function CartPage() {
                         </Link>
                       </div>
 
-                      <div className="divide-y divide-gray-100">
-                        {cartItems.map((item) => {
-                          const product = item.product as Product;
-                          const price = Number(product.price_period?.[0]?.price || 0);
-                          const firstCard = product.product_stock_card?.[0]?.card || product.product_stock_card?.[0]?.stock_card?.card;
+                      <div className="space-y-6">
+                        {groupedCartItems.map((group, groupIdx) => {
+                          const groupSubtotal = group.items.reduce((acc, item) => acc + Number(item.product.price || 0) * item.quantity, 0);
+                          const groupShipping = group.items.reduce((acc, item) => acc + Number(item.product.shipping_fee || 0) * item.quantity, 0);
+                          const groupTotal = groupSubtotal + groupShipping;
+                          const groupTotalQty = group.items.reduce((acc, item) => acc + item.quantity, 0);
 
                           return (
-                            <div key={item.cart_id} className="py-6 flex gap-6 group">
-                              <div className="relative w-24 aspect-[3/4] bg-gray-50 border border-gray-200 flex-shrink-0">
-                                <Image
-                                  src={getCardImageUrl(firstCard?.image_name)}
-                                  alt={product.name}
-                                  fill
-                                  className="object-cover p-2"
-                                  sizes="96px"
-                                />
+                            <Card key={groupIdx} styles={{ body: { padding: 0 } }} className="overflow-hidden border border-gray-200 shadow-sm rounded-xl">
+                              {/* Shop Header */}
+                              <div className="p-4 bg-white border-b border-gray-100 flex items-center gap-3">
+                                {group.isOfficial ? (
+                                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm bg-blue-50 border border-blue-100">
+                                    <Image src="/images/icon/logo.png" alt="Talingchan" width={32} height={32} className="rounded-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 bg-orange-100 border border-orange-200 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
+                                    {group.shopName.charAt(0)}
+                                  </div>
+                                )}
+                                <Text strong className="text-sm uppercase tracking-wider">{group.shopName}</Text>
+                                {group.isOfficial && <Tag color="blue" className="ml-2 border-0">Official</Tag>}
                               </div>
 
-                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                                <div>
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <Link href={`/market/cards/${btoa(String(firstCard?.card_id))}`}>
-                                        <Text strong className="text-lg hover:underline cursor-pointer">{product.name}</Text>
-                                      </Link>
-                                      <Text type="secondary" className="block text-sm">{product.product_type?.name}</Text>
+                              <div className="divide-y divide-gray-100 px-6">
+                                {group.items.map((item) => {
+                                  const product = item.product as Product;
+                                  const price = Number(product.price || 0);
+                                  const firstCard = product.product_stock_card?.[0]?.card || product.product_stock_card?.[0]?.stock_card?.card;
+                                  const firstImage = firstCard?.image_name || product.product_stock_merch?.[0]?.stock_merch?.merch?.image_name;
+
+                                  return (
+                                    <div key={item.cart_id} className="py-6 flex gap-6 group">
+                                      <div className="relative w-24 aspect-[3/4] bg-gray-50 border border-gray-200 flex-shrink-0">
+                                        <Image
+                                          src={getCardImageUrl(firstImage)}
+                                          alt={product.name}
+                                          fill
+                                          className="object-cover p-2"
+                                          sizes="96px"
+                                          unoptimized
+                                        />
+                                      </div>
+
+                                      <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                                        <div>
+                                          <div className="flex justify-between items-start">
+                                            <div>
+                                              <Link href={firstCard?.card_id ? `/market/cards/${btoa(String(firstCard.card_id))}` : '#'}>
+                                                <Text strong className="text-lg hover:underline cursor-pointer">{product.name}</Text>
+                                              </Link>
+                                              <Text type="secondary" className="block text-sm">{product.product_type?.name}</Text>
+                                            </div>
+                                            <Button
+                                              type="text"
+                                              danger
+                                              icon={<DeleteOutlined className="text-red-300 group-hover:text-red-500 transition-colors" />}
+                                              className="p-1 min-w-0 h-auto opacity-50 group-hover:opacity-100 bg-red-50 hover:bg-red-100 rounded-full w-8 flex items-center justify-center aspect-square"
+                                              onClick={() => removeMutation.mutate(item.cart_id)}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="flex justify-between items-end">
+                                          <div className="flex gap-4 items-center">
+                                            <div className="bg-white border text-blue-600 border-blue-200 px-3 py-1 flex items-center rounded text-xs font-medium">
+                                              จำนวน {item.quantity} ชิ้น
+                                            </div>
+                                          </div>
+                                          <Text strong className="text-lg text-gray-800">฿{(price * item.quantity).toLocaleString()}</Text>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <Text strong className="text-lg">฿{(price * item.quantity).toLocaleString()}</Text>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Shop Footer / Summary */}
+                              <div className="bg-gray-50 border-t border-gray-100 p-4 px-6">
+                                <div className="space-y-2 mb-3">
+                                  <div className="flex justify-between text-sm text-gray-600">
+                                    <span>การจัดส่ง</span>
+                                    <span className="font-medium text-gray-800">จัดส่งมาตรฐาน</span>
+                                  </div>
+                                  <div className="flex justify-between text-sm text-gray-600">
+                                    <span>ค่าจัดส่ง</span>
+                                    <span className={groupShipping === 0 ? "text-green-600 font-medium" : "text-gray-800 font-medium"}>
+                                      {groupShipping === 0 ? "Free" : `฿${groupShipping.toLocaleString()}`}
+                                    </span>
                                   </div>
                                 </div>
-
-                                <div className="flex justify-between items-end">
-                                  <div className="flex items-center gap-3">
-                                    <div className="border border-gray-200 flex items-center">
-                                      <Button
-                                        type="text"
-                                        size="small"
-                                        className="px-2"
-                                        onClick={() => item.quantity > 1 && updateQtyMutation.mutate({ id: item.cart_id, qty: item.quantity - 1 })}
-                                      >-</Button>
-                                      <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                                      <Button
-                                        type="text"
-                                        size="small"
-                                        className="px-2"
-                                        onClick={() => updateQtyMutation.mutate({ id: item.cart_id, qty: item.quantity + 1 })}
-                                      >+</Button>
-                                    </div>
-                                    <Button
-                                      type="text"
-                                      danger
-                                      icon={<DeleteOutlined />}
-                                      className="text-xs text-gray-400 hover:text-red-500"
-                                      onClick={() => removeMutation.mutate(item.cart_id)}
-                                    >
-                                      Remove
-                                    </Button>
-                                  </div>
-                                  <Text type="secondary" className="text-xs">
-                                    Unit Price: ฿{price.toLocaleString()}
-                                  </Text>
+                                <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                                  <Text strong className="text-sm">รวมยอดสั่งซื้อ {groupTotalQty} ชิ้น</Text>
+                                  <Text strong className="text-lg text-blue-600">฿{groupTotal.toLocaleString()}</Text>
                                 </div>
                               </div>
-                            </div>
+                            </Card>
                           );
                         })}
                       </div>
@@ -423,11 +467,13 @@ export default function CartPage() {
                           </div>
                           <div className="flex justify-between text-gray-600">
                             <span>Shipping</span>
-                            <span className="text-green-600">Free</span>
+                            <span className={shippingFee === 0 ? "text-green-600" : ""}>
+                              {shippingFee === 0 ? "Free" : `฿${shippingFee.toLocaleString()}`}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-4">
                             <span className="font-medium text-lg uppercase">Total</span>
-                            <span className="font-bold text-2xl">฿{subtotal.toLocaleString()}</span>
+                            <span className="font-bold text-2xl">฿{total.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>

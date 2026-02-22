@@ -448,11 +448,11 @@ export default function MarketPage() {
                             <Text type="secondary" className="block text-xs mb-1">Quantity</Text>
                             <InputNumber 
                               min={1} 
-                              max={selectedProduct.total_quantity || 99} 
+                              max={selectedProduct.quantity || 1} 
                               value={buyQuantity} 
-                              onChange={(val) => setBuyQuantity(val || 1)}
+                              onChange={(val) => setBuyQuantity(Number(val) || 1)}
                               className="w-24"
-                              disabled={user?.users_id === selectedProduct.users?.users_id}
+                              disabled={user?.users_id === selectedProduct.users?.users_id || (selectedProduct.quantity || 0) <= 0}
                             />
                           </div>
                           <Button 
@@ -462,9 +462,9 @@ export default function MarketPage() {
                             icon={user?.users_id === selectedProduct.users?.users_id ? undefined : <ShoppingCartOutlined />}
                             onClick={handleAddToCart}
                             loading={addingToCart}
-                            disabled={user?.users_id === selectedProduct.users?.users_id}
+                            disabled={user?.users_id === selectedProduct.users?.users_id || (selectedProduct.quantity || 0) <= 0}
                           >
-                            {user?.users_id === selectedProduct.users?.users_id ? "สินค้าของคุณ" : "เพิ่มสินค้าลงตะกร้า"}
+                            {user?.users_id === selectedProduct.users?.users_id ? "สินค้าของคุณ" : (selectedProduct.quantity || 0) <= 0 ? "สินค้าหมด" : "เพิ่มสินค้าลงตะกร้า"}
                           </Button>
                         </div>
                       </Space>

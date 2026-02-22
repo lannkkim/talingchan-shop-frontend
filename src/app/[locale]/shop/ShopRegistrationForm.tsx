@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Form,
   Input,
@@ -9,168 +9,132 @@ import {
   Select,
   Card,
   Typography,
-  Divider,
   App,
   Row,
   Col,
 } from "antd";
-import { UploadOutlined, BankOutlined, ShopOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  BankOutlined,
+  ShopOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  MailOutlined,
+} from "@ant-design/icons";
 import { registerShop, getBanks, Bank } from "@/services/shop";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
-export default function ShopRegistrationForm() {
+export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => void }) {
+  const t = useTranslations("Shop.registration");
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const { message, modal } = App.useApp();
-  const router = useRouter();
-  const [banks, setBanks] = useState<Bank[]>([]);
+  const { message } = App.useApp();
 
-  useEffect(() => {
-    fetchBanks();
-  }, []);
+  // Queries
+  const { data: banks = [], isLoading: banksLoading } = useQuery<Bank[]>({
+    queryKey: ["banks"],
+    queryFn: getBanks,
+  });
 
-  const fetchBanks = async () => {
-    try {
-      const data = await getBanks();
-      setBanks(data);
-    } catch (error) {
-      console.error("Failed to fetch banks", error);
-      message.error("Failed to load bank list");
-    }
-  };
-
-  const { user } = useAuth();
-  useEffect(() => {
-    if (user && form) {
-      const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-      if (fullName) {
-        form.setFieldsValue({
-          owner_name: fullName
-        });
+  // Mutations
+  const registerMutation = useMutation({
+    mutationFn: (values: any) => registerShop(values),
+    onSuccess: () => {
+      message.success(t("messages.success"));
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        window.location.href = "/shop";
       }
-    }
-  }, [user, form]);
-
-  const onFinish = async (values: any) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("shop_name", values.shop_name);
-      if (values.shop_display) formData.append("shop_display", values.shop_display);
-      if (values.shop_email) formData.append("shop_email", values.shop_email);
-      if (values.shop_phone) formData.append("shop_phone", values.shop_phone);
-      if (values.owner_name) formData.append("owner_name", values.owner_name);
-
-      formData.append("bank_id", values.bank_id);
-      formData.append("bank_account", values.bank_account);
-      if (values.bank_account_name) formData.append("bank_account_name", values.bank_account_name);
-      if (values.bank_branch) formData.append("branch", values.bank_branch); // Mapped to 'branch' in DB
-
-      if (values.bank_book_image && values.bank_book_image.length > 0) {
-        formData.append("bank_book_image", values.bank_book_image[0].originFileObj);
-      }
-
-      await registerShop(formData);
-
-      modal.success({
-        title: "Registration Successful",
-        content: "Your shop application has been submitted. Please wait for verification.",
-        onOk: () => {
-          // Redirect or reload
-          // window.location.reload(); 
-          // Ideally redirect to /shop which matches the condition
-          window.location.href = "/shop";
-        },
-      });
-    } catch (err: any) {
-      console.error(err);
-      message.error(err.response?.data?.error || "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadProps = {
-    beforeUpload: (file: any) => {
-      const isImage = file.type === "image/jpeg" || file.type === "image/png";
-      if (!isImage) {
-        message.error("You can only upload JPG/PNG file!");
-      }
-      return false; // Prevent auto upload
     },
-    maxCount: 1,
+    onError: (error: any) => {
+      console.error("Registration error:", error);
+      message.error(error.response?.data?.message || t("messages.error"));
+    },
+  });
+
+  const onFinish = (values: any) => {
+    const formData = new FormData();
+    formData.append("shop_name", values.shop_name);
+    if (values.shop_email) formData.append("shop_email", values.shop_email);
+    if (values.shop_phone) formData.append("shop_phone", values.shop_phone);
+    formData.append("bank_id", values.bank_id);
+    formData.append("bank_account", values.account_number);
+    if (values.account_name) formData.append("bank_account_name", values.account_name);
+    if (values.branch) formData.append("branch", values.branch);
+
+    if (values.book_image && values.book_image.length > 0) {
+      formData.append("bank_book_image", values.book_image[0].originFileObj);
+    }
+    
+    registerMutation.mutate(formData);
+  };
+
+  const normFile = (e: any) => {
+    if (Array.isArray(e)) return e;
+    return e?.fileList;
   };
 
   return (
-    <div className="flex justify-center py-10">
-      <Card
-        className="w-full max-w-3xl shadow-lg border-t-4 border-t-blue-500"
-        title={
-          <div className="text-center py-4">
-            <Title level={2} className="m-0 text-blue-600"><ShopOutlined /> Register Your Shop</Title>
-            <Text type="secondary">Join our marketplace and start selling today!</Text>
-          </div>
-        }
+    <div className="max-w-4xl mx-auto py-10 px-4">
+      <div className="text-center mb-10">
+        <ShopOutlined className="text-5xl text-blue-600 mb-4" />
+        <Title level={2}>{t("title")}</Title>
+        <Paragraph className="text-gray-500 max-w-md mx-auto">
+          {t("description")}
+        </Paragraph>
+      </div>
+
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        requiredMark="optional"
+        className="space-y-6"
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          requiredMark="optional"
-          size="large"
-          initialValues={{
-            shop_display: "",
-            shop_email: "",
-            shop_phone: "",
-          }}
-        >
-          <Divider titlePlacement="left">Shop Information</Divider>
-          <Row gutter={16}>
-            <Col span={24}>
+        <Row gutter={24}>
+          <Col xs={24} md={12}>
+            <Card title={t("profile.title")} className="h-full shadow-sm border-gray-100">
               <Form.Item
                 name="shop_name"
-                label="Shop Name"
-                rules={[{ required: true, message: "Please enter shop name" }]}
+                label={t("profile.shopName")}
+                rules={[{ required: true, message: "Required" }]}
               >
-                <Input placeholder="e.g. My Awesome Store" prefix={<ShopOutlined />} />
+                <Input prefix={<ShopOutlined className="text-gray-400" />} />
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="shop_display" label="Display Name (Optional)">
-                <Input placeholder="Shop display name" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="owner_name" label="Owner Name">
-                <Input placeholder="Your full name" disabled />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="shop_email" label="Contact Email" rules={[{ type: 'email' }]}>
-                <Input placeholder="Email for customers" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="shop_phone" label="Contact Phone">
-                <Input placeholder="Phone for customers" />
-              </Form.Item>
-            </Col>
-          </Row>
 
-          <Divider titlePlacement="left">Bank Information</Divider>
-          <Row gutter={16}>
-            <Col span={12}>
+              <Form.Item
+                name="shop_email"
+                label={t("profile.shopEmail")}
+                rules={[
+                  { required: true, message: "Required" },
+                  { type: "email", message: "Invalid email" }
+                ]}
+              >
+                <Input prefix={<MailOutlined className="text-gray-400" />} />
+              </Form.Item>
+
+              <Form.Item
+                name="shop_phone"
+                label={t("profile.shopPhone")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input prefix={<PhoneOutlined className="text-gray-400" />} />
+              </Form.Item>
+            </Card>
+          </Col>
+
+          <Col xs={24} md={12}>
+            <Card title={t("bank.title")} className="h-full shadow-sm border-gray-100">
               <Form.Item
                 name="bank_id"
-                label="Bank"
-                rules={[{ required: true, message: "Please select a bank" }]}
+                label={t("bank.name")}
+                rules={[{ required: true, message: "Required" }]}
               >
-                <Select placeholder="Select Bank" showSearch optionFilterProp="children">
+                <Select loading={banksLoading}>
                   {banks.map((bank) => (
                     <Option key={bank.bank_id} value={bank.bank_id}>
                       {bank.bank_shortname} - {bank.bank_name}
@@ -178,58 +142,60 @@ export default function ShopRegistrationForm() {
                   ))}
                 </Select>
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="bank_branch" label="Branch">
-                <Input placeholder="Bank Branch" prefix={<EnvironmentOutlined />} />
-              </Form.Item>
-            </Col>
-          </Row>
 
-          <Row gutter={16}>
-            <Col span={12}>
               <Form.Item
-                name="bank_account"
-                label="Account Number"
-                rules={[{ required: true, message: "Please enter account number" }]}
+                name="account_name"
+                label={t("bank.holderName")}
+                rules={[{ required: true, message: "Required" }]}
               >
-                <Input placeholder="e.g. 123-4-56789-0" prefix={<BankOutlined />} />
+                <Input prefix={<UserOutlined className="text-gray-400" />} />
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="bank_account_name" label="Account Name">
-                <Input placeholder="Name on bank account" />
-              </Form.Item>
-            </Col>
-          </Row>
 
+              <Form.Item
+                name="account_number"
+                label={t("bank.number")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input prefix={<BankOutlined className="text-gray-400" />} />
+              </Form.Item>
+
+              <Form.Item
+                name="branch"
+                label={t("bank.branch")}
+              >
+                <Input />
+              </Form.Item>
+            </Card>
+          </Col>
+        </Row>
+
+        <Card title={t("verification.title")} className="shadow-sm border-gray-100">
           <Form.Item
-            name="bank_book_image"
-            label="Bank Book Image"
+            name="book_image"
+            label={t("verification.bookImage")}
             valuePropName="fileList"
-            getValueFromEvent={(e: any) => {
-              if (Array.isArray(e)) return e;
-              return e?.fileList;
-            }}
-            rules={[{ required: true, message: "Please upload bank book image" }]}
+            getValueFromEvent={normFile}
+            extra={t("verification.bookImageExtra")}
+            rules={[{ required: true, message: "Required" }]}
           >
-            <Upload {...uploadProps} listType="picture-card">
-              <div>
-                <UploadOutlined />
-                <div style={{ marginTop: 8 }}>Upload</div>
-              </div>
+            <Upload listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Upload</Button>
             </Upload>
           </Form.Item>
+        </Card>
 
-          <Divider />
-
-          <Form.Item className="text-center">
-            <Button type="primary" htmlType="submit" size="large" loading={loading} className="w-full md:w-1/3 h-12 text-lg bg-blue-600 hover:bg-blue-700">
-              Submit Application
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
+        <div className="flex justify-center pt-6">
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="large"
+            loading={registerMutation.isPending}
+            className="px-12 h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700"
+          >
+            {t("actions.submit")}
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 }

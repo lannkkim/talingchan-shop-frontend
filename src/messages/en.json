@@ -158,35 +158,50 @@
       "title": "All Orders",
       "empty": "No orders found",
       "columns": {
-        "order": "Order",
-        "customer": "Customer",
+        "orderId": "Order ID",
+        "buyer": "Buyer",
         "items": "Items",
         "total": "Total",
-        "shipping": "Shipping",
-        "status": "Status"
+        "status": "Status",
+        "date": "Date",
+        "tracking": "Tracking",
+        "actions": "Actions"
       },
       "status": {
         "paid": "Paid",
         "pending": "Pending",
-        "shipped": "Shipped",
-        "delivered": "Delivered"
+        "pending_approve": "Waiting verify paid",
+        "shipped": "Already Shipped",
+        "delivered": "Delivered",
+        "completed": "Complete",
+        "cancelled": "Cancel",
+        "WVP": "Waiting verify paid",
+        "PD": "Pending",
+        "AP": "Approved",
+        "RJ": "Reject",
+        "WA": "waiting auction",
+        "CPA": "Complete Auction",
+        "NCA": "not Complete Auction",
+        "WO": "waiting offer",
+        "CC": "Cancel",
+        "RF": "Refund",
+        "WP": "Waiting pack",
+        "WS": "Waiting ship",
+        "RS": "Already Shipped",
+        "CP": "Complete"
       },
       "actions": {
-        "addTracking": "Add Tracking No",
-        "editShipping": "Edit Shipping",
-        "specifyShipping": "Specify Shipping"
+        "view": "View",
+        "tracking": "Tracking",
+        "refresh": "Refresh"
       },
-      "modal": {
-        "transport": "Transportation Company",
-        "selectTransport": "Select Transport",
-        "trackingNo": "Tracking Number",
-        "trackingPlaceholder": "e.g. TH123456789",
-        "note": "* Once saved, status will automatically change to Shipped and customer will be notified.",
-        "save": "Save Info",
-        "cancel": "Cancel",
-        "success": "Tracking number updated",
-        "error": "Error updating tracking number",
-        "warning": "Please enter tracking number"
+      "tracking": {
+        "success": "Tracking updated successfully",
+        "error": "Failed to update tracking",
+        "notSet": "Not Set",
+        "modalTitle": "Update Tracking",
+        "label": "Tracking Number",
+        "placeholder": "Enter tracking number"
       }
     },
     "products": {
@@ -222,7 +237,12 @@
         "description": "Description",
         "activeUntil": "Active Until",
         "priceValidUntil": "Price Valid Until",
-        "indefinite": "Indefinite"
+        "indefinite": "Indefinite",
+        "includesCards": "Includes {count} cards",
+        "totalCards": "Total Cards",
+        "shippingFee": "Shipping Fee",
+        "startedAt": "Started At",
+        "endedAt": "Ended At"
       },
       "renewModal": {
         "title": "Renew Product Price",
@@ -334,6 +354,35 @@
         "enterName": "Please enter product name",
         "selectCard": "Please select at least one card"
       }
+    },
+    "registration": {
+      "title": "Open Your Shop",
+      "description": "Join our marketplace and start selling your cards to collectors around the world. Fill out the form below to register your shop.",
+      "profile": {
+        "title": "Shop Profile",
+        "shopName": "Shop Name",
+        "shopEmail": "Shop Email",
+        "shopPhone": "Shop Phone"
+      },
+      "bank": {
+        "title": "Bank Account Details",
+        "name": "Bank Name",
+        "holderName": "Account Holder Name",
+        "number": "Account Number",
+        "branch": "Branch (Optional)"
+      },
+      "verification": {
+        "title": "Verification",
+        "bookImage": "Bank Book Image",
+        "bookImageExtra": "Please upload a clear photo of your bank book's first page."
+      },
+      "actions": {
+        "submit": "Submit Application"
+      },
+      "messages": {
+        "success": "Shop registered successfully! Please wait for admin approval.",
+        "error": "Failed to register shop. Please try again."
+      }
     }
   },
   "Footer": {
@@ -376,7 +425,8 @@
       "dashboard": "Dashboard",
       "users": "User Management",
       "roles": "Role Management",
-      "products": "Product Management"
+      "products": "Product Management",
+      "orders": "Manage Orders"
     },
     "Layout": {
       "verifying": "Verifying access...",
@@ -391,6 +441,35 @@
       "totalUsers": "Total Users",
       "activeRoles": "Active Roles",
       "welcome": "Welcome to the Admin Control Panel. Use the sidebar to manage users and roles."
+    },
+    "Shops": {
+      "title": "Shop Management",
+      "columns": {
+        "name": "Shop Name",
+        "owner": "Owner",
+        "requestedDate": "Requested Date",
+        "status": "Status",
+        "action": "Action"
+      },
+      "actions": {
+        "view": "View",
+        "approve": "Approve Shop"
+      },
+      "details": {
+        "title": "Shop Details",
+        "back": "Back to List",
+        "shopInfo": "Shop Information",
+        "bankInfo": "Bank Information",
+        "noBank": "No Bank Information Available",
+        "bookImage": "Bank Book Image"
+      },
+      "messages": {
+        "approveSuccess": "Shop approved successfully",
+        "approveError": "Failed to approve shop",
+        "fetchError": "Failed to fetch shops",
+        "notFound": "Shop not found",
+        "loading": "Loading data..."
+      }
     },
     "Users": {
       "title": "User Management",

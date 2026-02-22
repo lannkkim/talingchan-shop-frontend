@@ -173,9 +173,12 @@ export default function PageHeader({
             {cartItems.map((item) => {
               const product = item.product;
               const price = Number(product?.price || 0);
-              const firstCard =
-                product?.product_stock_card?.[0]?.card ||
-                product?.product_stock_card?.[0]?.stock_card?.card;
+              const firstImage =
+                product?.product_stock_card?.[0]?.card?.image_name ||
+                product?.product_stock_card?.[0]?.stock_card?.card
+                  ?.image_name ||
+                product?.product_stock_merch?.[0]?.stock_merch?.merch
+                  ?.image_name;
 
               return (
                 <div
@@ -184,11 +187,12 @@ export default function PageHeader({
                 >
                   <div className="relative w-12 h-16 bg-gray-50 rounded overflow-hidden flex-shrink-0">
                     <Image
-                      src={getCardImageUrl(firstCard?.image_name)}
+                      src={getCardImageUrl(firstImage)}
                       alt={product?.name || "Product"}
                       fill
                       className="object-contain"
                       sizes="48px"
+                      unoptimized
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -232,9 +236,7 @@ export default function PageHeader({
               {cartItems
                 .reduce(
                   (acc, item) =>
-                    acc +
-                    Number(item.product?.price || 0) *
-                      item.quantity,
+                    acc + Number(item.product?.price || 0) * item.quantity,
                   0,
                 )
                 .toLocaleString()}
@@ -258,7 +260,7 @@ export default function PageHeader({
               onClick={onBack}
               className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2 cursor-pointer"
             >
-               <ArrowLeftOutlined style={{ fontSize: "20px" }} />
+              <ArrowLeftOutlined style={{ fontSize: "20px" }} />
             </div>
           ) : backUrl ? (
             <Link

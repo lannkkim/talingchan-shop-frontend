@@ -22,7 +22,7 @@ export default function AdminSidebar() {
   const getSelectedKey = () => {
     if (pathname.includes("/admin/users")) return "users";
     if (pathname.includes("/admin/roles")) return "roles";
-    if (pathname.includes("/admin/products")) return "products";
+    if (pathname.includes("/admin/orders")) return "orders";
     if (pathname.includes("/admin/shops")) return "shops";
     return "dashboard";
   };
@@ -44,9 +44,9 @@ export default function AdminSidebar() {
       label: <Link href="/admin/roles">{t("roles")}</Link>,
     },
     {
-      key: "products",
+      key: "orders",
       icon: <ShoppingOutlined />,
-      label: <Link href="/admin/products">{t("products")}</Link>,
+      label: <Link href="/admin/orders">{t("orders")}</Link>,
     },
     {
       key: "shops",

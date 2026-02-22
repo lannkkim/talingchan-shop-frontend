@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, Select, Checkbox, Button, App } from "antd";
 import { createAddress, getAddressTypes } from "@/services/address";
-import { CreateAddressInput, AddressType } from "@/types/address";
+import { Address, CreateAddressInput, AddressType } from "@/types/address";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +11,7 @@ interface AddAddressModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onSave?: (input: CreateAddressInput) => Promise<Address>;
 }
 
 const { Option } = Select;
@@ -19,6 +20,7 @@ export default function AddAddressModal({
   visible,
   onClose,
   onSuccess,
+  onSave,
 }: AddAddressModalProps) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -44,7 +46,11 @@ export default function AddAddressModal({
         address_type_id: shippingType?.address_type_id || 1, // Fallback to 1 if not found
       };
 
-      await createAddress(payload as CreateAddressInput);
+      if (onSave) {
+        await onSave(payload as CreateAddressInput);
+      } else {
+        await createAddress(payload as CreateAddressInput);
+      }
       message.success(t("success.added"));
       form.resetFields();
       onSuccess();

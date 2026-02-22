@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import { getCards } from "@/services/card";
 import { Product } from "@/types/product";
-import { getCardImageUrl } from "@/utils/image";
+import { getCardImageUrl, getProductImage } from "@/utils/image";
 
 export function useMarketPage() {
   const { data: productsRaw, isLoading: isLoadingProducts } = useQuery<
@@ -35,18 +35,6 @@ export function useMarketPage() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const getProductImage = (
-    product: Product,
-    size: "thumb" | "medium" | "original" = "medium",
-  ) => {
-    const firstStock = product.product_stock_card?.[0];
-    if (!firstStock) return "/images/card-placeholder.png";
-
-    const imageName =
-      firstStock.card?.image_name || firstStock.stock_card?.card?.image_name;
-    return getCardImageUrl(imageName, size);
-  };
 
   const getActivePrice = (product: Product) => {
     return product.price ? Number(product.price) : null;

@@ -1,38 +1,30 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, Space, Card, Typography, message } from "antd";
+import React from "react";
+import { Table, Button, Space, App } from "antd";
 import { getAdminShops, AdminShopListResponse } from "@/services/shop";
 import { Link } from "@/navigation";
-import { useTranslations } from "next-intl";
 import { EyeOutlined } from "@ant-design/icons";
-
-const { Title } = Typography;
+import { useQuery } from "@tanstack/react-query";
+import { ManagementPageLayout } from "@/components/shared/ManagementPageLayout";
+import { StatusTag } from "@/components/shared/StatusTag";
+import { formatDate } from "@/utils/format";
+import { useTranslations } from "next-intl";
 
 export default function AdminShopsPage() {
-  const [shops, setShops] = useState<AdminShopListResponse[]>([]);
-  const [loading, setLoading] = useState(false);
+  const t = useTranslations("Admin.Shops");
 
-  useEffect(() => {
-    fetchShops();
-  }, []);
-
-  const fetchShops = async () => {
-    setLoading(true);
-    try {
-      const data = await getAdminShops();
-      setShops(data);
-    } catch (error) {
-      console.error(error);
-      message.error("Failed to fetch shops");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: shops = [], isLoading } = useQuery<AdminShopListResponse[]>({
+    queryKey: ["admin", "shops"],
+    queryFn: getAdminShops,
+    meta: {
+      errorMessage: t("messages.fetchError"),
+    },
+  });
 
   const columns = [
     {
-      title: "Shop Name",
+      title: t("columns.name"),
       dataIndex: "shop_name",
       key: "shop_name",
       render: (text: string, record: AdminShopListResponse) => (
@@ -40,36 +32,32 @@ export default function AdminShopsPage() {
       ),
     },
     {
-      title: "Owner",
+      title: t("columns.owner"),
       dataIndex: "owner_name",
       key: "owner_name",
     },
     {
-      title: "Requested Date",
+      title: t("columns.requestedDate"),
       dataIndex: "requested_date",
       key: "requested_date",
-      render: (date: string) => new Date(date).toLocaleDateString(),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: "Status",
+      title: t("columns.status"),
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        let color = "default";
-        if (status === "approved") color = "success";
-        if (status === "pending_approve") color = "warning";
-        if (status === "suspended") color = "error";
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
-      },
+      render: (status: string) => (
+        <StatusTag domain="shop" status={status} />
+      ),
     },
     {
-      title: "Action",
+      title: t("columns.action"),
       key: "action",
       render: (_: any, record: AdminShopListResponse) => (
         <Space size="middle">
           <Link href={`/admin/shops/${record.shop_id}`}>
             <Button type="primary" icon={<EyeOutlined />} size="small">
-              View
+              {t("actions.view")}
             </Button>
           </Link>
         </Space>
@@ -78,20 +66,14 @@ export default function AdminShopsPage() {
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <Title level={2} className="m-0">Shop Management</Title>
-      </div>
-
-      <Card className="shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={shops}
-          rowKey="shop_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
-    </div>
+    <ManagementPageLayout title={t("title")}>
+      <Table
+        columns={columns}
+        dataSource={shops}
+        rowKey="shop_id"
+        loading={isLoading}
+        pagination={{ pageSize: 10 }}
+      />
+    </ManagementPageLayout>
   );
 }

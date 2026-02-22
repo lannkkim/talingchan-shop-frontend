@@ -27,3 +27,26 @@ export const getAddressTypes = async (): Promise<AddressType[]> => {
   const response = await axiosInstance.get(`${BASE_URL}/types`);
   return response.data;
 };
+
+// Shop Addresses
+const SHOP_BASE_URL = `${BASE_URL}/shops`;
+
+export const getShopAddresses = async (): Promise<Address[]> => {
+  const response = await axiosInstance.get(SHOP_BASE_URL);
+  return response.data;
+};
+
+export const createShopAddress = async (
+  input: CreateAddressInput,
+): Promise<Address> => {
+  const response = await axiosInstance.post(SHOP_BASE_URL, input);
+  return response.data;
+};
+
+export const deleteShopAddress = async (id: string): Promise<void> => {
+  await axiosInstance.delete(`${SHOP_BASE_URL}/${id}`);
+};
+
+export const setShopDefaultAddress = async (id: string): Promise<void> => {
+  await axiosInstance.put(`${SHOP_BASE_URL}/${id}/default`);
+};

@@ -370,6 +370,25 @@ export default function ProductAddFormV2({
   const productCategory = Form.useWatch(['items', activeFieldIndex, 'product_category'], form);
   const isSingle = productCategory === "single";
   const isBundle = productCategory === "bundle";
+  const prevCategoryRef = useRef(productCategory);
+
+  // Handle mode transition (Bundle -> Single) as requested by user
+  useEffect(() => {
+    if (prevCategoryRef.current === "bundle" && productCategory === "single") {
+      const currentCards = selectedCardsMap[activeFieldIndex] || [];
+      if (currentCards.length > 1) {
+        // Multiple types: reset all cards
+        setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: [] }));
+        message.info("สินค้าเปลี่ยนเป็นใบเดี่ยว: รีเซ็ตรายการที่เลือกใหม่เนื่องจากมีหลายประเภท");
+      } else if (currentCards.length === 1) {
+        // Single type but multiple pieces: reset quantity to 1
+        const card = currentCards[0];
+        form.setFieldValue(['items', activeFieldIndex, `quantity_${card.card_id}`], 1);
+        message.info("สินค้าเปลี่ยนเป็นใบเดี่ยว: ปรับจำนวนเป็น 1 ใบ");
+      }
+    }
+    prevCategoryRef.current = productCategory;
+  }, [productCategory, activeFieldIndex, selectedCardsMap, form, message]);
 
   // Auto-fill product name based on card selection
   React.useEffect(() => {
@@ -392,14 +411,7 @@ export default function ProductAddFormV2({
     }
   }, [selectedCards, isSingle, isBundle, form, activeFieldIndex]);
 
-  // Reset card quantities when switching to isSingle
-  useEffect(() => {
-    if (isSingle && selectedCards.length > 0) {
-      selectedCards.forEach(card => {
-        form.setFieldValue(['items', activeFieldIndex, `quantity_${card.card_id}`], 1);
-      });
-    }
-  }, [isSingle, selectedCards, form, activeFieldIndex]);
+  // Quantities are now managed via handleSelectCards and preserved in form state
 
   // Fetch shop profile for stock check (only for sell orders)
   const { data: shopProfile } = useQuery({
@@ -581,7 +593,7 @@ export default function ProductAddFormV2({
           ended_at: itemEnd,
           cards: cards.map((c) => ({
             stock_card_id: c.card_id,
-            quantity: item[`quantity_${c.card_id}`] || 1,
+            quantity: form.getFieldValue(['items', index, `quantity_${c.card_id}`]) || 1,
           })),
           price: item.price
             ? {
@@ -966,7 +978,17 @@ export default function ProductAddFormV2({
             <Content className="p-6" style={{ minHeight: "calc(100vh - 113px)" }}>
               <CardBrowser
                 selectedCards={selectedCardsMap[activeFieldIndex] || []}
-                onSelect={(cards) => setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: cards }))}
+                onSelect={(cards) => {
+                  // Initialize quantities for newly added cards
+                  const currentValues = form.getFieldValue(['items', activeFieldIndex]) || {};
+                  cards.forEach(card => {
+                    const fieldKey = `quantity_${card.card_id}`;
+                    if (currentValues[fieldKey] === undefined) {
+                      form.setFieldValue(['items', activeFieldIndex, fieldKey], 1);
+                    }
+                  });
+                  setSelectedCardsMap(prev => ({ ...prev, [activeFieldIndex]: cards }));
+                }}
                 multiple={!isSingle}
                 availableCards={availableCards}
                 renderCustomActions={(card, isSelected) => isSelected && (
@@ -1007,7 +1029,6 @@ export default function ProductAddFormV2({
                         </div>
                         <Form.Item
                           name={['items', activeFieldIndex, `quantity_${card.card_id}`]}
-                          initialValue={1}
                           className="!mb-0"
                         >
                           <InputNumber min={1} size="middle" className="w-full" />

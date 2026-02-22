@@ -57,19 +57,37 @@ export default function TradeModal({ open, onCancel, userId }: TradeModalProps) 
         const values = await form.validateFields();
         
         const payload: CreatePackageTradeInput = {
+            tradeType: "MIXED",
+            forceCentralTrade: false,
             name: values.name,
-            detail: values.description,
-            have_cards: haveCards.map(c => ({
-                stock_card_id: c.card_id, 
-                quantity: form.getFieldValue(`have_qty_${c.card_id}`) || 1 
-            })),
-            want_options: wantOptions
-                .map((opt, i) => ({ opt, i }))
-                .filter(({ opt }) => opt.length > 0)
-                .map(({ opt, i }) => opt.map(c => ({
-                     stock_card_id: c.card_id, 
-                     quantity: form.getFieldValue(`want_qty_${i}_${c.card_id}`) || 1
-                }))),
+            started_at: new Date().toISOString(),
+            ended_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // +7 days
+            sections: [
+              {
+                sectionType: "SINGLE",
+                items: haveCards.map(c => ({
+                  itemType: "PRODUCT",
+                  productId: c.card_id,
+                  quantity: form.getFieldValue(`have_qty_${c.card_id}`) || 1
+                }))
+              }
+            ],
+            want: wantOptions
+                .filter(opt => opt.length > 0)
+                .map((opt, i) => ({
+                   type: "PRODUCT",
+                   bundle: {
+                     sections: [
+                       {
+                         sectionType: "SINGLE",
+                         items: opt.map(c => ({ 
+                           productId: c.card_id,
+                           quantity: form.getFieldValue(`want_qty_${i}_${c.card_id}`) || 1
+                         }))
+                       }
+                     ]
+                   }
+                })),
         };
         
         mutation.mutate(payload);

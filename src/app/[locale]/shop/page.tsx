@@ -21,7 +21,8 @@ import {
   FileTextOutlined,
   UserOutlined,
   LogoutOutlined,
-  SettingOutlined
+  SettingOutlined,
+  EnvironmentOutlined
 } from "@ant-design/icons";
 import PageHeader from "@/components/shared/PageHeader";
 import ShopProfileForm from "./ShopProfileForm";
@@ -30,6 +31,7 @@ import ShopOrders from "./ShopOrders";
 import ShopProducts from "./ShopProducts";
 import Link from "next/link";
 import ShopRegistrationForm from "./ShopRegistrationForm";
+import ShopAddressManagement from "./ShopAddressManagement";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -142,6 +144,8 @@ export default function ShopPage() {
             <ShopOrders />
           </div>
         );
+      case "addresses":
+        return <ShopAddressManagement />;
       default:
         return null;
     }
@@ -264,6 +268,11 @@ export default function ShopPage() {
                   key: "orders",
                   icon: <FileTextOutlined />,
                   label: "คำสั่งซื้อ",
+                },
+                {
+                  key: "addresses",
+                  icon: <EnvironmentOutlined />,
+                  label: "ที่อยู่ร้านค้า",
                 },
               ]}
               className="border-none px-2 py-4"

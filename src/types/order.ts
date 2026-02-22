@@ -7,6 +7,7 @@ export interface OrderProduct {
   product_id: string;
   quantity: number;
   price: string;
+  shipping_fee: string;
   product: Product;
 }
 
@@ -21,6 +22,7 @@ export interface Order {
   buyer_id: string;
   seller_id: string;
   total_price: string;
+  total_shipping: string;
   order_quantity: number;
   status: string;
   tracking_no?: string;
@@ -29,6 +31,12 @@ export interface Order {
   created_at: string;
   updated_at: string;
   buyer: User & { user_profile?: Record<string, unknown> };
+  shop?: {
+    shop_id: string;
+    shop_profile?: {
+      shop_name: string;
+    };
+  };
   order_product: OrderProduct[];
   payment_type?: {
     name: string;

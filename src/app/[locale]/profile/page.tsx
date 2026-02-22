@@ -17,11 +17,13 @@ import {
   LogoutOutlined,
   SafetyOutlined,
   EnvironmentOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AddressList from "./AddressList";
+import OrderList from "./OrderList";
 import { useTranslations } from "next-intl";
 
 const { Content, Sider } = Layout;
@@ -71,7 +73,17 @@ const bottegaTheme = {
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [selectedKey, setSelectedKey] = useState("account");
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+  
+  const [selectedKey, setSelectedKey] = useState(tab || "account");
+
+  React.useEffect(() => {
+    if (tab) {
+      setSelectedKey(tab);
+    }
+  }, [tab]);
+  
   const t = useTranslations("Profile");
 
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -102,6 +114,11 @@ export default function ProfilePage() {
       key: "addresses",
       icon: <EnvironmentOutlined />,
       label: t("menu.addresses"),
+    },
+    {
+      key: "purchases",
+      icon: <ShoppingOutlined />,
+      label: "คำสั่งซื้อของฉัน",
     },
     {
       key: "logout",
@@ -199,6 +216,16 @@ export default function ProfilePage() {
                     <Text type="secondary">Manage your shipping addresses</Text>
                   </div>
                   <AddressList />
+                </div>
+              )}
+
+              {selectedKey === "purchases" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">คำสั่งซื้อของฉัน</Title>
+                    <Text type="secondary">ตรวจสอบสถานะและประวัติการสั่งซื้อของคุณ</Text>
+                  </div>
+                  <OrderList />
                 </div>
               )}
             </div>

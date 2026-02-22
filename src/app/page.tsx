@@ -16,6 +16,8 @@ export default function LandingPage() {
     getCardImageUrl,
     getProductImage,
     getActivePrice,
+    tradeProducts,
+    isLoadingTrades,
   } = useMarketPage();
 
   return (
@@ -37,6 +39,8 @@ export default function LandingPage() {
         getCardImageUrl={getCardImageUrl}
         getProductImage={getProductImage}
         getActivePrice={getActivePrice}
+        tradeProducts={tradeProducts}
+        isLoadingTrades={isLoadingTrades}
       />
     </ConfigProvider>
   );

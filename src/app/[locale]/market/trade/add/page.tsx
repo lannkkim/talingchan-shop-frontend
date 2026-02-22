@@ -25,6 +25,6 @@ export default function TradeAddPage() {
   }
 
   return (
-    <TradeAddForm userId={user?.users_id || ""} />
+    <TradeAddForm />
   );
 }

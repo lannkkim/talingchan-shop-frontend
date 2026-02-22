@@ -43,6 +43,7 @@ export interface Product {
   product_id: string;
   product_code?: string; // Added code
   name: string;
+  image_name?: string; // Snapshot for orders
   description?: string;
   status: string;
   title?: string;

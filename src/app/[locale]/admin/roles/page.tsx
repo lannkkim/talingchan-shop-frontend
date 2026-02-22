@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Table,
   Button,
   Modal,
-  message,
+  App,
   Tag,
   Checkbox,
   Input,
@@ -14,47 +14,65 @@ import {
 import { LockOutlined, PlusOutlined } from "@ant-design/icons";
 import { adminService, AdminRole, Permission } from "@/services/admin";
 import { useTranslations } from "next-intl";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ManagementPageLayout } from "@/components/shared/ManagementPageLayout";
 
 export default function RolesManagementPage() {
   const t = useTranslations("Admin.Roles");
-  const [roles, setRoles] = useState<AdminRole[]>([]);
-  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
 
-  // Edit Permissions Modal
+  // Edit Permissions Modal State
   const [permModalVisible, setPermModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AdminRole | null>(null);
   const [checkedPerms, setCheckedPerms] = useState<string[]>([]);
 
-  // Create Role Modal
+  // Create Role Modal State
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [createForm] = Form.useForm();
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [rolesData, permsData] = await Promise.all([
-        adminService.getRoles(),
-        adminService.getPermissions(),
-      ]);
-      setRoles(rolesData);
-      setAllPermissions(permsData);
-    } catch (error) {
-      console.error(error);
-      message.error(t("permModal.error")); // General fetch error
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Queries
+  const { data: roles = [], isLoading } = useQuery<AdminRole[]>({
+    queryKey: ["admin", "roles"],
+    queryFn: adminService.getRoles,
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: allPermissions = [] } = useQuery<Permission[]>({
+    queryKey: ["admin", "permissions"],
+    queryFn: adminService.getPermissions,
+  });
 
-  // Handle Edit Permissions
+  // Mutations
+  const updatePermsMutation = useMutation({
+    mutationFn: ({ roleId, permissions }: { roleId: string; permissions: string[] }) =>
+      adminService.updateRolePermissions(roleId, permissions),
+    onSuccess: () => {
+      message.success(t("permModal.success"));
+      setPermModalVisible(false);
+      queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
+    },
+    onError: () => {
+      message.error(t("permModal.error"));
+    },
+  });
+
+  const createRoleMutation = useMutation({
+    mutationFn: ({ name, description }: { name: string; description: string }) =>
+      adminService.createRole(name, description),
+    onSuccess: () => {
+      message.success(t("modal.success"));
+      setCreateModalVisible(false);
+      createForm.resetFields();
+      queryClient.invalidateQueries({ queryKey: ["admin", "roles"] });
+    },
+    onError: () => {
+      // Handled by Form validation or generic API error
+    },
+  });
+
+  // Handlers
   const handleEditPerms = (role: AdminRole) => {
     setSelectedRole(role);
-    // Parse existing permissions
     const currentPerms = role.role_permissions
       .map((rp) => rp.permissions?.name)
       .filter((name): name is string => !!name);
@@ -63,32 +81,20 @@ export default function RolesManagementPage() {
     setPermModalVisible(true);
   };
 
-  const handleSavePerms = async () => {
+  const handleSavePerms = () => {
     if (!selectedRole) return;
-    try {
-      await adminService.updateRolePermissions(
-        selectedRole.roles_id,
-        checkedPerms,
-      );
-      message.success(t("permModal.success"));
-      setPermModalVisible(false);
-      fetchData();
-    } catch (error) {
-      message.error(t("permModal.error"));
-    }
+    updatePermsMutation.mutate({
+      roleId: selectedRole.roles_id,
+      permissions: checkedPerms,
+    });
   };
 
-  // Handle Create Role
   const handleCreateRole = async () => {
     try {
       const values = await createForm.validateFields();
-      await adminService.createRole(values.name, values.description);
-      message.success(t("modal.success"));
-      setCreateModalVisible(false);
-      createForm.resetFields();
-      fetchData();
+      createRoleMutation.mutate(values);
     } catch (error) {
-      // Form validation error or API error
+      // Form validation error
     }
   };
 
@@ -143,9 +149,9 @@ export default function RolesManagementPage() {
   ];
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t("title")}</h1>
+    <ManagementPageLayout 
+      title={t("title")}
+      extra={
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -153,13 +159,13 @@ export default function RolesManagementPage() {
         >
           {t("create")}
         </Button>
-      </div>
-
+      }
+    >
       <Table
         dataSource={roles}
         columns={columns}
         rowKey="roles_id"
-        loading={loading}
+        loading={isLoading}
         pagination={false}
       />
 
@@ -170,6 +176,7 @@ export default function RolesManagementPage() {
         onOk={handleSavePerms}
         onCancel={() => setPermModalVisible(false)}
         width={700}
+        confirmLoading={updatePermsMutation.isPending}
       >
         <div className="py-4">
           <Checkbox.Group
@@ -196,11 +203,8 @@ export default function RolesManagementPage() {
         onOk={handleCreateRole}
         onCancel={() => setCreateModalVisible(false)}
         okText={t("modal.save")}
-        cancelText={
-          t("modal.save").replace("Create", "Cancel") === t("modal.save")
-            ? "Cancel"
-            : "Cancel"
-        } // Fallback logic
+        cancelText={t("modal.cancel")}
+        confirmLoading={createRoleMutation.isPending}
       >
         <Form form={createForm} layout="vertical">
           <Form.Item
@@ -219,6 +223,6 @@ export default function RolesManagementPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </ManagementPageLayout>
   );
 }
