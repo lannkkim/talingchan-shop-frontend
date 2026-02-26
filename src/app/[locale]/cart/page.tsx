@@ -22,7 +22,6 @@ import {
   Spin,
   Space,
   Divider,
-  message,
   Modal,
   App,
   ConfigProvider,
@@ -210,7 +209,7 @@ export default function CartPage() {
   const total = subtotal + shippingFee;
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const router = useRouter();
 
   const handleCheckout = () => {

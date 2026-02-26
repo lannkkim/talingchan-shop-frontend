@@ -135,7 +135,9 @@
     "tabs": {
       "info": "ข้อมูลร้านค้า",
       "products": "สินค้าของฉัน",
-      "orders": "คำสั่งซื้อ (Orders)"
+      "orders": "คำสั่งซื้อ (Orders)",
+      "revenue": "รายได้และบัญชี",
+      "addresses": "ที่อยู่ร้านค้า"
     },
     "form": {
       "title": "ข้อมูลร้านค้า",
@@ -201,7 +203,10 @@
         "notSet": "ยังไม่ได้ระบุ",
         "modalTitle": "อัปเดตข้อมูลการจัดส่ง",
         "label": "หมายเลขติดตามพัสดุ",
-        "placeholder": "ระบุหมายเลขพัสดุ"
+        "placeholder": "ระบุหมายเลขพัสดุ",
+        "transportation": "บริษัทขนส่ง",
+        "selectTransportation": "เลือกบริษัทขนส่ง",
+        "validationError": "กรุณากรอกทั้งบริษัทขนส่งและหมายเลขพัสดุ"
       }
     },
     "products": {
@@ -279,6 +284,22 @@
         "typeInstruction": "กรุณาพิมพ์คำว่า <confirm>{text}</confirm> เพื่อดำเนินการต่อ",
         "placeholder": "ยืนยันการเชื่อมต่อ",
         "confirmText": "ยืนยันการเชื่อมต่อ"
+      }
+    },
+    "revenue": {
+      "title": "สรุปรายได้และบัญชี",
+      "summary": {
+        "totalRevenue": "ยอดรวมรายรับ",
+        "totalFee": "ค่าธรรมเนียมแพลตฟอร์ม",
+        "netRevenue": "รายได้รวมสุทธิ"
+      },
+      "table": {
+        "title": "ประวัติรายได้",
+        "date": "วันที่",
+        "orderCode": "รหัสคำสั่งซื้อ",
+        "totalAmount": "ยอดรวม",
+        "feeAmount": "ค่าธรรมเนียม",
+        "netRevenue": "รายได้สุทธิ"
       }
     },
     "productForm": {

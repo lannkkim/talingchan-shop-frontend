@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   /* config options here */
+  transpilePackages: ["antd"],
   reactCompiler: true,
   images: {
     remotePatterns: [

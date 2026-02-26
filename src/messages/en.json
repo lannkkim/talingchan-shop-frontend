@@ -135,7 +135,9 @@
     "tabs": {
       "info": "Shop Info",
       "products": "My Products",
-      "orders": "Orders"
+      "orders": "Orders",
+      "revenue": "Revenue & Accounting",
+      "addresses": "Shop Addresses"
     },
     "form": {
       "title": "Shop Information",
@@ -278,6 +280,22 @@
         "typeInstruction": "Please type <b>{text}</b> to continue",
         "placeholder": "Confirm Connect",
         "confirmText": "Confirm Connect"
+      }
+    },
+    "revenue": {
+      "title": "Revenue & Accounting",
+      "summary": {
+        "totalRevenue": "Total Revenue",
+        "totalFee": "Platform Fees",
+        "netRevenue": "Net Revenue"
+      },
+      "table": {
+        "title": "Revenue History",
+        "date": "Date",
+        "orderCode": "Order Code",
+        "totalAmount": "Total Amount",
+        "feeAmount": "Fee",
+        "netRevenue": "Net Revenue"
       }
     },
     "productForm": {

@@ -12,7 +12,7 @@ function ThemedApp({ children }: { children: React.ReactNode }) {
       theme={{
         algorithm,
         token: {
-          fontFamily: `var(--font-inter), var(--font-noto-sans-thai), sans-serif`,
+          fontFamily: `var(--font-noto-sans), var(--font-noto-sans-thai), sans-serif`,
         },
       }}
     >

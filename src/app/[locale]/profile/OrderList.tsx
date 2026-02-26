@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Tag, Typography, Card, Badge, Empty, Skeleton, Space, Divider } from "antd";
-import { getUserOrders } from "@/services/order";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { App, Tag, Typography, Card, Badge, Empty, Skeleton, Space, Divider, Button } from "antd";
+import { getUserOrders, receiveOrder } from "@/services/order";
 import { Order } from "@/types/order";
 import { ShoppingOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { getProductImage } from "@/utils/image";
@@ -15,10 +15,23 @@ const { Text, Title } = Typography;
 
 
 export default function OrderList() {
+  const { message } = App.useApp();
   const ts = useTranslations("Shop.orders.status");
+  const queryClient = useQueryClient();
   const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ["orders", "me"],
     queryFn: getUserOrders,
+  });
+
+  const receiveMutation = useMutation({
+    mutationFn: (orderId: string) => receiveOrder(orderId),
+    onSuccess: () => {
+      message.success("ยืนยันการได้รับสินค้าสำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+    onError: () => {
+      message.error("เกิดข้อผิดพลาดในการยืนยันการได้รับสินค้า");
+    },
   });
 
   if (isLoading) {
@@ -113,15 +126,29 @@ export default function OrderList() {
           {/* Footer */}
           <Divider className="my-0" />
           <div className="p-4 px-6 flex justify-between items-center">
-            <Space orientation="horizontal" size={16}>
-              <div className="text-xs text-gray-500">
-                <Text type="secondary" className="mr-1">การชำระเงิน:</Text>
-                <Text>{order.payment_type?.name || "N/A"}</Text>
-              </div>
-              <div className="text-xs text-gray-500">
-                <Text type="secondary" className="mr-1">การจัดส่ง:</Text>
-                <Text>{order.transportation?.name || "Standard Delivery"}</Text>
-              </div>
+            <Space orientation="vertical" size={16}>
+              <Space orientation="horizontal" size={16}>
+                <div className="text-xs text-gray-500">
+                  <Text type="secondary" className="mr-1">การชำระเงิน:</Text>
+                  <Text>{order.payment_type?.name || "N/A"}</Text>
+                </div>
+                <div className="text-xs text-gray-500">
+                  <Text type="secondary" className="mr-1">การจัดส่ง:</Text>
+                  <Text>{order.transportation?.transportation_name || order.transportation?.name || "Standard Delivery"}</Text>
+                </div>
+              </Space>
+              
+              {order.status === "RS" && (
+                <Button 
+                  type="primary" 
+                  size="small"
+                  className="bg-green-600 hover:!bg-green-700 text-[12px] h-8 px-4"
+                  onClick={() => receiveMutation.mutate(order.order_id)}
+                  loading={receiveMutation.isPending && receiveMutation.variables === order.order_id}
+                >
+                  ได้รับสินค้าแล้ว
+                </Button>
+              )}
             </Space>
             <div className="text-right space-y-1">
               <div className="flex justify-end items-center gap-2">

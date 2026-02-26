@@ -14,10 +14,11 @@ import {
   ReloadOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import { getAdminOrders, updateAdminOrderStatus } from "@/services/order";
+import { getAdminOrders, updateAdminOrderStatus, confirmPayment, rejectPayment } from "@/services/order";
 import { Order } from "@/types/order";
 import { OrderDetailsModal } from "@/app/[locale]/shop/OrderDetailsModal";
-import type { ColumnsType } from "antd/es/table";
+import type { TableProps } from "antd";
+type ColumnsType<T> = TableProps<T>["columns"];
 import { useTranslations } from "next-intl";
 import { OrderStatusTag } from "@/components/Order/OrderStatusTag";
 import { ManagementPageLayout } from "@/components/shared/ManagementPageLayout";
@@ -104,6 +105,37 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = (orderId: string, status: string) => {
     updateStatusMutation.mutate({ orderId, status });
+  };
+
+  // Payment Actions Mutations
+  const confirmPaymentMutation = useMutation({
+    mutationFn: (orderId: string) => confirmPayment(orderId),
+    onSuccess: () => {
+      message.success("อนุมัติการชำระเงินสำเร็จ");
+      refetch();
+    },
+    onError: () => {
+      message.error("เกิดข้อผิดพลาดในการอนุมัติการชำระเงิน");
+    },
+  });
+
+  const rejectPaymentMutation = useMutation({
+    mutationFn: (orderId: string) => rejectPayment(orderId),
+    onSuccess: () => {
+      message.success("ปฏิเสธการชำระเงินสำเร็จ");
+      refetch();
+    },
+    onError: () => {
+      message.error("เกิดข้อผิดพลาดในการปฏิเสธการชำระเงิน");
+    },
+  });
+
+  const handleConfirmPayment = (orderId: string) => {
+    confirmPaymentMutation.mutate(orderId);
+  };
+
+  const handleRejectPayment = (orderId: string) => {
+    rejectPaymentMutation.mutate(orderId);
   };
 
   // Filter and Sort Orders
@@ -209,21 +241,45 @@ export default function AdminOrdersPage() {
             <EyeOutlined className="text-lg mb-1" />
             รายละเอียด
           </Button>
-          <Select
-            size="small"
-            value={getNormalizedStatus(record.status)}
-            onChange={(value) => handleStatusChange(record.order_id, value)}
-            style={{ width: 140 }}
-            className="text-[11px]"
-            loading={updateStatusMutation.isPending && selectedOrder?.order_id === record.order_id}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {orderStatuses.map((s) => (
-              <Option key={s.value} value={s.value}>
-                {ts(s.value) || s.label}
-              </Option>
-            ))}
-          </Select>
+          {record.status === "pending_approve" ? (
+            <div className="flex gap-2">
+              <Button
+                type="primary"
+                size="small"
+                className="bg-green-600 hover:!bg-green-700 text-[11px]"
+                onClick={() => handleConfirmPayment(record.order_id)}
+                loading={confirmPaymentMutation.isPending && selectedOrder?.order_id === record.order_id}
+              >
+                อนุมัติ
+              </Button>
+              <Button
+                type="primary"
+                danger
+                size="small"
+                className="text-[11px]"
+                onClick={() => handleRejectPayment(record.order_id)}
+                loading={rejectPaymentMutation.isPending && selectedOrder?.order_id === record.order_id}
+              >
+                ไม่อนุมัติ
+              </Button>
+            </div>
+          ) : (
+            <Select
+              size="small"
+              value={getNormalizedStatus(record.status)}
+              onChange={(value) => handleStatusChange(record.order_id, value)}
+              style={{ width: 140 }}
+              className="text-[11px]"
+              loading={updateStatusMutation.isPending && selectedOrder?.order_id === record.order_id}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {orderStatuses.map((s) => (
+                <Option key={s.value} value={s.value}>
+                  {ts(s.value) || s.label}
+                </Option>
+              ))}
+            </Select>
+          )}
         </Space>
       ),
     },

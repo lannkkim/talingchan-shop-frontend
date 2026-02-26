@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Button,
-  Card,
-  Typography,
-  Tag,
-  Space,
-  Empty,
-  Popconfirm,
-  App,
-} from "antd";
+import { Card, Button, Typography, Empty, Space, Skeleton, Tag, App, Popconfirm } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,

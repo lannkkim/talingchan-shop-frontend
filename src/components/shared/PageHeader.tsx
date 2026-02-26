@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Layout,
-  Typography,
-  Menu,
-  Button,
-  Dropdown,
-  Avatar,
-  Card,
-  Empty,
-  ConfigProvider,
-} from "antd";
+import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty, ConfigProvider } from "antd";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,

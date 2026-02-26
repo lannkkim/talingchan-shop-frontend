@@ -10,6 +10,8 @@ import {
   Typography,
   App,
   Tooltip,
+  Select,
+  Alert,
 } from "antd";
 import {
   EyeOutlined,
@@ -18,11 +20,12 @@ import {
   CarOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getShopOrders, updateTrackingNo } from "@/services/order";
+import { getShopOrders, shipOrder, getTransportations } from "@/services/order";
 import { Order, OrderProduct } from "@/types/order";
 import { OrderStatusTag } from "@/components/Order/OrderStatusTag";
 import { OrderDetailsModal } from "./OrderDetailsModal";
-import type { ColumnsType } from "antd/es/table";
+import type { TableProps } from "antd";
+type ColumnsType<T> = TableProps<T>["columns"];
 import { useTranslations } from "next-intl";
 import { ManagementPageLayout } from "@/components/shared/ManagementPageLayout";
 import { formatDate, formatCurrency } from "@/utils/format";
@@ -42,6 +45,7 @@ export default function ShopOrders() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [transportationId, setTransportationId] = useState<string | undefined>(undefined);
 
   // Queries
   const { data: orders = [], isLoading, refetch } = useQuery<Order[]>({
@@ -49,17 +53,22 @@ export default function ShopOrders() {
     queryFn: getShopOrders,
   });
 
+  const { data: transportations = [], isLoading: isTransportationsLoading } = useQuery({
+    queryKey: ["transportations"],
+    queryFn: getTransportations,
+  });
+
   // Mutations
-  const trackingMutation = useMutation({
-    mutationFn: ({ orderId, tracking }: { orderId: string; tracking: string }) =>
-      updateTrackingNo(orderId, tracking),
+  const shipMutation = useMutation({
+    mutationFn: ({ orderId, tracking, transportId }: { orderId: string; tracking: string, transportId: string }) =>
+      shipOrder(orderId, tracking, transportId),
     onSuccess: () => {
-      message.success(t("tracking.success") || "Tracking updated successfully");
+      message.success(t("tracking.success") || "Order marked as shipped successfully");
       setIsTrackingOpen(false);
       queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.error || t("tracking.error") || "Failed to update tracking");
+      message.error(error.response?.data?.error || t("tracking.error") || "Failed to mark as shipped");
     },
   });
 
@@ -72,14 +81,20 @@ export default function ShopOrders() {
   const handleEditTracking = (order: Order) => {
     setSelectedOrder(order);
     setTrackingNumber(order.tracking_no || "");
+    setTransportationId(order.transportation?.transportation_id || undefined);
     setIsTrackingOpen(true);
   };
 
   const handleSaveTracking = () => {
     if (!selectedOrder) return;
-    trackingMutation.mutate({
+    if (!trackingNumber || !transportationId) {
+      message.error(t("tracking.validationError") || "Please enter both tracking number and transportation");
+      return;
+    }
+    shipMutation.mutate({
       orderId: selectedOrder.order_id,
       tracking: trackingNumber,
+      transportId: transportationId,
     });
   };
 
@@ -213,16 +228,29 @@ export default function ShopOrders() {
         open={isTrackingOpen}
         onOk={handleSaveTracking}
         onCancel={() => setIsTrackingOpen(false)}
-        confirmLoading={trackingMutation.isPending}
+        confirmLoading={shipMutation.isPending}
       >
-        <div className="py-4">
-          <Text className="mb-2 block">{t("tracking.label") || "Tracking Number"}</Text>
-          <Input
-            placeholder={t("tracking.placeholder") || "Enter tracking number"}
-            value={trackingNumber}
-            onChange={(e) => setTrackingNumber(e.target.value)}
-            prefix={<CarOutlined className="text-gray-400" />}
-          />
+        <div className="py-4 space-y-4">
+          <div>
+            <Text className="mb-2 block">{t("tracking.transportation") || "Transportation Method"}</Text>
+            <Select
+              className="w-full"
+              placeholder={t("tracking.selectTransportation") || "Select transportation method"}
+              options={transportations.map((t) => ({ label: t.transportation_name || t.name, value: t.transportation_id }))}
+              value={transportationId}
+              onChange={setTransportationId}
+              loading={isTransportationsLoading}
+            />
+          </div>
+          <div>
+            <Text className="mb-2 block">{t("tracking.label") || "Tracking Number"}</Text>
+            <Input
+              placeholder={t("tracking.placeholder") || "Enter tracking number"}
+              value={trackingNumber}
+              onChange={(e) => setTrackingNumber(e.target.value)}
+              prefix={<CarOutlined className="text-gray-400" />}
+            />
+          </div>
         </div>
       </Modal>
     </ManagementPageLayout>

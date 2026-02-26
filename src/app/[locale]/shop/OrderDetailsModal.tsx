@@ -216,7 +216,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         <div className="bg-white p-3 rounded border border-gray-100">
                           <div className="mb-2">
                             <Text type="secondary" className="text-xs mr-2">Courier:</Text>
-                            <Text className="text-sm font-medium">{order.transportation?.name || "-"}</Text>
+                            <Text className="text-sm font-medium">{order.transportation?.transportation_name || order.transportation?.name || "-"}</Text>
                           </div>
                           <div>
                              <Text type="secondary" className="text-xs mr-2">Tracking:</Text>

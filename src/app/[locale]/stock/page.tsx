@@ -8,7 +8,8 @@ import { StockCard } from "@/types/stock";
 import { getMyStockCards } from "@/services/stock";
 import AddStockCardModal from "./AddStockCardModal";
 import PageHeader from "@/components/shared/PageHeader";
-import type { ColumnsType } from "antd/es/table";
+import type { TableProps } from "antd";
+type ColumnsType<T> = TableProps<T>["columns"];
 
 const { Title } = Typography;
 const { Content } = Layout;

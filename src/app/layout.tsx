@@ -44,17 +44,7 @@ export default function RootLayout({
       >
         <QueryProvider>
           <StyledComponentsRegistry>
-            <ConfigProvider
-              theme={{
-                token: {
-                  fontFamily: `var(--font-noto-sans), var(--font-noto-sans-thai), sans-serif`,
-                },
-              }}
-            >
-              <AuthProvider>
-                <App>{children}</App>
-              </AuthProvider>
-            </ConfigProvider>
+            <AuthProvider>{children}</AuthProvider>
           </StyledComponentsRegistry>
         </QueryProvider>
       </body>

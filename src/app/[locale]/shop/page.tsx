@@ -32,6 +32,7 @@ import ShopProducts from "./ShopProducts";
 import Link from "next/link";
 import ShopRegistrationForm from "./ShopRegistrationForm";
 import ShopAddressManagement from "./ShopAddressManagement";
+import ShopRevenue from "./ShopRevenue";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -144,6 +145,8 @@ export default function ShopPage() {
             <ShopOrders />
           </div>
         );
+      case "revenue":
+        return <ShopRevenue />;
       case "addresses":
         return <ShopAddressManagement />;
       default:
@@ -257,22 +260,27 @@ export default function ShopPage() {
                 {
                   key: "info",
                   icon: <UserOutlined />,
-                  label: "ข้อมูลร้านค้า",
+                  label: t("tabs.info"),
                 },
                 {
                   key: "products",
                   icon: <AppstoreOutlined />,
-                  label: "สินค้าของฉัน",
+                  label: t("tabs.products"),
                 },
                 {
                   key: "orders",
                   icon: <FileTextOutlined />,
-                  label: "คำสั่งซื้อ",
+                  label: t("tabs.orders"),
+                },
+                {
+                  key: "revenue",
+                  icon: <ShopOutlined />,
+                  label: t("tabs.revenue"),
                 },
                 {
                   key: "addresses",
                   icon: <EnvironmentOutlined />,
-                  label: "ที่อยู่ร้านค้า",
+                  label: t("tabs.addresses"),
                 },
               ]}
               className="border-none px-2 py-4"

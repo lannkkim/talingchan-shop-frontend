@@ -17,6 +17,17 @@ export const updateTrackingNo = async (
   });
 };
 
+export const shipOrder = async (
+  orderId: string,
+  trackingNo: string,
+  transportationId: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/ship`, {
+    tracking_no: trackingNo,
+    transportation_id: transportationId,
+  });
+};
+
 export const getTransportations = async (): Promise<Transportation[]> => {
   const response = await axiosInstance.get<Transportation[]>(
     "/api/v1/transportations",
@@ -38,4 +49,16 @@ export const updateAdminOrderStatus = async (
   status: string,
 ): Promise<void> => {
   await axiosInstance.put(`/api/v1/orders/admin/${orderId}/status`, { status });
+};
+
+export const confirmPayment = async (orderId: string): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/admin/${orderId}/confirm-payment`);
+};
+
+export const rejectPayment = async (orderId: string): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/admin/${orderId}/reject-payment`);
+};
+
+export const receiveOrder = async (orderId: string): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/${orderId}/receive`);
 };

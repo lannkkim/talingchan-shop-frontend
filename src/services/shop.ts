@@ -67,3 +67,8 @@ export const approveShop = async (shopID: string): Promise<any> => {
   const response = await axios.put(`/api/v1/shop/${shopID}/approve`);
   return response.data;
 };
+
+export const getShopRevenueDashboard = async (): Promise<any> => {
+  const response = await axios.get("/api/v1/shop/revenue");
+  return response.data;
+};

@@ -13,7 +13,8 @@ export interface OrderProduct {
 
 export interface Transportation {
   transportation_id: string;
-  name: string;
+  name?: string;
+  transportation_name?: string;
 }
 
 export interface Order {

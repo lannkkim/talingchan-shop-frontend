@@ -8,9 +8,8 @@ import {
   Card,
   Avatar,
   Descriptions,
-  Modal,
-  ConfigProvider,
-  Button
+  Button,
+  App
 } from "antd";
 import {
   UserOutlined,
@@ -29,47 +28,6 @@ import { useTranslations } from "next-intl";
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
-const bottegaTheme = {
-  token: {
-    borderRadius: 0,
-    colorPrimary: "#000000",
-    fontFamily: "var(--font-inter)",
-    colorText: "#000000",
-    colorBgContainer: "#ffffff",
-    colorBorder: "#e5e5e5",
-  },
-  components: {
-    Button: {
-      borderRadius: 0,
-      controlHeight: 48,
-      fontWeight: 500,
-      primaryColor: "#ffffff",
-      defaultBorderColor: "#000000",
-      defaultColor: "#000000",
-    },
-    Input: {
-      borderRadius: 0,
-      controlHeight: 48,
-      activeBorderColor: "#000000",
-      hoverBorderColor: "#000000",
-    },
-    Layout: {
-      bodyBg: "#ffffff",
-      siderBg: "#ffffff",
-    },
-    Menu: {
-      itemSelectedColor: "#000000",
-      itemSelectedBg: "#f5f5f5",
-      itemActiveBg: "#f5f5f5",
-      itemHoverBg: "#fafafa",
-      subMenuItemBg: "#ffffff",
-    },
-    Typography: {
-      fontFamily: "var(--font-inter)",
-    },
-  },
-};
-
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -86,9 +44,11 @@ export default function ProfilePage() {
   
   const t = useTranslations("Profile");
 
+  const { modal } = App.useApp();
+  
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === "logout") {
-      Modal.confirm({
+      modal.confirm({
         title: t("logoutConfirm.title"),
         content: t("logoutConfirm.content"),
         okText: t("logoutConfirm.ok"),
@@ -129,8 +89,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <ConfigProvider theme={bottegaTheme}>
-      <Layout className="min-h-screen bg-white">
+    <Layout className="min-h-screen bg-white">
         <PageHeader title={t("title")} />
 
         <Layout className="has-sider">
@@ -232,6 +191,5 @@ export default function ProfilePage() {
           </Content>
         </Layout>
       </Layout>
-    </ConfigProvider>
-  );
-}
+    );
+  }

@@ -21,27 +21,18 @@ export default function LandingPage() {
   } = useMarketPage();
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: "#1890ff",
-          borderRadius: 8,
-        },
-      }}
-    >
-      <MarketPageUI
-        products={products}
-        isLoadingProducts={isLoadingProducts}
-        cards={cards}
-        isLoadingCards={isLoadingCards}
-        tradeProducts={tradeProducts}
-        isLoadingTrades={isLoadingTrades}
-        carouselRef={carouselRef}
-        handleScroll={handleScroll}
-        getCardImageUrl={getCardImageUrl}
-        getProductImage={getProductImage}
-        getActivePrice={getActivePrice}
-      />
-    </ConfigProvider>
+    <MarketPageUI
+      products={products}
+      isLoadingProducts={isLoadingProducts}
+      cards={cards}
+      isLoadingCards={isLoadingCards}
+      tradeProducts={tradeProducts}
+      isLoadingTrades={isLoadingTrades}
+      carouselRef={carouselRef}
+      handleScroll={handleScroll}
+      getCardImageUrl={getCardImageUrl}
+      getProductImage={getProductImage}
+      getActivePrice={getActivePrice}
+    />
   );
 }
