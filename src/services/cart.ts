@@ -49,6 +49,6 @@ export interface CheckoutResponse {
 export const checkout = async (
   input: CheckoutInput,
 ): Promise<CheckoutResponse> => {
-  const response = await axios.post("/api/v1/checkout", input);
+  const response = await axios.post("/api/v1/orders", input);
   return response.data;
 };

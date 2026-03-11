@@ -48,12 +48,12 @@ export default function MarketPage() {
   });
 
   // Query for User/Community Market Products - Bundles (Single Type Set) (Sell Only)
-  const { data: bundleProducts = [], isLoading: loadingBundle } = useQuery({
-    queryKey: ["products", "market", "bundle"],
+  const { data: pluralProducts = [], isLoading: loadingPlural } = useQuery({
+    queryKey: ["products", "market", "plural"],
     queryFn: () => getProducts({
       status: "active",
       is_admin_shop: false,
-      product_type_code: "bundle",
+      product_type_code: "plural",
       transaction_type_code: "sell",
       limit: 10,
       include_shop: true,
@@ -97,7 +97,7 @@ export default function MarketPage() {
     }),
   });
 
-  const loading = loadingAdmin || loadingSingle || loadingBundle || loadingDeck || loadingTrade || loadingBuy;
+  const loading = loadingAdmin || loadingSingle || loadingPlural || loadingDeck || loadingTrade || loadingBuy;
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -274,15 +274,15 @@ export default function MarketPage() {
             <div className="mb-10">
               <div className="flex justify-between items-center">
                 <Title level={3}>ชุดประเภทเดี่ยว</Title>
-                <Link href="/market/products?type=bundle">
+                <Link href="/market/products?type=plural">
                   <Button type="link">ดูเพิ่มเติม</Button>
                 </Link>
               </div>
               <Divider className="my-3" />
-              {bundleProducts && bundleProducts.length > 0 ? (
-                <Row gutter={[16, 24]}>{bundleProducts.map((p: Product) => renderProductCard(p))}</Row>
+              {pluralProducts && pluralProducts.length > 0 ? (
+                <Row gutter={[16, 24]}>{pluralProducts.map((p: Product) => renderProductCard(p))}</Row>
               ) : (
-                <Text type="secondary">No bundle products available.</Text>
+                <Text type="secondary">ไม่มีสินค้าในหมวดหมู่นี้</Text>
               )}
             </div>
 

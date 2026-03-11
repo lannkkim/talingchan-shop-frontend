@@ -112,7 +112,7 @@ function AllMarketProductsContent() {
   } else {
     // Sell
     title = typeCode === "single" ? "แยกใบทั้งหมด" 
-    : typeCode === "bundle" ? "ชุดประเภทเดี่ยวทั้งหมด"
+    : typeCode === "plural" ? "ชุดประเภทเดี่ยวทั้งหมด"
     : typeCode === "deck" ? "ชุดหลายประเภททั้งหมด" 
     : "สินค้าทั้งหมด";
   }

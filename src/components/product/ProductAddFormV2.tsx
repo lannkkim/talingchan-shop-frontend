@@ -369,12 +369,12 @@ export default function ProductAddFormV2({
 
   const productCategory = Form.useWatch(['items', activeFieldIndex, 'product_category'], form);
   const isSingle = productCategory === "single";
-  const isBundle = productCategory === "bundle";
+  const isPlural = productCategory === "plural";
   const prevCategoryRef = useRef(productCategory);
 
-  // Handle mode transition (Bundle -> Single) as requested by user
+  // Handle mode transition (Plural -> Single) as requested by user
   useEffect(() => {
-    if (prevCategoryRef.current === "bundle" && productCategory === "single") {
+    if (prevCategoryRef.current === "plural" && productCategory === "single") {
       const currentCards = selectedCardsMap[activeFieldIndex] || [];
       if (currentCards.length > 1) {
         // Multiple types: reset all cards
@@ -401,7 +401,7 @@ export default function ProductAddFormV2({
         if (currentName !== autoName) {
           form.setFieldValue(["items", activeFieldIndex, "name"], autoName);
         }
-      } else if (isBundle) {
+      } else if (isPlural) {
         const qty = form.getFieldValue(["items", activeFieldIndex, `quantity_${card.card_id}`]) || 1;
         const autoName = `ชุด ${card.name} ${card.rare} ${qty} ใบ`.trim();
         if (currentName !== autoName) {
@@ -409,7 +409,7 @@ export default function ProductAddFormV2({
         }
       }
     }
-  }, [selectedCards, isSingle, isBundle, form, activeFieldIndex]);
+  }, [selectedCards, isSingle, isPlural, form, activeFieldIndex]);
 
   // Quantities are now managed via handleSelectCards and preserved in form state
 
@@ -577,7 +577,7 @@ export default function ProductAddFormV2({
         // Resolve Product Type Code
         const distinctCardIds = new Set(cards.map(c => c.card_id));
         let resolvedCode = "single";
-        if (item.product_category === "bundle") {
+        if (item.product_category === "plural") {
           resolvedCode = distinctCardIds.size > 1 ? "deck" : "plural";
         }
         const resolvedTypeId = types.find(t => t.code === resolvedCode)?.product_type_id;
@@ -830,7 +830,7 @@ export default function ProductAddFormV2({
                                   >
                                     <Select placeholder="เลือกประเภท">
                                       <Select.Option value="single">ใบเดี่ยว (Single)</Select.Option>
-                                      <Select.Option value="bundle">โครง / ชุด (Deck / Set)</Select.Option>
+                                      <Select.Option value="plural">โครง / ชุด (Deck / Set)</Select.Option>
                                     </Select>
                                   </Form.Item>
 
