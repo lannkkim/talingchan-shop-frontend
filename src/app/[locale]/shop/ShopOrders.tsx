@@ -18,9 +18,10 @@ import {
   EditOutlined,
   ReloadOutlined,
   CarOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getShopOrders, shipOrder, getTransportations } from "@/services/order";
+import { getShopOrders, shipOrder, getTransportations, cancelOrder, approveCancel, rejectCancel, reviewRefund, confirmReturn } from "@/services/order";
 import { Order, OrderProduct } from "@/types/order";
 import { OrderStatusTag } from "@/components/Order/OrderStatusTag";
 import { OrderDetailsModal } from "./OrderDetailsModal";
@@ -35,7 +36,7 @@ import { getProductImage } from "@/utils/image";
 const { Text } = Typography;
 
 export default function ShopOrders() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const t = useTranslations("Shop.orders");
   const ts = useTranslations("Shop.orders.status");
@@ -72,6 +73,49 @@ export default function ShopOrders() {
     },
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: ({ orderId, reason }: { orderId: string, reason: string }) => cancelOrder(orderId, reason),
+    onSuccess: () => {
+      message.success(t("messages.cancelSuccess") || "ยกเลิกคำสั่งซื้อสำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
+    },
+  });
+
+  const approveCancelMutation = useMutation({
+    mutationFn: (orderId: string) => approveCancel(orderId),
+    onSuccess: () => {
+      message.success(t("messages.approveCancelSuccess") || "อนุมัติยกเลิกสำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
+    },
+  });
+
+  const rejectCancelMutation = useMutation({
+    mutationFn: ({ orderId, tracking, transportId }: { orderId: string; tracking: string, transportId: string }) =>
+      rejectCancel(orderId, tracking, transportId),
+    onSuccess: () => {
+      message.success("ปฏิเสธการยกเลิกและจัดส่งสินค้าเรียบร้อย");
+      setIsTrackingOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
+    },
+  });
+
+  const reviewRefundMutation = useMutation({
+    mutationFn: ({ orderId, action, reason }: { orderId: string, action: string, reason?: string }) => 
+      reviewRefund(orderId, action, reason),
+    onSuccess: () => {
+      message.success("ประมวลผลคำขอสำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
+    },
+  });
+
+  const confirmReturnMutation = useMutation({
+    mutationFn: (orderId: string) => confirmReturn(orderId),
+    onSuccess: () => {
+      message.success("ยืนยันรับของคืนและคืนเงินสำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["shop", "orders"] });
+    },
+  });
+
   // Handlers
   const handleViewDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -91,10 +135,89 @@ export default function ShopOrders() {
       message.error(t("tracking.validationError") || "Please enter both tracking number and transportation");
       return;
     }
-    shipMutation.mutate({
-      orderId: selectedOrder.order_id,
-      tracking: trackingNumber,
-      transportId: transportationId,
+
+    if (selectedOrder.status === "CC_REQ") {
+      rejectCancelMutation.mutate({
+        orderId: selectedOrder.order_id,
+        tracking: trackingNumber,
+        transportId: transportationId,
+      });
+    } else {
+      shipMutation.mutate({
+        orderId: selectedOrder.order_id,
+        tracking: trackingNumber,
+        transportId: transportationId,
+      });
+    }
+  };
+
+  const handleShopCancel = (order: Order) => {
+    let reason = "";
+    modal.confirm({
+      title: "ยกเลิกคำสั่งซื้อ",
+      content: (
+        <div className="mt-4">
+          <Text type="secondary">กรุณาระบุเหตุผลที่ยกเลิก:</Text>
+          <Input.TextArea 
+            className="mt-2" 
+            placeholder="เช่น สินค้าหมด"
+            onChange={(e) => reason = e.target.value}
+          />
+        </div>
+      ),
+      onOk: async () => {
+        if (!reason.trim()) {
+          message.warning("กรุณาระบุเหตุผล");
+          return Promise.reject();
+        }
+        await cancelMutation.mutateAsync({ orderId: order.order_id, reason });
+      },
+    });
+  };
+
+  const handleReviewRefund = (order: Order) => {
+    let reason = "";
+    modal.confirm({
+      title: "พิจารณาคำขอคืนเงิน",
+      width: 600,
+      content: (
+        <div className="mt-4 space-y-4">
+          <Alert title={`เหตุผลจากผู้ซื้อ: ${order.refund_reason}`} type="info" />
+          {order.refund_images && order.refund_images.length > 0 && (
+            <div className="bg-gray-50 p-4 rounded border border-gray-100">
+              <Text strong className="block mb-2 text-xs uppercase tracking-wider text-gray-500">หลักฐานที่แนบมา:</Text>
+              <div className="flex flex-wrap gap-2">
+                {order.refund_images.map((img, i) => (
+                  <div key={i} className="relative w-24 h-24 border rounded overflow-hidden bg-white shadow-sm">
+                    <img 
+                      src={`http://localhost:8080/images/refunds/${img}`}
+                      alt={`Evidence ${i + 1}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(`http://localhost:8080/images/refunds/${img}`, "_blank")}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Text type="secondary" className="text-[10px] mt-2 block">คลิกที่รูปเพื่อดูขนาดใหญ่</Text>
+            </div>
+          )}
+          <Text type="secondary">โปรดเลือกดำเนินการ:</Text>
+        </div>
+      ),
+      footer: (
+        <div className="flex justify-end gap-2 p-4 border-t">
+          <Button danger onClick={() => {
+            modal.confirm({
+              title: "ยืนยันการปฏิเสธ",
+              content: <Input.TextArea placeholder="ระบุเหตุผลที่ปฏิเสธ" onChange={e => reason = e.target.value} />,
+              onOk: () => reviewRefundMutation.mutateAsync({ orderId: order.order_id, action: "REJECT", reason })
+            });
+            Modal.destroyAll();
+          }}>ปฏิเสธ</Button>
+          <Button onClick={() => reviewRefundMutation.mutate({ orderId: order.order_id, action: "APPROVE_RETURN" })}>อนุมัติให้ส่งคืนสินค้า</Button>
+          <Button type="primary" onClick={() => reviewRefundMutation.mutate({ orderId: order.order_id, action: "APPROVE_REFUND" })}>คืนเงินทันที</Button>
+        </div>
+      )
     });
   };
 
@@ -178,7 +301,7 @@ export default function ShopOrders() {
       key: "actions",
       align: "center",
       render: (_: any, record: Order) => (
-        <Space>
+        <Space wrap>
           <Button
             icon={<EyeOutlined />}
             size="small"
@@ -186,7 +309,100 @@ export default function ShopOrders() {
           >
             {t("actions.view") || "View"}
           </Button>
-          {!["pending_approve", "WVP", "pending", "PD", "cancelled", "CC", "RJ", "RF"].includes(record.status) && (
+
+          {record.payment_slip && (
+            <Button
+              icon={<FileTextOutlined />}
+              size="small"
+              className="text-blue-500"
+              onClick={() => {
+                modal.info({
+                  title: t("modals.slip.view") || "หลักฐานการชำระเงิน",
+                  width: 450,
+                  content: (
+                    <div className="mt-4 flex justify-center bg-gray-50 p-4 border rounded">
+                      <img 
+                        src={`http://localhost:8080/images/slips/${record.payment_slip}`} 
+                        alt="Slip" 
+                        className="max-w-full h-auto shadow-md"
+                      />
+                    </div>
+                  ),
+                  footer: null,
+                  closable: true,
+                  maskClosable: true
+                });
+              }}
+            >
+              {t("slip.view") || "ดูสลิป"}
+            </Button>
+          )}
+
+          {(record.status === "pending_approve" || record.status === "WS") && (
+            <>
+              {record.status === "WS" && (
+                <Button
+                  icon={<CarOutlined />}
+                  size="small"
+                  type="primary"
+                  onClick={() => handleEditTracking(record)}
+                >
+                  {t("actions.tracking") || "Ship"}
+                </Button>
+              )}
+              <Button
+                danger
+                size="small"
+                onClick={() => handleShopCancel(record)}
+              >
+                {t("actions.cancel") || "Cancel"}
+              </Button>
+            </>
+          )}
+
+          {record.status === "CC_REQ" && (
+            <>
+              <Button
+                type="primary"
+                size="small"
+                className="bg-green-600 hover:!bg-green-700"
+                onClick={() => approveCancelMutation.mutate(record.order_id)}
+              >
+                {t("actions.approveCancel") || "อนุมัติยกเลิก"}
+              </Button>
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => handleEditTracking(record)}
+              >
+                {t("actions.rejectCancel") || "ปฏิเสธ"}
+              </Button>
+            </>
+          )}
+
+          {record.status === "RF_REQ" && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => handleReviewRefund(record)}
+            >
+              {t("actions.reviewRefund") || "พิจารณาคืนเงิน"}
+            </Button>
+          )}
+
+          {record.status === "WAITING_FOR_RETURN" && (
+            <Button
+              type="primary"
+              size="small"
+              className="bg-green-600 hover:!bg-green-700"
+              onClick={() => confirmReturnMutation.mutate(record.order_id)}
+              disabled={!record.return_tracking_no}
+            >
+              {record.return_tracking_no ? t("actions.receivedReturn") : t("actions.waitingReturn")}
+            </Button>
+          )}
+
+          {!["pending_approve", "WS", "CC_REQ", "RF_REQ", "WAITING_FOR_RETURN", "WVP", "pending", "PD", "cancelled", "CC", "RJ", "RF"].includes(record.status) && (
             <Button
               icon={<EditOutlined />}
               size="small"

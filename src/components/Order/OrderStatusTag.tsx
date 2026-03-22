@@ -82,6 +82,18 @@ export const OrderStatusTag: React.FC<OrderStatusTagProps> = ({ status, t }) => 
       color = "success";
       icon = <CheckCircleOutlined />;
       break;
+    case "CC_REQ":
+      color = "warning";
+      icon = <ClockCircleOutlined />;
+      break;
+    case "RF_REQ":
+      color = "volcano";
+      icon = <ReloadOutlined />;
+      break;
+    case "WAITING_FOR_RETURN":
+      color = "orange";
+      icon = <ReloadOutlined />;
+      break;
   }
 
   return (

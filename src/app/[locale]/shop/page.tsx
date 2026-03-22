@@ -34,7 +34,7 @@ import ShopRegistrationForm from "./ShopRegistrationForm";
 import ShopAddressManagement from "./ShopAddressManagement";
 import ShopRevenue from "./ShopRevenue";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -105,9 +105,18 @@ const bottegaTheme = {
 export default function ShopPage() {
   const { user, isAuthenticated, loading: isAuthLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+  
   const t = useTranslations("Shop");
   const [isRegistering, setIsRegistering] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("info");
+  const [activeMenu, setActiveMenu] = useState(tab || "info");
+
+  useEffect(() => {
+    if (tab) {
+      setActiveMenu(tab);
+    }
+  }, [tab]);
 
   const {
     data: shopData,

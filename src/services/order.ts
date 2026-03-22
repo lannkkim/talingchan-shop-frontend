@@ -62,3 +62,102 @@ export const rejectPayment = async (orderId: string): Promise<void> => {
 export const receiveOrder = async (orderId: string): Promise<void> => {
   await axiosInstance.post(`/api/v1/orders/${orderId}/receive`);
 };
+
+export const cancelRequest = async (
+  orderId: string,
+  reason: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/${orderId}/cancel-request`, {
+    reason,
+  });
+};
+
+export const cancelOrder = async (
+  orderId: string,
+  reason: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/cancel`, { reason });
+};
+
+export const approveCancel = async (orderId: string): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/cancel-approve`);
+};
+
+export const rejectCancel = async (
+  orderId: string,
+  trackingNo: string,
+  transportationId?: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/cancel-reject`, {
+    tracking_no: trackingNo,
+    transportation_id: transportationId,
+  });
+};
+
+export const requestRefund = async (
+  orderId: string,
+  reason: string,
+  images?: string[],
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/${orderId}/refund-request`, {
+    reason,
+    images,
+  });
+};
+
+export const reviewRefund = async (
+  orderId: string,
+  action: string,
+  reason?: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/refund-review`, {
+    action,
+    reason,
+  });
+};
+
+export const updateReturnTracking = async (
+  orderId: string,
+  trackingNo: string,
+): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/${orderId}/return-tracking`, {
+    tracking_no: trackingNo,
+  });
+};
+
+export const confirmReturn = async (orderId: string): Promise<void> => {
+  await axiosInstance.post(`/api/v1/orders/shop/${orderId}/return-confirm`);
+};
+
+export const uploadPaymentSlip = async (
+  orderId: string,
+  file: File,
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  await axiosInstance.post(`/api/v1/orders/${orderId}/slip`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const uploadRefundImages = async (
+  orderId: string,
+  files: File[],
+): Promise<string[]> => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+  const response = await axiosInstance.post<{ filenames: string[] }>(
+    `/api/v1/orders/${orderId}/refund-images`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data.filenames;
+};

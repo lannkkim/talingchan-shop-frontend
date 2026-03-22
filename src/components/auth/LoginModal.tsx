@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Modal, Tabs, Form, Input, Button, App, Divider } from "antd";
+import Modal from "antd/es/modal";
+import Tabs from "antd/es/tabs";
+import Form from "antd/es/form";
+import Input from "antd/es/input";
+import Button from "antd/es/button";
+import App from "antd/es/app";
+import Divider from "antd/es/divider";
 import {
   UserOutlined,
   LockOutlined,

@@ -16,6 +16,7 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -180,6 +181,61 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         </Text>
                       </div>
                     </div>
+
+                    {/* Payment Slip Section */}
+                    {order.payment_slip && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 mt-4">
+                        <Text strong className="block mb-3 text-xs uppercase tracking-wider text-blue-600">
+                          <CreditCardOutlined className="mr-2" />
+                          {t("modals.slip.view") || "Payment Proof"}
+                        </Text>
+                        <div className="flex justify-center bg-white p-2 border rounded shadow-sm overflow-hidden">
+                          <img 
+                            src={`http://localhost:8080/images/slips/${order.payment_slip}`} 
+                            alt="Payment Slip" 
+                            className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(`http://localhost:8080/images/slips/${order.payment_slip}`, "_blank")}
+                          />
+                        </div>
+                        <div className="text-center mt-2">
+                          <Text type="secondary" className="text-[10px]">
+                            {t("refund.clickToView") || "Click image to view full size"}
+                          </Text>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Refund Evidence Section */}
+                    {order.refund_images && order.refund_images.length > 0 && (
+                      <div className="bg-orange-50 rounded-lg p-4 border border-orange-100 mt-4">
+                        <Text strong className="block mb-3 text-xs uppercase tracking-wider text-orange-600">
+                          <FileTextOutlined className="mr-2" />
+                          {t("refund.evidence") || "Refund Evidence"}
+                        </Text>
+                        <div className="flex flex-wrap gap-2">
+                          {order.refund_images.map((img, i) => (
+                            <div key={i} className="relative w-20 h-20 border rounded overflow-hidden bg-white shadow-sm">
+                              <img 
+                                src={`http://localhost:8080/images/refunds/${img}`} 
+                                alt={`Evidence ${i + 1}`} 
+                                className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => window.open(`http://localhost:8080/images/refunds/${img}`, "_blank")}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {order.refund_reason && (
+                          <div className="mt-3 p-2 bg-white/50 rounded border border-orange-200/50">
+                            <Text type="secondary" className="text-[11px] block italic">"{order.refund_reason}"</Text>
+                          </div>
+                        )}
+                        <div className="mt-2">
+                          <Text type="secondary" className="text-[10px]">
+                            {t("refund.clickToView") || "Click images to view full size"}
+                          </Text>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Shipping & Payment Section */}

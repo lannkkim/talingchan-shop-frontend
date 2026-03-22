@@ -574,18 +574,9 @@ export default function ProductAddFormV2({
           itemEnd = e?.toISOString();
         }
 
-        // Resolve Product Type Code
-        const distinctCardIds = new Set(cards.map(c => c.card_id));
-        let resolvedCode = "single";
-        if (item.product_category === "plural") {
-          resolvedCode = distinctCardIds.size > 1 ? "deck" : "plural";
-        }
-        const resolvedTypeId = types.find(t => t.code === resolvedCode)?.product_type_id;
-
         return {
           name: item.name,
           detail: item.detail,
-          type_id: resolvedTypeId || item.type_id,
           transaction_type_id: transactionTypeId,
           sell_type_id: sellTypeId,
           buy_type_id: buyTypeId,

@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Layout, Typography, Menu, Button, Dropdown, Avatar, Card, Empty, ConfigProvider } from "antd";
+import Layout from "antd/es/layout";
+import Typography from "antd/es/typography";
+import Menu from "antd/es/menu";
+import Button from "antd/es/button";
+import Dropdown from "antd/es/dropdown";
+import Avatar from "antd/es/avatar";
+import Card from "antd/es/card";
+import Empty from "antd/es/empty";
+import ConfigProvider from "antd/es/config-provider";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
@@ -23,6 +31,7 @@ import { getCart, removeFromCart, CartItem } from "@/services/cart";
 import { getCardImageUrl } from "@/utils/image";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import ThemeSwitcher from "@/components/shared/ThemeSwitcher";
+import NotificationBell from "@/components/notification/NotificationBell";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
@@ -311,7 +320,8 @@ export default function PageHeader({
           <ThemeSwitcher />
           <LanguageSwitcher />
           {isAuthenticated ? (
-            <div className="flex items-center gap-0 md:gap-2">
+            <div className="flex items-center gap-2 md:gap-4">
+              <NotificationBell />
               <Dropdown menu={{ items: userMenu }} placement="bottomRight">
                 <Button
                   type="text"

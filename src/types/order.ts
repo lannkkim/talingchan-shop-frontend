@@ -29,6 +29,12 @@ export interface Order {
   tracking_no?: string;
   status_tracking?: string;
   reciept_id?: string;
+  cancel_reason?: string;
+  refund_reason?: string;
+  refund_images?: string[] | null;
+  return_tracking_no?: string;
+  reject_reason?: string;
+  payment_slip?: string;
   created_at: string;
   updated_at: string;
   buyer: User & { user_profile?: Record<string, unknown> };

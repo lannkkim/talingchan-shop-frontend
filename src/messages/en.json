@@ -15,7 +15,10 @@
     "empty": "No items in cart",
     "total": "Total",
     "proceed": "Proceed to Cart",
-    "goToMarket": "Go to Market"
+    "goToMarket": "Go to Market",
+    "uploadSlip": "Upload Payment Slip",
+    "selectFile": "Select Slip File",
+    "slipHint": "Supports JPG, PNG (Max 10MB)"
   },
   "CartPage": {
     "subtitle": "Your Shopping Cart",
@@ -186,16 +189,25 @@
         "NCA": "not Complete Auction",
         "WO": "waiting offer",
         "CC": "Cancel",
-        "RF": "Refund",
+        "RF": "Refunded",
         "WP": "Waiting pack",
         "WS": "Waiting ship",
         "RS": "Already Shipped",
-        "CP": "Complete"
+        "CP": "Complete",
+        "CC_REQ": "Cancel Requested",
+        "RF_REQ": "Refund Requested",
+        "WAITING_FOR_RETURN": "Waiting for Return"
       },
       "actions": {
         "view": "View",
         "tracking": "Tracking",
-        "refresh": "Refresh"
+        "refresh": "Refresh",
+        "cancel": "Cancel",
+        "approveCancel": "Approve Cancel",
+        "rejectCancel": "Reject",
+        "reviewRefund": "Review Refund",
+        "receivedReturn": "Received Return",
+        "waitingReturn": "Waiting for Return"
       },
       "tracking": {
         "success": "Tracking updated successfully",
@@ -203,7 +215,26 @@
         "notSet": "Not Set",
         "modalTitle": "Update Tracking",
         "label": "Tracking Number",
-        "placeholder": "Enter tracking number"
+        "placeholder": "Enter tracking number",
+        "transportation": "Transportation Company",
+        "selectTransportation": "Select Transportation",
+        "validationError": "Please enter both transportation and tracking number"
+      },
+      "slip": {
+        "view": "View Slip"
+      },
+      "refund": {
+        "evidence": "Refund Evidence",
+        "clickToView": "Click images to view full size"
+      },
+      "modals": {
+        "slip": {
+          "view": "Payment Proof"
+        },
+        "refund": {
+          "evidence": "Refund Evidence",
+          "clickToView": "Click images to view full size"
+        }
       }
     },
     "products": {
@@ -601,6 +632,71 @@
           "status": "Failed to update status: {error}",
           "delete": "Failed to delete product: {error}"
         }
+      }
+    }
+  },
+  "Orders": {
+    "me": {
+      "title": "My Orders",
+      "empty": "No orders yet",
+      "startShopping": "Start shopping to collect your orders",
+      "orderNo": "Order No.",
+      "orderDate": "Order Date",
+      "shop": "Shop",
+      "tracking": "Tracking",
+      "payment": "Payment",
+      "shipping": "Shipping",
+      "totalItems": "Total Items",
+      "shippingFee": "Shipping Fee",
+      "orderTotal": "Order Total",
+      "actions": {
+        "receive": "Received",
+        "cancel": "Cancel Order",
+        "refund": "Request Refund",
+        "return": "Return Items",
+        "notifyPayment": "Notify Payment",
+        "reuploadSlip": "Re-upload Slip",
+        "viewSlip": "View Uploaded Slip"
+      },
+      "modals": {
+        "cancel": {
+          "title": "Cancel Order",
+          "reasonLabel": "Please provide a reason for cancellation:",
+          "placeholder": "e.g. Changed my mind, wrong order",
+          "error": "Please enter a reason"
+        },
+        "refund": {
+          "title": "Request Refund",
+          "reasonLabel": "Reason for refund:",
+          "placeholder": "Describe the product issue",
+          "error": "Please enter a reason",
+          "attachment": "Attach proof images:",
+          "upload": "Upload Images",
+          "uploadHint": "*Supports images up to 10MB each"
+        },
+        "return": {
+          "title": "Return Tracking",
+          "label": "Enter tracking number for returned items:",
+          "placeholder": "e.g. TH12345678",
+          "error": "Please enter tracking number"
+        },
+        "slip": {
+          "title": "Notify Payment",
+          "label": "Upload transfer slip to verify payment:",
+          "selectFile": "Select Slip File",
+          "hint": "*Supports .jpg, .png up to 10MB",
+          "error": "Please select a file",
+          "view": "Payment Proof"
+        }
+      },
+      "messages": {
+        "receiveSuccess": "Product receipt confirmed",
+        "receiveError": "Error confirming receipt",
+        "cancelSuccess": "Cancel request sent",
+        "refundSuccess": "Refund request sent",
+        "returnSuccess": "Return tracking updated",
+        "uploadSuccess": "Payment slip uploaded successfully",
+        "uploadError": "Error uploading slip"
       }
     }
   }

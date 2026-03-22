@@ -15,7 +15,7 @@ import {
   QRCode,
   Spin,
 } from "antd";
-import { ArrowLeftOutlined, UploadOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, UploadOutlined, FileTextOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import PageHeader from "@/components/shared/PageHeader";
 import { useState } from "react";
@@ -100,7 +100,20 @@ export default function CartPayPage() {
 
   const checkoutMutation = useMutation({
     mutationFn: (data: CheckoutInput) => checkout(data),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Upload slip for each order if file exists
+      if (slipFile) {
+        try {
+          const { uploadPaymentSlip } = await import("@/services/order");
+          await Promise.all(
+            data.order_ids.map((orderId) => uploadPaymentSlip(orderId, slipFile))
+          );
+        } catch (error) {
+          console.error("Failed to upload slip to some orders", error);
+          // We don't block the success modal but log it
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       modal.success({
         title: t("success"),
@@ -201,28 +214,33 @@ export default function CartPayPage() {
               </div>
 
               <div className="p-8 bg-white">
-                <Title level={5} className="mb-4">Upload Payment Slip</Title>
+                <Title level={5} className="mb-4 flex items-center gap-2">
+                  <FileTextOutlined /> {tCart("uploadSlip") || "Upload Payment Slip"}
+                </Title>
                 <div className="mb-8">
-                  <Upload.Dragger
+                  <Upload
                     accept="image/*"
                     maxCount={1}
+                    listType="picture-card"
+                    className="w-full flex justify-center"
                     beforeUpload={(file) => {
                       setSlipFile(file);
-                      return false; // Prevent auto-upload if no backend API is handling it explicitly yet
+                      return false;
                     }}
                     onRemove={() => setSlipFile(null)}
-                    className="bg-gray-50 border-gray-300 hover:border-blue-500 transition-colors"
                   >
-                    <p className="ant-upload-drag-icon">
-                      <UploadOutlined className="text-3xl text-gray-400" />
-                    </p>
-                    <p className="ant-upload-text font-medium text-gray-800">
-                      Click or drag slip image to this area to upload
-                    </p>
-                    <p className="ant-upload-hint text-gray-500 px-4">
-                      Support for a single image upload (JPG, PNG).
-                    </p>
-                  </Upload.Dragger>
+                    {!slipFile && (
+                      <div className="flex flex-col items-center justify-center py-4">
+                        <UploadOutlined className="text-2xl mb-2 text-gray-400" />
+                        <div className="text-sm font-medium">{tCart("selectFile") || "Select Slip"}</div>
+                      </div>
+                    )}
+                  </Upload>
+                  <div className="mt-4 text-center">
+                    <Text type="secondary" className="text-[11px] block text-gray-400 uppercase tracking-tighter">
+                      * {tCart("slipHint") || "Supports JPG, PNG (Max 10MB)"}
+                    </Text>
+                  </div>
                 </div>
 
                 <Button

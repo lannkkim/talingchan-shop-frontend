@@ -2,10 +2,10 @@
 
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { App, Tag, Typography, Card, Badge, Empty, Skeleton, Space, Divider, Button } from "antd";
-import { getUserOrders, receiveOrder } from "@/services/order";
+import { App, Tag, Typography, Card, Badge, Empty, Skeleton, Space, Divider, Button, Modal, Form, Input, Upload } from "antd";
+import { getUserOrders, receiveOrder, cancelRequest, requestRefund, updateReturnTracking, uploadPaymentSlip, uploadRefundImages } from "@/services/order";
 import { Order } from "@/types/order";
-import { ShoppingOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { ShoppingOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { getProductImage } from "@/utils/image";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -15,7 +15,8 @@ const { Text, Title } = Typography;
 
 
 export default function OrderList() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
+  const t = useTranslations("Orders.me");
   const ts = useTranslations("Shop.orders.status");
   const queryClient = useQueryClient();
   const { data: orders, isLoading } = useQuery<Order[]>({
@@ -26,13 +27,198 @@ export default function OrderList() {
   const receiveMutation = useMutation({
     mutationFn: (orderId: string) => receiveOrder(orderId),
     onSuccess: () => {
-      message.success("ยืนยันการได้รับสินค้าสำเร็จ");
+      message.success(t("messages.receiveSuccess"));
       queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
     },
     onError: () => {
-      message.error("เกิดข้อผิดพลาดในการยืนยันการได้รับสินค้า");
+      message.error(t("messages.receiveError"));
     },
   });
+
+  const cancelRequestMutation = useMutation({
+    mutationFn: ({ orderId, reason }: { orderId: string, reason: string }) => cancelRequest(orderId, reason),
+    onSuccess: () => {
+      message.success(t("messages.cancelSuccess"));
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: ({ orderId, reason, images }: { orderId: string, reason: string, images?: string[] }) => 
+      requestRefund(orderId, reason, images),
+    onSuccess: () => {
+      message.success(t("messages.refundSuccess"));
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+  });
+
+  const returnTrackingMutation = useMutation({
+    mutationFn: ({ orderId, trackingNo }: { orderId: string, trackingNo: string }) => 
+      updateReturnTracking(orderId, trackingNo),
+    onSuccess: () => {
+      message.success(t("messages.returnSuccess"));
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+  });
+
+  const uploadSlipMutation = useMutation({
+    mutationFn: ({ orderId, file }: { orderId: string, file: File }) => 
+      uploadPaymentSlip(orderId, file),
+    onSuccess: () => {
+      message.success(t("messages.uploadSuccess"));
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+    onError: (err: any) => {
+      message.error(err?.response?.data?.error || t("messages.uploadError"));
+    }
+  });
+
+  const showCancelModal = (orderId: string) => {
+    let reason = "";
+    modal.confirm({
+      title: t("modals.cancel.title"),
+      content: (
+        <div className="mt-4">
+          <Text type="secondary">{t("modals.cancel.reasonLabel")}</Text>
+          <Input.TextArea 
+            className="mt-2" 
+            placeholder={t("modals.cancel.placeholder")}
+            onChange={(e) => reason = e.target.value}
+          />
+        </div>
+      ),
+      onOk: async () => {
+        if (!reason.trim()) {
+          message.warning(t("modals.cancel.error"));
+          return Promise.reject();
+        }
+        await cancelRequestMutation.mutateAsync({ orderId, reason });
+      },
+    });
+  };
+
+  const showRefundModal = (orderId: string) => {
+    let reason = "";
+    let fileList: File[] = [];
+    modal.confirm({
+      title: t("modals.refund.title"),
+      width: 500,
+      content: (
+        <div className="mt-4 space-y-4">
+          <div>
+            <Text type="secondary">{t("modals.refund.reasonLabel") || "Reason for refund"}</Text>
+            <Input.TextArea 
+              className="mt-2" 
+              placeholder={t("modals.refund.placeholder") || "Please describe the problem"}
+              onChange={(e) => reason = e.target.value}
+            />
+          </div>
+          <div>
+            <Text type="secondary">{t("modals.refund.attachment") || "Evidence (Photos)"}</Text>
+            <div className="mt-2">
+              <Upload
+                listType="picture-card"
+                beforeUpload={(file) => {
+                  fileList.push(file as File);
+                  return false;
+                }}
+                onRemove={(file) => {
+                  fileList = fileList.filter(f => f !== (file as any));
+                }}
+                multiple
+                accept="image/*"
+              >
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 8 }}>{t("modals.refund.upload") || "Upload"}</div>
+                </div>
+              </Upload>
+            </div>
+            <div className="mt-1 text-[10px] text-gray-400">
+              {t("modals.refund.uploadHint") || "Maximum 10MB per image"}
+            </div>
+          </div>
+        </div>
+      ),
+      onOk: async () => {
+        if (!reason.trim()) {
+          message.warning(t("modals.refund.error") || "Please provide a reason");
+          return Promise.reject();
+        }
+
+        let imageUrls: string[] = [];
+        if (fileList.length > 0) {
+          try {
+            imageUrls = await uploadRefundImages(orderId, fileList);
+          } catch (err: any) {
+            message.error(err?.response?.data?.error || "Failed to upload images");
+            return Promise.reject();
+          }
+        }
+
+        await refundMutation.mutateAsync({ orderId, reason, images: imageUrls });
+      },
+    });
+  };
+
+  const showReturnTrackingModal = (orderId: string) => {
+    let trackingNo = "";
+    modal.confirm({
+      title: t("modals.return.title"),
+      content: (
+        <div className="mt-4">
+          <Text type="secondary">{t("modals.return.label")}</Text>
+          <Input 
+            className="mt-2" 
+            placeholder={t("modals.return.placeholder")}
+            onChange={(e) => trackingNo = e.target.value}
+          />
+        </div>
+      ),
+      onOk: async () => {
+        if (!trackingNo.trim()) {
+          message.warning(t("modals.return.error"));
+          return Promise.reject();
+        }
+        await returnTrackingMutation.mutateAsync({ orderId, trackingNo });
+      },
+    });
+  };
+
+  const showUploadSlipModal = (orderId: string) => {
+    let selectedFile: File | null = null;
+    modal.confirm({
+      title: t("modals.slip.title"),
+      icon: <UploadOutlined />,
+      content: (
+        <div className="mt-4">
+          <Text type="secondary">{t("modals.slip.label")}</Text>
+          <div className="mt-4">
+            <Upload
+              beforeUpload={(file) => {
+                selectedFile = file;
+                return false;
+              }}
+              maxCount={1}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>{t("modals.slip.selectFile")}</Button>
+            </Upload>
+          </div>
+          <div className="mt-2 text-[10px] text-gray-400">
+            {t("modals.slip.hint")}
+          </div>
+        </div>
+      ),
+      onOk: async () => {
+        if (!selectedFile) {
+          message.warning(t("modals.slip.error"));
+          return Promise.reject();
+        }
+        await uploadSlipMutation.mutateAsync({ orderId, file: selectedFile });
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -50,9 +236,9 @@ export default function OrderList() {
     return (
       <Empty
         image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description="ยังไม่มีรายการสั่งซื้อ"
+        description={t("empty")}
       >
-        <Text type="secondary">เริ่มช้อปปิ้งเพื่อสะสมรายการสั่งซื้อของคุณ</Text>
+        <Text type="secondary">{t("startShopping")}</Text>
       </Empty>
     );
   }
@@ -90,10 +276,37 @@ export default function OrderList() {
           <div className="px-6 py-3 border-b border-gray-50 flex items-center justify-between">
             <Space>
               <ShoppingOutlined className="text-gray-400" />
-              <Text strong className="text-sm">{order.shop?.shop_profile?.shop_name || "ร้านค้าทั่วไป"}</Text>
+              <Text strong className="text-sm">{order.shop?.shop_profile?.shop_name || t("shop")}</Text>
             </Space>
             {order.tracking_no && (
               <Badge status="processing" text={`Tracking: ${order.tracking_no}`} />
+            )}
+            {order.payment_slip && (
+              <Button 
+                type="link" 
+                size="small" 
+                className="text-xs p-0 text-blue-500 hover:text-blue-600"
+                onClick={() => {
+                  modal.info({
+                    title: "หลักฐานการชำระเงิน",
+                    width: 400,
+                    content: (
+                      <div className="mt-4 flex justify-center bg-gray-100 p-2">
+                        <img 
+                          src={`http://localhost:8080/images/slips/${order.payment_slip}`} 
+                          alt="Slip" 
+                          className="max-w-full h-auto shadow-sm"
+                        />
+                      </div>
+                    ),
+                    footer: null,
+                    closable: true,
+                    maskClosable: true
+                  });
+                }}
+              >
+                ดูสลิปที่อัปโหลดแล้ว
+              </Button>
             )}
           </div>
 
@@ -138,29 +351,80 @@ export default function OrderList() {
                 </div>
               </Space>
               
-              {order.status === "RS" && (
-                <Button 
-                  type="primary" 
-                  size="small"
-                  className="bg-green-600 hover:!bg-green-700 text-[12px] h-8 px-4"
-                  onClick={() => receiveMutation.mutate(order.order_id)}
-                  loading={receiveMutation.isPending && receiveMutation.variables === order.order_id}
-                >
-                  ได้รับสินค้าแล้ว
-                </Button>
-              )}
+              <Space orientation="horizontal" size={8}>
+                {order.status === "RS" && (
+                  <Button 
+                    type="primary" 
+                    size="small"
+                    className="bg-green-600 hover:!bg-green-700 text-[12px] h-8 px-4"
+                    onClick={() => receiveMutation.mutate(order.order_id)}
+                    loading={receiveMutation.isPending && receiveMutation.variables === order.order_id}
+                  >
+                    ได้รับสินค้าแล้ว
+                  </Button>
+                )}
+
+                {(order.status === "pending_approve" || order.status === "WS") && (
+                  <Button 
+                    danger
+                    size="small"
+                    className="text-[12px] h-8 px-4"
+                    onClick={() => showCancelModal(order.order_id)}
+                    loading={cancelRequestMutation.isPending}
+                  >
+                    {t("actions.cancel")}
+                  </Button>
+                )}
+
+                {order.status === "pending_approve" && !order.payment_slip && (
+                  <Button 
+                    type="primary"
+                    size="small"
+                    className="text-[12px] h-8 px-4 bg-blue-600"
+                    icon={<UploadOutlined />}
+                    onClick={() => showUploadSlipModal(order.order_id)}
+                    loading={uploadSlipMutation.isPending && uploadSlipMutation.variables?.orderId === order.order_id}
+                  >
+                    {t("actions.notifyPayment")}
+                  </Button>
+                )}
+
+                {order.status === "RS" && (
+                  <Button 
+                    type="default"
+                    size="small"
+                    className="text-[12px] h-8 px-4"
+                    onClick={() => showRefundModal(order.order_id)}
+                    loading={refundMutation.isPending}
+                  >
+                    ขอคืนเงิน
+                  </Button>
+                )}
+
+                {order.status === "WAITING_FOR_RETURN" && (
+                  <Button 
+                    type="primary"
+                    size="small"
+                    className="text-[12px] h-8 px-4"
+                    onClick={() => showReturnTrackingModal(order.order_id)}
+                    loading={returnTrackingMutation.isPending}
+                  >
+                    ส่งคืนสินค้า
+                  </Button>
+                )}
+              </Space>
             </Space>
             <div className="text-right space-y-1">
               <div className="flex justify-end items-center gap-2">
-                <Text type="secondary" className="text-xs">ยอดรวมสินค้า:</Text>
+                <Text type="secondary" className="text-xs">{t("totalItems")}:</Text>
                 <Text className="text-sm">฿{(Number(order.total_price) - Number(order.total_shipping || 0)).toLocaleString()}</Text>
               </div>
               <div className="flex justify-end items-center gap-2">
-                <Text type="secondary" className="text-xs">ค่าจัดส่ง:</Text>
+                <Text type="secondary" className="text-xs">{t("shippingFee")}:</Text>
                 <Text className="text-sm">฿{Number(order.total_shipping || 0).toLocaleString()}</Text>
               </div>
               <div className="flex justify-end items-center gap-2 mt-1">
-                <Text strong className="text-sm">ยอดคำสั่งซื้อรวม:</Text>
+                <Text strong className="text-sm">{t("orderTotal")}:</Text>
                 <Text strong className="text-xl text-blue-600">฿{Number(order.total_price).toLocaleString()}</Text>
               </div>
             </div>
