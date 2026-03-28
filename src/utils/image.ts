@@ -1,10 +1,29 @@
-import { Product } from "@/types/product";
-
 const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 ).replace(/\/$/, "");
 
 export type ImageSize = "thumb" | "medium" | "original";
+
+export const getShopBankBookUrl = (
+  filename: string | null | undefined,
+): string => {
+  if (!filename) return "/images/card-placeholder.png";
+
+  // If it's already a full URL, return as is
+  if (filename.startsWith("http")) {
+    return filename;
+  }
+
+  // Handle legacy /uploads path (e.g., /uploads/shops/bank_books/filename.png)
+  // or just filename
+  let cleanFilename = filename;
+  if (filename.startsWith("/uploads/shops/bank_books/")) {
+    cleanFilename = filename.replace("/uploads/shops/bank_books/", "");
+  }
+
+  // Use the root static route /images/shops/bank_books (not /api/v1)
+  return `${API_URL}/images/shops/bank_books/${cleanFilename}`;
+};
 
 export const getCardImageUrl = (
   imageName: string | null | undefined,

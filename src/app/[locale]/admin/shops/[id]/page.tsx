@@ -9,6 +9,7 @@ import { Link } from "@/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StatusTag } from "@/components/shared/StatusTag";
 import { formatDate } from "@/utils/format";
+import { getShopBankBookUrl } from "@/utils/image";
 import { useTranslations } from "next-intl";
 
 const { Title, Text } = Typography;
@@ -107,7 +108,7 @@ export default function ShopDetailPage() {
                       <div className="mt-2">
                         <Text strong className="mb-2 block text-xs uppercase text-gray-400">{t("details.bookImage")}</Text>
                         <Image 
-                          src={shop.shop_bank.book_image} 
+                          src={getShopBankBookUrl(shop.shop_bank.book_image)} 
                           alt="Bank Book" 
                           width="100%" 
                           className="rounded-lg border border-gray-100 object-contain max-h-60"

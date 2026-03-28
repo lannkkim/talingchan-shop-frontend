@@ -22,7 +22,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  BankOutlined,
 } from "@ant-design/icons";
 import PageHeader from "@/components/shared/PageHeader";
 import ShopProfileForm from "./ShopProfileForm";
@@ -33,6 +34,7 @@ import Link from "next/link";
 import ShopRegistrationForm from "./ShopRegistrationForm";
 import ShopAddressManagement from "./ShopAddressManagement";
 import ShopRevenue from "./ShopRevenue";
+import ShopPayouts from "./ShopPayouts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -158,6 +160,8 @@ export default function ShopPage() {
         return <ShopRevenue />;
       case "addresses":
         return <ShopAddressManagement />;
+      case "payouts":
+        return <ShopPayouts />;
       default:
         return null;
     }
@@ -256,7 +260,7 @@ export default function ShopPage() {
                   <ShopOutlined className="text-xl" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <Text strong className="block truncate text-base">{shopData.shop_profile?.shop_name || "My Shop"}</Text>
+                  <Text strong className="block truncate text-base">{shopData.shop_profile?.shop_display || shopData.shop_profile?.shop_name || "My Shop"}</Text>
                   <Text type="secondary" className="text-xs">Shop Owner</Text>
                 </div>
               </div>
@@ -290,6 +294,11 @@ export default function ShopPage() {
                   key: "addresses",
                   icon: <EnvironmentOutlined />,
                   label: t("tabs.addresses"),
+                },
+                {
+                  key: "payouts",
+                  icon: <BankOutlined />,
+                  label: "ถอนเงิน",
                 },
               ]}
               className="border-none px-2 py-4"

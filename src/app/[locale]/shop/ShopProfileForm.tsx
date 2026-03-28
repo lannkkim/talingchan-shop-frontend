@@ -89,7 +89,11 @@ export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
             <Form.Item
               name="shop_name"
               label={t("shopName")}
-              rules={[{ required: true, message: t("shopNameError") }]}
+              rules={[
+                { required: true, message: t("shopNameError") },
+                { min: 3, message: "Too short" },
+                { max: 100, message: "Too long" }
+              ]}
             >
               <Input
                 prefix={<ShopOutlined className="text-gray-400" />}
@@ -99,7 +103,11 @@ export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="shop_display" label={t("displayName")}>
+            <Form.Item
+              name="shop_display"
+              label={t("displayName")}
+              rules={[{ max: 100, message: "Too long" }]}
+            >
               <Input
                 prefix={<UserOutlined className="text-gray-400" />}
                 placeholder={t("displayNamePlaceholder")}
@@ -115,7 +123,15 @@ export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
 
         <Row gutter={24}>
           <Col xs={24} md={12}>
-            <Form.Item name="shop_phone" label={t("phone")}>
+            <Form.Item
+              name="shop_phone"
+              label={t("phone")}
+              rules={[
+                { pattern: /^[0-9]+$/, message: "Numeric only" },
+                { min: 9, message: "Too short" },
+                { max: 11, message: "Too long" }
+              ]}
+            >
               <Input
                 prefix={<PhoneOutlined className="text-gray-400" />}
                 placeholder={t("phonePlaceholder")}
@@ -124,7 +140,14 @@ export default function ShopProfileForm({ shopData }: ShopProfileFormProps) {
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="shop_email" label={t("email")}>
+            <Form.Item
+              name="shop_email"
+              label={t("email")}
+              rules={[
+                { type: "email", message: "Invalid email" },
+                { max: 100, message: "Too long" }
+              ]}
+            >
               <Input
                 prefix={<MailOutlined className="text-gray-400" />}
                 placeholder={t("emailPlaceholder")}

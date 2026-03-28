@@ -420,6 +420,16 @@
         "number": "Account Number",
         "branch": "Branch (Optional)"
       },
+      "address": {
+        "title": "Shop Address",
+        "name": "Address Label",
+        "phone": "Contact Phone",
+        "address": "Address",
+        "subDistrict": "Sub-district",
+        "district": "District",
+        "province": "Province",
+        "zipcode": "Zipcode"
+      },
       "verification": {
         "title": "Verification",
         "bookImage": "Bank Book Image",

@@ -72,3 +72,8 @@ export const getShopRevenueDashboard = async (): Promise<any> => {
   const response = await axios.get("/api/v1/shop/revenue");
   return response.data;
 };
+
+export const getProductsByShop = async (shopId: string): Promise<any[]> => {
+  const response = await axios.get(`/api/v1/products?shop_id=${shopId}`);
+  return response.data;
+};

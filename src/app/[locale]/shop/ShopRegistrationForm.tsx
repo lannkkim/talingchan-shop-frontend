@@ -20,6 +20,7 @@ import {
   UserOutlined,
   PhoneOutlined,
   MailOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { registerShop, getBanks, Bank } from "@/services/shop";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -69,7 +70,16 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
     if (values.book_image && values.book_image.length > 0) {
       formData.append("bank_book_image", values.book_image[0].originFileObj);
     }
-    
+
+    // Address fields
+    formData.append("address_name", values.address_name);
+    formData.append("address", values.address);
+    formData.append("sub_district", values.sub_district);
+    formData.append("district", values.district);
+    formData.append("province", values.province);
+    formData.append("zipcode", values.zipcode);
+    formData.append("address_phone", values.address_phone);
+
     registerMutation.mutate(formData);
   };
 
@@ -101,7 +111,11 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
               <Form.Item
                 name="shop_name"
                 label={t("profile.shopName")}
-                rules={[{ required: true, message: "Required" }]}
+                rules={[
+                  { required: true, message: "Required" },
+                  { min: 3, message: "Too short" },
+                  { max: 100, message: "Too long" }
+                ]}
               >
                 <Input prefix={<ShopOutlined className="text-gray-400" />} />
               </Form.Item>
@@ -111,7 +125,8 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
                 label={t("profile.shopEmail")}
                 rules={[
                   { required: true, message: "Required" },
-                  { type: "email", message: "Invalid email" }
+                  { type: "email", message: "Invalid email" },
+                  { max: 100, message: "Too long" }
                 ]}
               >
                 <Input prefix={<MailOutlined className="text-gray-400" />} />
@@ -120,7 +135,12 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
               <Form.Item
                 name="shop_phone"
                 label={t("profile.shopPhone")}
-                rules={[{ required: true, message: "Required" }]}
+                rules={[
+                  { required: true, message: "Required" },
+                  { pattern: /^[0-9]+$/, message: "Numeric only" },
+                  { min: 9, message: "Too short" },
+                  { max: 11, message: "Too long" }
+                ]}
               >
                 <Input prefix={<PhoneOutlined className="text-gray-400" />} />
               </Form.Item>
@@ -154,7 +174,12 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
               <Form.Item
                 name="account_number"
                 label={t("bank.number")}
-                rules={[{ required: true, message: "Required" }]}
+                rules={[
+                  { required: true, message: "Required" },
+                  { pattern: /^[0-9]+$/, message: "Numeric only" },
+                  { min: 10, message: "Too short" },
+                  { max: 15, message: "Too long" }
+                ]}
               >
                 <Input prefix={<BankOutlined className="text-gray-400" />} />
               </Form.Item>
@@ -168,6 +193,85 @@ export default function ShopRegistrationForm({ onSuccess }: { onSuccess?: () => 
             </Card>
           </Col>
         </Row>
+
+        <Card title={t("address.title")} className="shadow-sm border-gray-100">
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="address_name"
+                label={t("address.name")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input prefix={<EnvironmentOutlined className="text-gray-400" />} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                name="address_phone"
+                label={t("address.phone")}
+                rules={[
+                  { required: true, message: "Required" },
+                  { pattern: /^[0-9]+$/, message: "Numeric only" },
+                  { min: 9, message: "Too short" },
+                  { max: 11, message: "Too long" }
+                ]}
+              >
+                <Input prefix={<PhoneOutlined className="text-gray-400" />} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            name="address"
+            label={t("address.address")}
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} md={6}>
+              <Form.Item
+                name="sub_district"
+                label={t("address.subDistrict")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item
+                name="district"
+                label={t("address.district")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item
+                name="province"
+                label={t("address.province")}
+                rules={[{ required: true, message: "Required" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item
+                name="zipcode"
+                label={t("address.zipcode")}
+                rules={[
+                  { required: true, message: "Required" },
+                  { pattern: /^[0-9]+$/, message: "Numeric only" },
+                  { len: 5, message: "Must be 5 digits" }
+                ]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
 
         <Card title={t("verification.title")} className="shadow-sm border-gray-100">
           <Form.Item

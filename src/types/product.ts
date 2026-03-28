@@ -55,6 +55,9 @@ export interface Product {
   created_at?: string;
   product_type?: Type;
   transaction_type?: TransactionType;
+  sell_type?: string;
+  sell_type_code?: string;
+  buy_now_price?: string;
   // Relationships
   product_stock_card?: ProductStockCard[];
   product_stock_merch?: ProductStockMerch[];

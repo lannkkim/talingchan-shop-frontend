@@ -17,12 +17,20 @@ import {
   SafetyOutlined,
   EnvironmentOutlined,
   ShoppingOutlined,
+  HeartOutlined,
+  StarOutlined,
+  ExclamationCircleOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
 import { useRouter, useSearchParams } from "next/navigation";
 import AddressList from "./AddressList";
 import OrderList from "./OrderList";
+import FavoritesList from "./FavoritesList";
+import ReviewsList from "./ReviewsList";
+import DisputesList from "./DisputesList";
+import PrivacySettings from "./PrivacySettings";
 import { useTranslations } from "next-intl";
 
 const { Content, Sider } = Layout;
@@ -79,6 +87,26 @@ export default function ProfilePage() {
       key: "purchases",
       icon: <ShoppingOutlined />,
       label: "คำสั่งซื้อของฉัน",
+    },
+    {
+      key: "favorites",
+      icon: <HeartOutlined />,
+      label: "รายการโปรด",
+    },
+    {
+      key: "reviews",
+      icon: <StarOutlined />,
+      label: "รีวิวของฉัน",
+    },
+    {
+      key: "disputes",
+      icon: <ExclamationCircleOutlined />,
+      label: "การร้องเรียน",
+    },
+    {
+      key: "privacy",
+      icon: <LockOutlined />,
+      label: "ความเป็นส่วนตัว",
     },
     {
       key: "logout",
@@ -185,6 +213,46 @@ export default function ProfilePage() {
                     <Text type="secondary">ตรวจสอบสถานะและประวัติการสั่งซื้อของคุณ</Text>
                   </div>
                   <OrderList />
+                </div>
+              )}
+
+              {selectedKey === "favorites" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">รายการโปรด</Title>
+                    <Text type="secondary">สินค้าที่คุณบันทึกไว้</Text>
+                  </div>
+                  <FavoritesList />
+                </div>
+              )}
+
+              {selectedKey === "reviews" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">รีวิวของฉัน</Title>
+                    <Text type="secondary">รีวิวที่คุณเขียนไว้</Text>
+                  </div>
+                  <ReviewsList />
+                </div>
+              )}
+
+              {selectedKey === "disputes" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">การร้องเรียน</Title>
+                    <Text type="secondary">รายการร้องเรียนที่คุณส่ง</Text>
+                  </div>
+                  <DisputesList />
+                </div>
+              )}
+
+              {selectedKey === "privacy" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">ความเป็นส่วนตัว (PDPA)</Title>
+                    <Text type="secondary">จัดการข้อมูลส่วนตัวของคุณตามสิทธิ์ PDPA</Text>
+                  </div>
+                  <PrivacySettings />
                 </div>
               )}
             </div>

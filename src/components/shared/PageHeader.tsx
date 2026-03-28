@@ -20,6 +20,7 @@ import {
   ArrowLeftOutlined,
   ShoppingCartOutlined,
   DeleteOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/navigation";
@@ -102,10 +103,16 @@ export default function PageHeader({
     },
   ];
 
+  if (isAuthenticated) {
+    menuItems.push({
+      key: "/chat",
+      label: <Link href="/chat"><MessageOutlined className="mr-1" />แชท</Link>,
+    });
+  }
+
   if (user?.role?.name === "shop" || user?.role?.name === "admin") {
     menuItems.push({
       key: "/shop",
-      //icon: <ShoppingOutlined />,
       label: <Link href="/shop">{tNav("shop")}</Link>,
     });
   }

@@ -8,6 +8,13 @@ import {
   DashboardOutlined,
   ShoppingOutlined,
   ShopOutlined,
+  BankOutlined,
+  PercentageOutlined,
+  AuditOutlined,
+  ExclamationCircleOutlined,
+  GiftOutlined,
+  RobotOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { Link, usePathname } from "@/navigation";
 import { useTranslations } from "next-intl";
@@ -24,6 +31,13 @@ export default function AdminSidebar() {
     if (pathname.includes("/admin/roles")) return "roles";
     if (pathname.includes("/admin/orders")) return "orders";
     if (pathname.includes("/admin/shops")) return "shops";
+    if (pathname.includes("/admin/payouts")) return "payouts";
+    if (pathname.includes("/admin/fee-rules")) return "fee-rules";
+    if (pathname.includes("/admin/ledger")) return "ledger";
+    if (pathname.includes("/admin/audit-log")) return "audit-log";
+    if (pathname.includes("/admin/disputes")) return "disputes";
+    if (pathname.includes("/admin/mystery-boxes")) return "mystery-boxes";
+    if (pathname.includes("/admin/bots")) return "bots";
     return "dashboard";
   };
 
@@ -51,7 +65,45 @@ export default function AdminSidebar() {
     {
       key: "shops",
       icon: <ShopOutlined />,
-      label: <Link href="/admin/shops">Shops</Link>, // Todo: Add translation
+      label: <Link href="/admin/shops">Shops</Link>,
+    },
+    {
+      type: "divider" as const,
+    },
+    {
+      key: "payouts",
+      icon: <BankOutlined />,
+      label: <Link href="/admin/payouts">ถอนเงิน</Link>,
+    },
+    {
+      key: "fee-rules",
+      icon: <PercentageOutlined />,
+      label: <Link href="/admin/fee-rules">กฎค่าธรรมเนียม</Link>,
+    },
+    {
+      key: "ledger",
+      icon: <FileTextOutlined />,
+      label: <Link href="/admin/ledger">Ledger</Link>,
+    },
+    {
+      key: "disputes",
+      icon: <ExclamationCircleOutlined />,
+      label: <Link href="/admin/disputes">การร้องเรียน</Link>,
+    },
+    {
+      key: "mystery-boxes",
+      icon: <GiftOutlined />,
+      label: <Link href="/admin/mystery-boxes">กล่องสุ่ม</Link>,
+    },
+    {
+      key: "bots",
+      icon: <RobotOutlined />,
+      label: <Link href="/admin/bots">Bots</Link>,
+    },
+    {
+      key: "audit-log",
+      icon: <AuditOutlined />,
+      label: <Link href="/admin/audit-log">Audit Log</Link>,
     },
   ];
 
