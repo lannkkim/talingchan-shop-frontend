@@ -23,7 +23,7 @@ export const purchaseMysteryBox = async (
 };
 
 export const getMyPurchases = async (): Promise<MysteryBoxPurchase[]> => {
-  const res = await axiosInstance.get<MysteryBoxPurchase[]>("/api/v1/mystery-boxes/purchases/me");
+  const res = await axiosInstance.get<MysteryBoxPurchase[]>("/api/v1/mystery-boxes/purchases");
   return res.data;
 };
 

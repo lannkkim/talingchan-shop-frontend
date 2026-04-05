@@ -73,7 +73,41 @@ export const getShopRevenueDashboard = async (): Promise<any> => {
   return response.data;
 };
 
+export interface ShopAnalytics {
+  total_orders: number;
+  pending_orders: number;
+  completed_orders: number;
+  cancelled_orders: number;
+  total_revenue: number;
+  avg_rating: number;
+  total_reviews: number;
+}
+
+export const getShopAnalytics = async (): Promise<ShopAnalytics> => {
+  const response = await axios.get("/api/v1/shop/me/analytics");
+  return response.data;
+};
+
 export const getProductsByShop = async (shopId: string): Promise<any[]> => {
   const response = await axios.get(`/api/v1/products?shop_id=${shopId}`);
+  return response.data;
+};
+
+export interface PublicShopResponse {
+  shop_id: string;
+  is_stock_check_enabled: boolean;
+  level: string;
+  status: string;
+  is_verified: boolean;
+  shop_profile?: {
+    shop_name: string;
+    shop_display?: string;
+    shop_email?: string;
+    shop_phone?: string;
+  };
+}
+
+export const getShopById = async (shopId: string): Promise<PublicShopResponse> => {
+  const response = await axios.get(`/api/v1/shops/${shopId}`);
   return response.data;
 };

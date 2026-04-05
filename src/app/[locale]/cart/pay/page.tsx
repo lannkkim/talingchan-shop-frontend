@@ -169,10 +169,20 @@ export default function CartPayPage() {
     );
   }
 
-  // Generate PromptPay URL (Placeholder logic - replace with actual generator if logic exists)
-  // Standard format relies on phone number / citizen ID + Amount
-  const promptPayNumber = "0812345678"; // Replace with your Talingchan official promptpay number
-  const qrCodeText = `PROMPTPAY: ${promptPayNumber} AMOUNT: ${total}`; 
+  if (!isLoading && cartItems.length === 0) {
+    router.replace("/cart");
+    return null;
+  }
+
+  if (!addressId) {
+    router.replace("/cart");
+    return null;
+  }
+
+  const promptPayNumber = process.env.NEXT_PUBLIC_PROMPTPAY_NUMBER || "";
+  const qrCodeText = promptPayNumber
+    ? `https://promptpay.io/${promptPayNumber}/${total}`
+    : `PromptPay ยอดชำระ ฿${total.toLocaleString()}`;
 
   return (
     <ConfigProvider theme={bottegaTheme}>

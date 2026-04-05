@@ -191,10 +191,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         </Text>
                         <div className="flex justify-center bg-white p-2 border rounded shadow-sm overflow-hidden">
                           <img 
-                            src={`http://localhost:8080/images/slips/${order.payment_slip}`} 
+                            src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/slips/${order.payment_slip}`} 
                             alt="Payment Slip" 
                             className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => window.open(`http://localhost:8080/images/slips/${order.payment_slip}`, "_blank")}
+                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/slips/${order.payment_slip}`, "_blank")}
                           />
                         </div>
                         <div className="text-center mt-2">
@@ -216,10 +216,10 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           {order.refund_images.map((img, i) => (
                             <div key={i} className="relative w-20 h-20 border rounded overflow-hidden bg-white shadow-sm">
                               <img 
-                                src={`http://localhost:8080/images/refunds/${img}`} 
+                                src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/refunds/${img}`} 
                                 alt={`Evidence ${i + 1}`} 
                                 className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => window.open(`http://localhost:8080/images/refunds/${img}`, "_blank")}
+                                onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/refunds/${img}`, "_blank")}
                               />
                             </div>
                           ))}

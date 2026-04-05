@@ -1,4 +1,27 @@
 export const COLORS = ["แดง", "ฟ้า", "เขียว", "ม่วง"];
+
+export const COLOR_HEX_MAP: Record<string, string> = {
+  "#FF0000": "แดง",
+  "#FF4444": "แดง",
+  "#00FFFF": "ฟ้า",
+  "#00BFFF": "ฟ้า",
+  "#0000FF": "ฟ้า",
+  "#00FF00": "เขียว",
+  "#6AA84F": "เขียว",
+  "#008000": "เขียว",
+  "#9900FF": "ม่วง",
+  "#8B00FF": "ม่วง",
+  "#800080": "ม่วง",
+  "#FFFFFF": "ขาว",
+  "#000000": "ดำ",
+};
+
+export const colorToThai = (color: string | null | undefined): string => {
+  if (!color) return "-";
+  if (!color.startsWith("#")) return color; // already Thai
+  const upper = color.toUpperCase();
+  return COLOR_HEX_MAP[upper] ?? color;
+};
 export const TYPES = ["Avatar", "Magic", "Life", "Construct"];
 export const SUBTYPES = ["Normal", "Modification", "React", "Land"];
 export const RARITIES = ["C", "R", "SR", "UR", "SCR", "CBR", "PR", "USEC"];

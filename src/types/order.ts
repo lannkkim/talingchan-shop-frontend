@@ -40,6 +40,7 @@ export interface Order {
   buyer: User & { user_profile?: Record<string, unknown> };
   shop?: {
     shop_id: string;
+    user_id: string;
     shop_profile?: {
       shop_name: string;
     };

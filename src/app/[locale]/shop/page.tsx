@@ -34,6 +34,7 @@ import Link from "next/link";
 import ShopRegistrationForm from "./ShopRegistrationForm";
 import ShopAddressManagement from "./ShopAddressManagement";
 import ShopRevenue from "./ShopRevenue";
+import ShopAnalytics from "./ShopAnalytics";
 import ShopPayouts from "./ShopPayouts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -158,6 +159,8 @@ export default function ShopPage() {
         );
       case "revenue":
         return <ShopRevenue />;
+      case "analytics":
+        return <ShopAnalytics />;
       case "addresses":
         return <ShopAddressManagement />;
       case "payouts":
@@ -289,6 +292,11 @@ export default function ShopPage() {
                   key: "revenue",
                   icon: <ShopOutlined />,
                   label: t("tabs.revenue"),
+                },
+                {
+                  key: "analytics",
+                  icon: <FileTextOutlined />,
+                  label: "สถิติร้านค้า",
                 },
                 {
                   key: "addresses",

@@ -15,6 +15,8 @@ import {
   GiftOutlined,
   RobotOutlined,
   FileTextOutlined,
+  CreditCardOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import { Link, usePathname } from "@/navigation";
 import { useTranslations } from "next-intl";
@@ -38,6 +40,8 @@ export default function AdminSidebar() {
     if (pathname.includes("/admin/disputes")) return "disputes";
     if (pathname.includes("/admin/mystery-boxes")) return "mystery-boxes";
     if (pathname.includes("/admin/bots")) return "bots";
+    if (pathname.includes("/admin/cards")) return "cards";
+    if (pathname.includes("/admin/merch")) return "merch";
     return "dashboard";
   };
 
@@ -99,6 +103,16 @@ export default function AdminSidebar() {
       key: "bots",
       icon: <RobotOutlined />,
       label: <Link href="/admin/bots">Bots</Link>,
+    },
+    {
+      key: "cards",
+      icon: <CreditCardOutlined />,
+      label: <Link href="/admin/cards">Cards Catalog</Link>,
+    },
+    {
+      key: "merch",
+      icon: <AppstoreOutlined />,
+      label: <Link href="/admin/merch">Merchandise</Link>,
     },
     {
       key: "audit-log",

@@ -9,9 +9,11 @@ import ProductCarouselSection from "./ProductCarouselSection";
 import CardCarouselSection from "@/components/shared/CardCarouselSection";
 import CategoryGridSection from "./CategoryGridSection";
 import MarketFooter from "./MarketFooter";
-import TradeCarouselSection from "./TradeCarouselSection"; // Import
+import TradeCarouselSection from "./TradeCarouselSection";
+import AuctionCarouselSection from "./AuctionCarouselSection";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation"; // Import
+import { useRouter } from "next/navigation";
+import type { AuctionProduct } from "@/types/auction";
 
 const { Content } = Layout;
 
@@ -20,8 +22,10 @@ interface MarketPageUIProps {
   isLoadingProducts: boolean;
   cards: CardType[];
   isLoadingCards: boolean;
-  tradeProducts: Product[]; // New prop
-  isLoadingTrades: boolean; // New prop
+  tradeProducts: Product[];
+  isLoadingTrades: boolean;
+  auctionProducts: AuctionProduct[];
+  isLoadingAuctions: boolean;
   carouselRef: React.RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
   getCardImageUrl: (imageName: string | null | undefined, size?: "thumb" | "medium" | "original") => string;
@@ -36,6 +40,8 @@ export default function MarketPageUI({
   isLoadingCards,
   tradeProducts,
   isLoadingTrades,
+  auctionProducts,
+  isLoadingAuctions,
   carouselRef,
   handleScroll,
   getCardImageUrl,
@@ -56,14 +62,12 @@ export default function MarketPageUI({
         <div className="max-w-7xl mx-auto">
 
 
-          {/* ประมูล - Auction (Large Cards - M) */}
-          <CardCarouselSection
-            cards={cards}
-            isLoading={isLoadingCards}
-            getCardImageUrl={getCardImageUrl}
+          {/* ประมูล - Auction (Real auction products) */}
+          <AuctionCarouselSection
+            products={auctionProducts}
+            isLoading={isLoadingAuctions}
             title={t("auction")}
-            coverImage="/images/auction.png"
-            boxFlatCode="M"
+            viewAllLink="/market/auction"
           />
 
           {/* แยกใบ - Single Cards (Small Cards - S) */}

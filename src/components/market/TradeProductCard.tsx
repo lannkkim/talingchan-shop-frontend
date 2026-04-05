@@ -6,6 +6,7 @@ import { Product } from "@/types/product";
 import { SwapOutlined, UserOutlined } from "@ant-design/icons";
 import { getCardImageUrl } from "@/utils/image";
 import { useTheme } from "@/contexts/ThemeContext";
+import FavoriteButton from "@/components/market/FavoriteButton";
 
 const { Text, Title } = Typography;
 
@@ -64,6 +65,11 @@ export default function TradeProductCard({ product, onClick }: TradeProductCardP
               {firstCard.rare}
             </Tag>
           )}
+
+          {/* Favorite Button (Top Right) */}
+          <div className="absolute top-2 right-2 z-10">
+            <FavoriteButton productId={product.product_id} />
+          </div>
 
            {/* Trade Banner */}
           <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white text-center py-1 text-xs backdrop-blur-sm">

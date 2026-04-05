@@ -1,35 +1,49 @@
-import type { Product } from "./product";
-import type { User } from "./auth";
-
 export interface TradingOffer {
-  trading_offer_id: string;
+  offer_id: string;
+  product_id: string;
+  product_name?: string;
   offerer_id: string;
-  target_product_id: string;
-  offered_items: OfferedItem[];
-  cash_top_up?: string;
+  offerer_name?: string;
+  offer_type: string;
+  status: "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED";
+  additional_cash?: string;
   message?: string;
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED" | "COUNTERED";
-  counter_offer?: string;
+  items: TradingOfferItem[];
+  order_id?: string;
+  trade_execution_id?: string;
   created_at: string;
-  updated_at: string;
-  offerer?: User;
-  target_product?: Product;
 }
 
-export interface OfferedItem {
-  product_id?: string;
-  package_id?: string;
-  description?: string;
+export interface TradeExecution {
+  trade_execution_id: string;
+  offer_id: string;
+  party_a_user_id: string;
+  party_a_username?: string;
+  party_b_user_id: string;
+  party_b_username?: string;
+  status: "AGREED" | "SHIPPING" | "COMPLETED" | "CANCELLED";
+  party_a_tracking?: string;
+  party_a_shipped_at?: string;
+  party_a_confirmed: boolean;
+  party_b_tracking?: string;
+  party_b_shipped_at?: string;
+  party_b_confirmed: boolean;
+  cancelled_by?: string;
+  cancel_reason?: string;
+  completed_at?: string;
+  created_at: string;
+}
+
+export interface TradingOfferItem {
+  offer_item_id: string;
+  stock_card_id?: string;
+  stock_merch_id?: string;
+  quantity: number;
 }
 
 export interface CreateTradingOfferInput {
   target_product_id: string;
-  offered_items: OfferedItem[];
-  cash_top_up?: string;
+  items: { stock_card_id?: string; stock_merch_id?: string; quantity: number }[];
+  additional_cash?: string;
   message?: string;
-}
-
-export interface RespondOfferInput {
-  action: "ACCEPT" | "REJECT" | "COUNTER";
-  counter_offer?: string;
 }

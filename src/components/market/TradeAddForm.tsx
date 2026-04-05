@@ -32,7 +32,7 @@ import {
 } from "@ant-design/icons";
 import { FloatingLabelInput } from "@/components/shared/FloatingLabelInput";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import Image from "next/image";
 import { Link } from "@/navigation";
 
@@ -281,10 +281,10 @@ export default function TradeAddForm() {
    };
 
    // 3. Selection Logic (Smart Add)
-   const { data: availableInventory } = useQuery({
+   const { data: availableInventory = [] } = useQuery({
       queryKey: ["my-inventory"],
       queryFn: getMyInventory,
-      initialData: [],
+      select: (data) => data ?? [],
    });
 
    // --- Derived State for Browser ---
@@ -377,7 +377,7 @@ export default function TradeAddForm() {
    const mutation = useMutation({
       mutationFn: createTrade,
       onSuccess: () => {
-         router.push("/th/market/trade");
+         router.push("/market/trade");
          queryClient.invalidateQueries({ queryKey: ["trades"] });
       },
       onError: (error) => {

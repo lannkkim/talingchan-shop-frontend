@@ -44,10 +44,10 @@ export const sendMessage = async (
 };
 
 export const markRead = async (threadId: string): Promise<void> => {
-  await axiosInstance.post(`/api/v1/chat/threads/${threadId}/read`);
+  await axiosInstance.put(`/api/v1/chat/threads/${threadId}/read`);
 };
 
 export const getUnreadCount = async (): Promise<number> => {
-  const res = await axiosInstance.get<{ count: number }>("/api/v1/chat/unread");
+  const res = await axiosInstance.get<{ count: number }>("/api/v1/chat/unread-count");
   return res.data.count;
 };

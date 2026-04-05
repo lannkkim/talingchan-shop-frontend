@@ -2,7 +2,7 @@
 
 import { Card, Skeleton, Tag, Typography } from "antd";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { Card as CardType } from "@/types/card";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -35,7 +35,7 @@ function SmallCardItem({
   return (
     <Card
       hoverable
-      className="flex-shrink-0 w-[200px] h-[300px] overflow-hidden border border-black hover:shadow-lg transition-all duration-300 rounded-lg"
+      className="flex-shrink-0 w-[200px] h-[300px] overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-300 rounded-lg"
       cover={
         <div className="relative h-[180px]" style={{ background: bgColor }}>
           <Image
@@ -65,7 +65,7 @@ function SmallCardItem({
         },
       }}
       style={{
-        border: "1px solid black",
+        border: "1px solid #e5e7eb",
         height: "280px",
         background: bgColor,
       }}
@@ -73,19 +73,15 @@ function SmallCardItem({
       <Text className="text-xs text-gray-800 dark:text-gray-100 line-clamp-1 font-medium block mb-1">
         {card.name}
       </Text>
-      <Text className="text-sm font-bold text-gray-900 dark:text-white block">
-        ฿ 41,200
-      </Text>
+      <Link href={`/market/cards/${card.card_id}`} className="text-sm font-semibold text-black dark:text-white hover:text-[#DC143C] transition-colors block">
+        ดูราคา →
+      </Link>
       <div className="flex items-center gap-1 mt-1">
-        <Tag color="blue" className="m-0 text-[10px]">
-          แยกใบ
-        </Tag>
-        <Tag color="orange" className="m-0 text-[10px]">
-          sec
-        </Tag>
-        <Text className="text-[10px] text-gray-400 dark:text-gray-300 ml-auto">
-          เหลือ 12
-        </Text>
+        {card.rare && (
+          <Tag color="gold" className="m-0 text-[10px]">
+            {card.rare}
+          </Tag>
+        )}
       </div>
     </Card>
   );
@@ -105,9 +101,9 @@ function LargeCardItem({
   return (
     <Card
       hoverable
-      className="flex-shrink-0 w-[500px] overflow-hidden hover:shadow-lg transition-all duration-300 rounded-lg"
+      className="flex-shrink-0 w-[500px] overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-300 rounded-lg"
       styles={{ body: { padding: 0, background: bgColor } }}
-      style={{ border: "1px solid black", background: bgColor }}
+      style={{ border: "1px solid #e5e7eb", background: bgColor }}
     >
       <div className="flex h-[300px]">
         {/* Image Section - Square 280x280 */}
@@ -131,54 +127,35 @@ function LargeCardItem({
         </div>
 
         {/* Details Section */}
-        <div className="flex-1] p-4 flex flex-col">
+        <div className="flex-1 p-4 flex flex-col">
           <Title
             level={4}
             className="!mb-2 !text-lg line-clamp-1 dark:!text-white"
           >
-            {card.name || "อาเธอร์"}
+            {card.name}
           </Title>
 
-          <div className="flex items-baseline gap-2 mb-2">
-            <Text className="text-gray-500 dark:text-gray-300 text-sm">
-              เปิดที่
-            </Text>
-            <Text className="text-lg font-bold text-gray-900 dark:text-white">
-              ฿ 41,200
-            </Text>
-            <Text className="text-gray-400 dark:text-gray-400 text-xs">
-              บิดขั้นต่ำ:10
-            </Text>
-          </div>
-
           <div className="flex items-center gap-2 mb-3">
-            <Tag color="orange" className="m-0 text-xs font-medium">
-              สูด
-            </Tag>
-            <Tag color="purple" className="m-0 text-xs font-medium">
-              sec
-            </Tag>
+            {card.rare && (
+              <Tag color="gold" className="m-0 text-xs font-medium">
+                {card.rare}
+              </Tag>
+            )}
           </div>
 
-          <div className="text-sm text-gray-600 dark:text-black space-y-1">
-            <div>รายละเอียดสินค้า</div>
-            <div>
-              จำนวน <span className="font-medium">4</span> ใบ
-            </div>
-            <div>หมดเวลาใน</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <div>{card.color && <span>สี: <span className="font-medium">{card.color}</span></span>}</div>
+            <div>{card.type && <span>ประเภท: <span className="font-medium">{card.type}</span></span>}</div>
           </div>
 
           <div className="mt-auto pt-3">
-            <div className="inline-block border border-black dark:border-white rounded px-4 py-2">
-              <Text className="text-lg font-mono font-medium dark:text-white">
-                24:02:32
-              </Text>
-            </div>
+            <Link
+              href={`/market/cards/${card.card_id}`}
+              className="inline-block bg-black text-white text-sm font-semibold px-4 py-2 hover:bg-gray-800 transition-colors"
+            >
+              ดูราคาและรายละเอียด →
+            </Link>
           </div>
-
-          <Text className="text-xs text-gray-400 dark:text-gray-300 mt-2">
-            เหลือ 1
-          </Text>
         </div>
       </div>
     </Card>
@@ -188,7 +165,7 @@ function LargeCardItem({
 // Cover placeholder card
 function CoverPlaceholder() {
   return (
-    <div className="flex-shrink-0 w-[140px] h-[280px] border-2 border-dashed border-black rounded-lg bg-white flex items-center justify-center">
+    <div className="flex-shrink-0 w-[140px] h-[280px] border-2 border-dashed border-gray-300 rounded-lg bg-white flex items-center justify-center">
       <Text className="text-gray-400 text-sm">Cover</Text>
     </div>
   );
@@ -231,7 +208,7 @@ export default function CardCarouselSection({
         {coverImage && (
           <Card
             className="flex-shrink-0 w-[200px] overflow-hidden shadow-lg bg-white"
-            style={{ border: "1px solid black" }}
+            style={{ border: "1px solid #e5e7eb" }}
             cover={
               <div className="relative h-[320px]">
                 <Image

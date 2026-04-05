@@ -19,11 +19,15 @@ export const OrderStatusTag: React.FC<OrderStatusTagProps> = ({ status, t }) => 
   let text = t(status) || status;
 
   switch (status) {
+    case "pending_payment":
+      color = "orange";
+      icon = <ClockCircleOutlined />;
+      text = "รอชำระเงิน";
+      break;
     case "pending_approve":
     case "WVP":
       color = "warning";
       icon = <ClockCircleOutlined />;
-      // Use short code for consistent translation key if possible, or handle both
       break;
     case "PD":
     case "pending":

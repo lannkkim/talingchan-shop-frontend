@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import Badge from "antd/es/badge";
 import Dropdown from "antd/es/dropdown";
 import Typography from "antd/es/typography";
@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types/notification";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 const { Text } = Typography;
 
@@ -53,9 +54,25 @@ export default function NotificationBell() {
 
   const { data: notificationsData, isLoading } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => getNotifications(1, 10), // Limit to 10 for dropdown
+    queryFn: () => getNotifications(1, 10),
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  // Real-time: invalidate on new_notification event
+  const handleWsMessage = useCallback((event: MessageEvent) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "new_notification") {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }
+    } catch {
+      // ignore malformed messages
+    }
+  }, [queryClient]);
+
+  useWebSocket(isAuthenticated ? "/api/v1/ws/notifications" : null, {
+    onMessage: handleWsMessage,
+    enabled: isAuthenticated,
   });
 
   const markAsReadMutation = useMutation({

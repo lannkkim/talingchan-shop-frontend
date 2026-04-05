@@ -3,6 +3,9 @@ import type { User } from "./auth";
 export interface ChatParticipant {
   chat_participant_id: string;
   user_id: string;
+  username?: string;
+  shop_name?: string;
+  image?: string;
   last_read_at?: string;
   joined_at: string;
   user?: User;

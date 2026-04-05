@@ -1,30 +1,69 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
+import { addToCart } from "@/services/cart";
 import { Product } from "@/types/product";
-import { Card, Spin, Typography, Row, Col, Divider, Layout, Tag, Modal, Button, Space } from "antd";
-import { LineChartOutlined } from "@ant-design/icons";
+import { Card, Spin, Typography, Row, Col, Divider, Layout, Tag, Modal, Button, Space, InputNumber, App, Alert } from "antd";
+import { LineChartOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import FavoriteButton from "@/components/market/FavoriteButton";
+import BuyRequestModal from "@/components/market/BuyRequestModal";
+import { Link as NavLink } from "@/navigation";
 import Image from "next/image";
 import PageHeader from "@/components/shared/PageHeader";
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { getCardImageUrl } from "@/utils/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 
 function AllMarketProductsContent() {
   const searchParams = useSearchParams();
-  const typeCode = searchParams.get("type"); // 'single' or 'deck' or 'bundle'
+  const typeCode = searchParams.get("type");
   const transactionTypeCode = searchParams.get("transaction_type") || "sell";
+  const { user } = useAuth();
+  const { modal } = App.useApp();
+  const queryClient = useQueryClient();
 
-  // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [buyQuantity, setBuyQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [buyRequestProduct, setBuyRequestProduct] = useState<Product | null>(null);
 
-  const { data: products = [], isLoading } = useQuery({
+  const handleProductClick = (product: Product) => {
+    if (product.transaction_type?.code === "buy") {
+      setBuyRequestProduct(product);
+    } else {
+      setSelectedProduct(product);
+      setBuyQuantity(1);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedProduct) return;
+    if (user?.users_id === selectedProduct.users?.users_id) {
+      modal.warning({ title: "ไม่สามารถเพิ่มสินค้าได้", content: "คุณไม่สามารถซื้อสินค้าของตัวเองได้" });
+      return;
+    }
+    setAddingToCart(true);
+    try {
+      await addToCart({ product_id: selectedProduct.product_id, quantity: buyQuantity });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      modal.success({ title: "เพิ่มลงตะกร้าแล้ว", content: `${selectedProduct.name} x${buyQuantity}` });
+      setIsModalOpen(false);
+    } catch (err: any) {
+      modal.error({ title: "เพิ่มไม่สำเร็จ", content: err.response?.data?.error || "เกิดข้อผิดพลาด" });
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const { data: products = [], isLoading, isError } = useQuery({
     queryKey: ["products", "all-market", typeCode, transactionTypeCode],
     queryFn: () => getProducts({
       status: "active",
@@ -50,10 +89,7 @@ function AllMarketProductsContent() {
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
         <Card
           hoverable
-          onClick={() => {
-            setSelectedProduct(product);
-            setIsModalOpen(true);
-          }}
+          onClick={() => handleProductClick(product)}
           cover={
             <div className="relative h-[240px] w-full bg-gray-50 flex items-center justify-center overflow-hidden">
                <Image
@@ -63,6 +99,9 @@ function AllMarketProductsContent() {
                 className="object-contain p-4"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
               />
+              <div className="absolute top-2 right-2">
+                <FavoriteButton productId={product.product_id} />
+              </div>
             </div>
           }
           className="h-full overflow-hidden"
@@ -125,11 +164,13 @@ function AllMarketProductsContent() {
           <div className="flex justify-center items-center min-h-[400px]">
             <Spin size="large" />
           </div>
+        ) : isError ? (
+          <Alert type="error" message="ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่อีกครั้ง" className="my-8" />
         ) : (
           <>
             <Title level={3}>{title}</Title>
             <Divider className="my-3" />
-            {products && products.length > 0 ? (
+            {products.length > 0 ? (
               <Row gutter={[16, 24]}>{products.map((p: Product) => renderProductCard(p))}</Row>
             ) : (
               <div className="text-center py-20">
@@ -138,6 +179,12 @@ function AllMarketProductsContent() {
             )}
           </>
         )}
+
+        <BuyRequestModal
+          product={buyRequestProduct}
+          isOpen={!!buyRequestProduct}
+          onClose={() => setBuyRequestProduct(null)}
+        />
 
         <Modal
           title={selectedProduct?.name}
@@ -182,7 +229,7 @@ function AllMarketProductsContent() {
                               </div>
                             )}
                             {card?.card_id && (
-                                <Link href={`/market/cards/${btoa(String(card.card_id))}`}>
+                                <Link href={`/market/cards/${card.card_id}`}>
                                     <Button type="link" size="small" className="p-0 h-auto text-[10px]" icon={<LineChartOutlined />}>Stats</Button>
                                 </Link>
                             )}
@@ -197,7 +244,15 @@ function AllMarketProductsContent() {
                   <Space orientation="vertical" size="middle" className="w-full">
                     <div>
                       <Text type="secondary" className="block text-xs text-gray-400">Shop</Text>
-                      <Text strong>{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Individual Seller"}</Text>
+                      {selectedProduct.users?.shop?.shop_id ? (
+                        <NavLink href={`/shops/${selectedProduct.users.shop.shop_id}`}>
+                          <Text strong className="underline-offset-2 hover:underline cursor-pointer">
+                            {selectedProduct.users.shop.shop_profile?.shop_name || selectedProduct.users.username || "Individual Seller"}
+                          </Text>
+                        </NavLink>
+                      ) : (
+                        <Text strong>{selectedProduct.users?.username || "Individual Seller"}</Text>
+                      )}
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">Description</Text>
@@ -212,11 +267,45 @@ function AllMarketProductsContent() {
                             </Text>
                          </div>
                          <div className="flex justify-between items-center">
+                            <Text type="secondary">คงเหลือ</Text>
+                            <Text strong>{selectedProduct.quantity ?? "-"} ชิ้น</Text>
+                         </div>
+                         <div className="flex justify-between items-center">
                             <Text type="secondary">Product Type</Text>
                             <Tag color="blue">{selectedProduct.product_type?.name}</Tag>
                          </div>
                        </Space>
                     </div>
+                    {transactionTypeCode === "sell" && (
+                      <div className="flex items-center gap-3 mt-4">
+                        <div>
+                          <Text type="secondary" className="block text-xs mb-1">จำนวน</Text>
+                          <InputNumber
+                            min={1}
+                            max={selectedProduct.quantity || 1}
+                            value={buyQuantity}
+                            onChange={(v) => setBuyQuantity(Number(v) || 1)}
+                            className="w-24"
+                            disabled={user?.users_id === selectedProduct.users?.users_id || (selectedProduct.quantity || 0) <= 0}
+                          />
+                        </div>
+                        <Button
+                          type="primary"
+                          size="large"
+                          className="flex-1"
+                          icon={<ShoppingCartOutlined />}
+                          onClick={handleAddToCart}
+                          loading={addingToCart}
+                          disabled={user?.users_id === selectedProduct.users?.users_id || (selectedProduct.quantity || 0) <= 0}
+                        >
+                          {user?.users_id === selectedProduct.users?.users_id
+                            ? "สินค้าของคุณ"
+                            : (selectedProduct.quantity || 0) <= 0
+                            ? "สินค้าหมด"
+                            : "เพิ่มลงตะกร้า"}
+                        </Button>
+                      </div>
+                    )}
                   </Space>
                 </Col>
               </Row>
@@ -230,17 +319,19 @@ function AllMarketProductsContent() {
 
 export default function AllMarketProductsPage() {
   return (
-    <Suspense fallback={
-      <Layout className="min-h-screen">
-        <PageHeader title="กำลังโหลด..." />
-        <Content className="p-4 md:p-8 container mx-auto">
-          <div className="flex justify-center items-center min-h-[400px]">
-            <Spin size="large" />
-          </div>
-        </Content>
-      </Layout>
-    }>
-      <AllMarketProductsContent />
-    </Suspense>
+    <App>
+      <Suspense fallback={
+        <Layout className="min-h-screen">
+          <PageHeader title="กำลังโหลด..." />
+          <Content className="p-4 md:p-8 container mx-auto">
+            <div className="flex justify-center items-center min-h-[400px]">
+              <Spin size="large" />
+            </div>
+          </Content>
+        </Layout>
+      }>
+        <AllMarketProductsContent />
+      </Suspense>
+    </App>
   );
 }

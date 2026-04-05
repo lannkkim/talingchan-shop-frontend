@@ -14,8 +14,9 @@ import {
   Switch,
   App,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { getAdminBots, createBot, updateBot, deleteBot } from "@/services/bot";
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
+import { getAdminBots, createBot, updateBot, deleteBot, bulkImportBots } from "@/services/bot";
+import BulkImportModal from "@/components/shared/BulkImportModal";
 import type { BotCatalog } from "@/types/bot";
 import { formatCurrency } from "@/utils/format";
 import { ManagementPageLayout } from "@/components/shared/ManagementPageLayout";
@@ -26,6 +27,7 @@ export default function AdminBotsPage() {
   const { message: antMessage, modal } = App.useApp();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<BotCatalog | null>(null);
   const [form] = Form.useForm();
 
@@ -128,9 +130,14 @@ export default function AdminBotsPage() {
       title="Bot Catalog"
       description="จัดการรายการบอทอัตโนมัติ"
       extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-          เพิ่ม Bot
-        </Button>
+        <Space>
+          <Button icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>
+            นำเข้า CSV
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+            เพิ่ม Bot
+          </Button>
+        </Space>
       }
     >
       <Table
@@ -139,6 +146,14 @@ export default function AdminBotsPage() {
         rowKey="bot_catalog_id"
         loading={isLoading}
         pagination={{ pageSize: 20 }}
+      />
+
+      <BulkImportModal
+        open={importOpen}
+        onClose={() => { setImportOpen(false); queryClient.invalidateQueries({ queryKey: ["admin", "bots"] }); }}
+        onImport={bulkImportBots}
+        title="นำเข้า Bot จาก CSV"
+        csvDescription="CSV header: name,bot_type,series,description,image_url"
       />
 
       <Modal

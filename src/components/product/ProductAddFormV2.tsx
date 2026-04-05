@@ -31,7 +31,9 @@ import {
   Image,
   InputNumber,
   Layout,
+  Modal,
   Select,
+  Space,
   Typography,
   Checkbox,
   DatePicker,
@@ -179,7 +181,8 @@ const AuctionSummary = ({ form, onRemove }: { form: any, onRemove?: (index: numb
   const isAutoExtend = Form.useWatch("is_auto_extend", form);
   const extendTrigger = Form.useWatch("auto_extend_trigger_min", form) || 5;
   const extendDuration = Form.useWatch("auto_extend_duration_min", form) || 5;
-  const extendMax = Form.useWatch("auto_extend_max_count", form);
+  const extendUnlimited = Form.useWatch("auto_extend_unlimited", form) ?? true;
+  const extendMax = extendUnlimited ? 0 : (Form.useWatch("auto_extend_max_count", form) || 0);
 
   const duration = useMemo(() => {
     if (!startDate || !endDate) return "-";
@@ -250,6 +253,12 @@ const AuctionSummary = ({ form, onRemove }: { form: any, onRemove?: (index: numb
                 <span className="text-gray-500">บิทขั้นต่ำ:</span>
                 <span>{Number(item?.bid_increment || 0).toLocaleString()}</span>
               </div>
+              {item?.buy_now_price > 0 && (
+                <div className="flex justify-between pl-2">
+                  <span className="text-gray-500">ซื้อทันที:</span>
+                  <span className="text-green-600 font-medium">{Number(item.buy_now_price).toLocaleString()}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -284,7 +293,7 @@ export default function ProductAddFormV2({
   onSuccess,
 }: ProductAddFormV2Props) {
   const router = useRouter();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const t = useTranslations("Shop.productForm");
 
@@ -465,7 +474,7 @@ export default function ProductAddFormV2({
   }, [shouldCheckStock, selectedCards, form, activeFieldIndex]);
 
   const mutation = useMutation({
-    mutationFn: (data: CreateProductInput) => createProduct(data, transactionType),
+    mutationFn: (data: CreateProductInput) => createProduct(data, saleType === "auction" ? "auction" : transactionType),
     onSuccess: () => {
       message.success(t("messages.success"));
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -475,8 +484,35 @@ export default function ProductAddFormV2({
         router.push("/products");
       }
     },
-    onError: (error: Error) => {
-      message.error(t("messages.error", { error: error.message }));
+    onError: (error: unknown) => {
+      const apiError = (error as any)?.response?.data?.error as string | undefined;
+      const apiCode = (error as any)?.response?.data?.code as string | undefined;
+
+      if (apiCode === "validation" && apiError?.toLowerCase().includes("address")) {
+        const isShopAddress = apiError?.toLowerCase().includes("shop address");
+        modal.error({
+          title: isShopAddress ? "ยังไม่ได้ตั้งค่าที่อยู่ร้านค้า" : "ยังไม่ได้ตั้งค่าที่อยู่",
+          content: (
+            <div>
+              <p className="mb-3">
+                {isShopAddress
+                  ? "ต้องเพิ่มที่อยู่ร้านค้าก่อนถึงจะลงขายสินค้าได้ เพื่อให้ผู้ซื้อทราบว่าจะรับสินค้าจากที่ไหน"
+                  : "ต้องเพิ่มที่อยู่จัดส่งก่อนถึงจะโพสต์ประกาศรับซื้อได้ เพื่อให้ผู้ขายทราบว่าจะส่งสินค้าไปที่ไหน"}
+              </p>
+              <a
+                href={isShopAddress ? "/shop?tab=addresses" : "/profile?tab=addresses"}
+                className="text-blue-600 underline font-medium"
+                onClick={() => Modal.destroyAll()}
+              >
+                {isShopAddress ? "ไปเพิ่มที่อยู่ร้านค้า →" : "ไปเพิ่มที่อยู่ →"}
+              </a>
+            </div>
+          ),
+          okText: "ปิด",
+        });
+      } else {
+        message.error(apiError || (error as Error).message || "เกิดข้อผิดพลาด");
+      }
     },
   });
 
@@ -500,35 +536,22 @@ export default function ProductAddFormV2({
         }
       }
 
-      const transactionTypeSelection =
-        transactionType === "sell" ? "sell_order" : "buy_order";
-
       let transactionTypeId: string | undefined;
       let sellTypeId: string | undefined;
       let buyTypeId: string | undefined;
 
-      if (transactionTypeSelection === "sell_order") {
+      if (saleType === "auction") {
+        transactionTypeId = transactionTypes.find(
+          (t) => t.code === "auction",
+        )?.transaction_type_id;
+      } else if (transactionType === "sell") {
         transactionTypeId = transactionTypes.find(
           (t) => t.code === "sell",
         )?.transaction_type_id;
-
-        // Determine Sell Type ID based on selected saleType
-        if (saleType === "sell") {
-          sellTypeId = sellTypes.find(
-            (t) => t.code === "sell_order"
-          )?.sell_type_id;
-        } else if (saleType === "auction") {
-          sellTypeId = sellTypes.find(
-            (t) => t.code === "auction_order"
-          )?.sell_type_id;
-
-          if (!sellTypeId) {
-            sellTypeId = sellTypes.find(
-              (t) => t.code === "auction"
-            )?.sell_type_id;
-          }
-        }
-      } else if (transactionTypeSelection === "buy_order") {
+        sellTypeId = sellTypes.find(
+          (t) => t.code === "sell_order"
+        )?.sell_type_id;
+      } else {
         transactionTypeId = transactionTypes.find(
           (t) => t.code === "buy",
         )?.transaction_type_id;
@@ -574,6 +597,7 @@ export default function ProductAddFormV2({
           itemEnd = e?.toISOString();
         }
 
+        const isAuction = saleType === "auction";
         return {
           name: item.name,
           detail: item.detail,
@@ -586,20 +610,22 @@ export default function ProductAddFormV2({
             stock_card_id: c.card_id,
             quantity: form.getFieldValue(['items', index, `quantity_${c.card_id}`]) || 1,
           })),
-          price: item.price
-            ? {
-              price: item.price,
-              price_period_ended: itemEnd,
-            }
-            : undefined,
+          price: item.price ? { price: Number(item.price) } : undefined,
           shipping_fee: (item.shipping_fee !== undefined && item.shipping_fee !== null && item.shipping_fee !== "") ? Number(item.shipping_fee) : undefined,
-          quantity: item.quantity,
+          quantity: item.quantity ? Number(item.quantity) : 1,
 
-          is_auto_extend: values.is_auto_extend,
-          auto_extend_trigger_min: values.is_auto_extend ? values.auto_extend_trigger_min : undefined,
-          auto_extend_duration_min: values.is_auto_extend ? values.auto_extend_duration_min : undefined,
-          auto_extend_max_count: values.is_auto_extend ? values.auto_extend_max_count : undefined,
-          bid_increment: item.bid_increment,
+          // Auction-specific fields
+          ...(isAuction && {
+            start_price: item.price ? Number(item.price) : undefined,
+            buy_now_price: item.buy_now_price ? Number(item.buy_now_price) : undefined,
+            min_bid_increment: item.bid_increment ? Number(item.bid_increment) : undefined,
+            auction_start_at: itemStart,
+            auction_end_at: itemEnd,
+            is_auto_extend: values.is_auto_extend || false,
+            auto_extend_trigger_min: values.is_auto_extend ? Number(values.auto_extend_trigger_min) : undefined,
+            auto_extend_duration_min: values.is_auto_extend ? Number(values.auto_extend_duration_min) : undefined,
+            auto_extend_max_count: values.is_auto_extend && !values.auto_extend_unlimited ? Number(values.auto_extend_max_count) : undefined,
+          }),
         };
       });
 
@@ -716,12 +742,29 @@ export default function ProductAddFormV2({
                           <Switch size="small" />
                         </Form.Item>
                       </div>
-                      <Form.Item noStyle shouldUpdate={(prev, curr) => prev.is_auto_extend !== curr.is_auto_extend}>
+                      <Form.Item noStyle shouldUpdate={(prev, curr) => prev.is_auto_extend !== curr.is_auto_extend || prev.auto_extend_unlimited !== curr.auto_extend_unlimited}>
                         {({ getFieldValue }) => getFieldValue("is_auto_extend") && (
-                          <div className="grid grid-cols-3 gap-2">
-                            <Form.Item name="auto_extend_trigger_min" label="Trigger (min)" initialValue={5}><InputNumber className="w-full" /></Form.Item>
-                            <Form.Item name="auto_extend_duration_min" label="Extend (min)" initialValue={5}><InputNumber className="w-full" /></Form.Item>
-                            <Form.Item name="auto_extend_max_count" label="Max Count" initialValue={0}><InputNumber className="w-full" /></Form.Item>
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <Form.Item name="auto_extend_trigger_min" label="Trigger ก่อนจบ (นาที)" initialValue={5}>
+                                <InputNumber className="w-full" min={1} />
+                              </Form.Item>
+                              <Form.Item name="auto_extend_duration_min" label="ต่อเวลาเพิ่ม (นาที)" initialValue={5}>
+                                <InputNumber className="w-full" min={1} />
+                              </Form.Item>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Form.Item name="auto_extend_unlimited" valuePropName="checked" initialValue={true} noStyle>
+                                <Checkbox>ไม่จำกัดจำนวนครั้ง</Checkbox>
+                              </Form.Item>
+                              <Form.Item noStyle shouldUpdate={(prev, curr) => prev.auto_extend_unlimited !== curr.auto_extend_unlimited}>
+                                {({ getFieldValue: gfv }) => !gfv("auto_extend_unlimited") && (
+                                  <Form.Item name="auto_extend_max_count" label="สูงสุด (ครั้ง)" noStyle initialValue={3}>
+                                    <InputNumber min={1} className="w-24" />
+                                  </Form.Item>
+                                )}
+                              </Form.Item>
+                            </div>
                           </div>
                         )}
                       </Form.Item>
@@ -906,9 +949,14 @@ export default function ProductAddFormV2({
                                     </Form.Item>
 
                                     {saleType === "auction" ? (
-                                      <Form.Item name={[field.name, "bid_increment"]} rules={[{ required: true }]}>
-                                        <FloatingLabelInput label="บิทขั้นต่ำ*" type="number" />
-                                      </Form.Item>
+                                      <>
+                                        <Form.Item name={[field.name, "bid_increment"]} rules={[{ required: true }]}>
+                                          <FloatingLabelInput label="บิทขั้นต่ำ*" type="number" />
+                                        </Form.Item>
+                                        <Form.Item name={[field.name, "buy_now_price"]}>
+                                          <FloatingLabelInput label="ราคาซื้อทันที (ถ้ามี)" type="number" min={0} />
+                                        </Form.Item>
+                                      </>
                                     ) : (
                                       <Form.Item name={[field.name, "effective_period"]}>
                                         <FloatingLabelRangePicker label={transactionType === "buy" ? "ระยะเวลารับซื้อ" : "วันที่ขาย"} className="w-full" />

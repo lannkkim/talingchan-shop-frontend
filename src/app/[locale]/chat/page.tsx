@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Typography,
@@ -11,7 +12,7 @@ import {
   Empty,
   App,
 } from "antd";
-import { SendOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
+import { SendOutlined, MessageOutlined } from "@ant-design/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyThreads, getMessages, sendMessage, markRead } from "@/services/chat";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -26,7 +27,10 @@ export default function ChatPage() {
   const queryClient = useQueryClient();
   const { message: antMessage } = App.useApp();
 
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(
+    searchParams.get("thread")
+  );
   const [inputText, setInputText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -35,12 +39,14 @@ export default function ChatPage() {
     queryFn: getMyThreads,
     enabled: isAuthenticated,
     refetchInterval: 30000,
+    select: (data) => data ?? [],
   });
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["chat", "messages", selectedThreadId],
     queryFn: () => getMessages(selectedThreadId!),
     enabled: !!selectedThreadId,
+    select: (data) => data ?? [],
   });
 
   const sendMutation = useMutation({
@@ -61,6 +67,7 @@ export default function ChatPage() {
         const data = JSON.parse(event.data) as WsNewMessageEvent;
         if (data.type === "new_message") {
           queryClient.invalidateQueries({ queryKey: ["chat", "messages", selectedThreadId] });
+          queryClient.invalidateQueries({ queryKey: ["chat", "threads"] });
         }
       } catch {
         // ignore parse errors
@@ -98,10 +105,12 @@ export default function ChatPage() {
       key: thread.chat_thread_id,
       label: (
         <div className="flex items-center gap-2 py-1">
-          <Avatar size={32} icon={<UserOutlined />} className="bg-gray-200 text-gray-600 flex-shrink-0" />
+          <Avatar size={32} style={{ backgroundColor: "#000", color: "#fff", flexShrink: 0, fontSize: 12, fontWeight: 700 }}>
+                    {(other?.shop_name?.[0] || other?.username?.[0] || "U").toUpperCase()}
+                  </Avatar>
           <div className="flex-1 min-w-0">
             <Text strong className="text-sm block truncate">
-              {other?.user?.username || "User"}
+              {other?.shop_name || other?.username || other?.user?.username || "User"}
             </Text>
             <Text type="secondary" className="text-xs truncate block">
               {thread.order_id ? `คำสั่งซื้อ` : "แชท"}
@@ -125,92 +134,94 @@ export default function ChatPage() {
 
   return (
     <SidebarLayout
-      title="แชท"
-      menuItems={threadsLoading ? [] : menuItems}
-      selectedKey={selectedThreadId || ""}
-      onMenuClick={handleSelectThread}
-      header={
-        <div className="flex items-center gap-2">
-          <MessageOutlined className="text-xl text-black" />
-          <Text strong className="text-base">ข้อความ</Text>
-        </div>
-      }
-    >
-      {!selectedThreadId ? (
-        <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
-          <MessageOutlined className="text-6xl text-gray-200 mb-4" />
-          <Title level={4} className="text-gray-400">เลือกบทสนทนา</Title>
-          <Text type="secondary">เลือกผู้ติดต่อจากรายการด้านซ้ายเพื่อเริ่มแชท</Text>
-        </div>
-      ) : (
-        <div className="flex flex-col h-[calc(100vh-130px)]">
-          {/* Thread header */}
-          <div className="pb-4 mb-4 border-b border-gray-100 flex items-center gap-3">
-            <Avatar icon={<UserOutlined />} className="bg-black text-white" />
-            <Text strong className="text-base">
-              {otherUser?.user?.username || "User"}
-            </Text>
+        title="แชท"
+        menuItems={threadsLoading ? [] : menuItems}
+        selectedKey={selectedThreadId || ""}
+        onMenuClick={handleSelectThread}
+        header={
+          <div className="flex items-center gap-2">
+            <MessageOutlined className="text-xl text-black" />
+            <Text strong className="text-base">ข้อความ</Text>
           </div>
+        }
+      >
+        {!selectedThreadId ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
+            <MessageOutlined className="text-6xl text-gray-200 mb-4" />
+            <Title level={4} className="text-gray-400">เลือกบทสนทนา</Title>
+            <Text type="secondary">เลือกผู้ติดต่อจากรายการด้านซ้ายเพื่อเริ่มแชท</Text>
+          </div>
+        ) : (
+          <div className="flex flex-col h-[calc(100vh-130px)]">
+            {/* Thread header */}
+            <div className="pb-4 mb-4 border-b border-gray-100 flex items-center gap-3">
+              <Avatar style={{ backgroundColor: "#000", color: "#fff", fontWeight: 700 }}>
+                {(otherUser?.shop_name?.[0] || otherUser?.username?.[0] || "U").toUpperCase()}
+              </Avatar>
+              <Text strong className="text-base">
+                {otherUser?.shop_name || otherUser?.username || otherUser?.user?.username || "User"}
+              </Text>
+            </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {messagesLoading ? (
-              <div className="flex justify-center py-8">
-                <Spin />
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex justify-center py-8">
-                <Text type="secondary">ยังไม่มีข้อความ เริ่มสนทนาได้เลย</Text>
-              </div>
-            ) : (
-              messages.map((msg: ChatMessage) => {
-                const isMe = msg.sender_id === user?.users_id;
-                return (
-                  <div
-                    key={msg.chat_message_id}
-                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                  >
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+              {messagesLoading ? (
+                <div className="flex justify-center py-8">
+                  <Spin />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex justify-center py-8">
+                  <Text type="secondary">ยังไม่มีข้อความ เริ่มสนทนาได้เลย</Text>
+                </div>
+              ) : (
+                messages.map((msg: ChatMessage) => {
+                  const isMe = msg.sender_id === user?.users_id;
+                  return (
                     <div
-                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                        isMe
-                          ? "bg-black text-white"
-                          : "bg-gray-100 text-gray-900"
-                      }`}
+                      key={msg.chat_message_id}
+                      className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                     >
-                      <Text className={isMe ? "text-white" : "text-gray-900"}>
-                        {msg.body}
-                      </Text>
-                      <div className={`text-xs mt-1 ${isMe ? "text-gray-300" : "text-gray-400"}`}>
-                        {formatDate(msg.created_at, true)}
+                      <div
+                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                          isMe
+                            ? "bg-black text-white"
+                            : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        <Text className={isMe ? "text-white" : "text-gray-900"}>
+                          {msg.body}
+                        </Text>
+                        <div className={`text-xs mt-1 ${isMe ? "text-gray-300" : "text-gray-400"}`}>
+                          {formatDate(msg.created_at, true)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={bottomRef} />
-          </div>
+                  );
+                })
+              )}
+              <div ref={bottomRef} />
+            </div>
 
-          {/* Input */}
-          <div className="pt-4 border-t border-gray-100 flex gap-2">
-            <Input
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onPressEnter={handleSend}
-              placeholder="พิมพ์ข้อความ..."
-              maxLength={2000}
-              className="flex-1"
-            />
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={handleSend}
-              loading={sendMutation.isPending}
-              disabled={!inputText.trim()}
-            />
+            {/* Input */}
+            <div className="pt-4 border-t border-gray-100 flex gap-2">
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onPressEnter={handleSend}
+                placeholder="พิมพ์ข้อความ..."
+                maxLength={2000}
+                className="flex-1"
+              />
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSend}
+                loading={sendMutation.isPending}
+                disabled={!inputText.trim()}
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </SidebarLayout>
+        )}
+      </SidebarLayout>
   );
 }

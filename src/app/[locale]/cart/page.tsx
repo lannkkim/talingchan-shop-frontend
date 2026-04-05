@@ -153,6 +153,9 @@ export default function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       message.success(t("removeSuccess"));
     },
+    onError: () => {
+      message.error("ไม่สามารถลบสินค้าออกจากตะกร้าได้ กรุณาลองใหม่");
+    },
   });
 
   // Derived state
@@ -352,7 +355,7 @@ export default function CartPage() {
                                         <div>
                                           <div className="flex justify-between items-start">
                                             <div>
-                                              <Link href={firstCard?.card_id ? `/market/cards/${btoa(String(firstCard.card_id))}` : '#'}>
+                                              <Link href={firstCard?.card_id ? `/market/cards/${firstCard.card_id}` : '#'}>
                                                 <Text strong className="text-lg hover:underline cursor-pointer">{product.name}</Text>
                                               </Link>
                                               <Text type="secondary" className="block text-sm">{product.product_type?.name}</Text>
@@ -368,10 +371,24 @@ export default function CartPage() {
                                         </div>
 
                                         <div className="flex justify-between items-end">
-                                          <div className="flex gap-4 items-center">
-                                            <div className="bg-white border text-blue-600 border-blue-200 px-3 py-1 flex items-center rounded text-xs font-medium">
-                                              จำนวน {item.quantity} ชิ้น
-                                            </div>
+                                          <div className="flex gap-2 items-center">
+                                            <InputNumber
+                                              min={1}
+                                              max={product.quantity || 1}
+                                              value={item.quantity}
+                                              onChange={(val) => {
+                                                const qty = Number(val);
+                                                if (qty && qty !== item.quantity) {
+                                                  updateQtyMutation.mutate({ id: item.cart_id, qty });
+                                                }
+                                              }}
+                                              size="small"
+                                              className="w-20"
+                                              disabled={updateQtyMutation.isPending}
+                                            />
+                                            {product.quantity != null && (
+                                              <Text type="secondary" className="text-xs">/ {product.quantity} คงเหลือ</Text>
+                                            )}
                                           </div>
                                           <Text strong className="text-lg text-gray-800">฿{(price * item.quantity).toLocaleString()}</Text>
                                         </div>

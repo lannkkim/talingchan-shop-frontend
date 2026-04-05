@@ -5,15 +5,13 @@ import Typography from "antd/es/typography";
 import Menu from "antd/es/menu";
 import Button from "antd/es/button";
 import Dropdown from "antd/es/dropdown";
-import Avatar from "antd/es/avatar";
+import Badge from "antd/es/badge";
 import Card from "antd/es/card";
 import Empty from "antd/es/empty";
 import ConfigProvider from "antd/es/config-provider";
 import type { MenuProps } from "antd";
 import {
   AppstoreOutlined,
-  ShoppingOutlined,
-  DatabaseOutlined,
   LoginOutlined,
   LogoutOutlined,
   UserOutlined,
@@ -83,45 +81,68 @@ export default function PageHeader({
   const menuItems: MenuProps["items"] = [
     {
       key: "/market",
-      //icon: <ShoppingOutlined />,
-      label: <Link href="/market">{tNav("market")}</Link>,
+      label: (
+        <Link href="/market">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("market")}</span>
+        </Link>
+      ),
     },
     {
       key: "/cards",
-      //icon: <AppstoreOutlined />,
-      label: <Link href="/cards">{tNav("cards")}</Link>,
+      label: (
+        <Link href="/cards">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("cards")}</span>
+        </Link>
+      ),
     },
     {
       key: "/products",
-      //icon: <DatabaseOutlined />,
-      label: <Link href="/products">{tNav("products")}</Link>,
+      label: (
+        <Link href="/products">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("products")}</span>
+        </Link>
+      ),
     },
     {
       key: "/stock",
-      //icon: <DatabaseOutlined />,
-      label: <Link href="/stock">{tNav("stock")}</Link>,
+      label: (
+        <Link href="/stock">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("stock")}</span>
+        </Link>
+      ),
     },
   ];
 
   if (isAuthenticated) {
     menuItems.push({
       key: "/chat",
-      label: <Link href="/chat"><MessageOutlined className="mr-1" />แชท</Link>,
+      label: (
+        <Link href="/chat">
+          <span className="text-xs tracking-widest uppercase font-medium">แชท</span>
+        </Link>
+      ),
     });
   }
 
   if (user?.role?.name === "shop" || user?.role?.name === "admin") {
     menuItems.push({
       key: "/shop",
-      label: <Link href="/shop">{tNav("shop")}</Link>,
+      label: (
+        <Link href="/shop">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("shop")}</span>
+        </Link>
+      ),
     });
   }
 
   if (user?.role?.name === "admin") {
     menuItems.push({
       key: "/admin",
-      icon: <AppstoreOutlined />,
-      label: <Link href="/admin">{tNav("admin")}</Link>,
+      label: (
+        <Link href="/admin">
+          <span className="text-xs tracking-widest uppercase font-medium">{tNav("admin")}</span>
+        </Link>
+      ),
     });
   }
 
@@ -156,11 +177,11 @@ export default function PageHeader({
 
   const cartDropdownContent = (
     <Card
-      className="w-[350px] shadow-2xl border border-blue-50 rounded-xl overflow-hidden"
+      className="w-[350px] shadow-2xl border border-gray-200 overflow-hidden"
       styles={{ body: { padding: 0 } }}
     >
-      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-        <Text strong className="text-gray-800">
+      <div className="p-4 bg-white border-b flex justify-between items-center">
+        <Text strong className="text-gray-800 text-xs tracking-widest uppercase">
           <ShoppingCartOutlined className="mr-2" /> {tCart("title")} (
           {cartItems.length})
         </Text>
@@ -237,7 +258,7 @@ export default function PageHeader({
         {cartItems.length > 0 && (
           <div className="flex justify-between items-center mb-1">
             <Text type="secondary">{tCart("total")}</Text>
-            <Text strong className="text-lg text-blue-600">
+            <Text strong className="text-lg text-black">
               ฿
               {cartItems
                 .reduce(
@@ -256,117 +277,144 @@ export default function PageHeader({
     </Card>
   );
 
-  return (
-    <Header className="sticky top-0 z-20 border-b px-4 h-auto py-0">
-      <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
-        {/* Logo and Title Section */}
-        <div className="flex items-center gap-6">
-          {onBack ? (
-            <div
-              onClick={onBack}
-              className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2 cursor-pointer"
-            >
-              <ArrowLeftOutlined style={{ fontSize: "20px" }} />
-            </div>
-          ) : backUrl ? (
-            <Link
-              href={backUrl}
-              className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2"
-            >
-              <ArrowLeftOutlined style={{ fontSize: "20px" }} />
-            </Link>
-          ) : (
-            <Link href="/" className="flex-shrink-0 -ml-3">
-              <Image
-                src="/images/icon/logo.png"
-                alt="Logo"
-                width={60}
-                height={60}
-                className="hover:opacity-80 transition-opacity"
-              />
-            </Link>
-          )}
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 0);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-          <div className="hidden md:block">
-            <Title level={4} className="!mb-0 !text-gray-800">
-              {title}
-            </Title>
-            {subtitle && (
-              <Text type="secondary" className="text-xs">
-                {subtitle}
-              </Text>
+  return (
+    <div className={`sticky top-0 z-20 transition-shadow duration-200 ${scrolled ? "shadow-md" : ""}`}>
+      {/* Announcement Bar */}
+      {/* <div className="announcement-bar">
+        ยินดีต้อนรับสู่ตลาดซื้อ-ขายการ์ดออนไลน์ อันดับ 1 ของไทย
+      </div> */}
+
+      <Header className="border-b px-4 h-auto py-0">
+        <div className="container mx-auto max-w-7xl flex items-center justify-between h-16">
+          {/* Logo and Brand Section */}
+          <div className="flex items-center gap-3">
+            {onBack ? (
+              <div
+                onClick={onBack}
+                className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2 cursor-pointer"
+              >
+                <ArrowLeftOutlined style={{ fontSize: "20px" }} />
+              </div>
+            ) : backUrl ? (
+              <Link
+                href={backUrl}
+                className="flex items-center justify-center text-gray-600 hover:text-gray-900 mr-2"
+              >
+                <ArrowLeftOutlined style={{ fontSize: "20px" }} />
+              </Link>
+            ) : (
+              <Link href="/" className="flex items-center gap-2 flex-shrink-0 -ml-2">
+                <Image
+                  src="/images/icon/logo.png"
+                  alt="Logo"
+                  width={48}
+                  height={48}
+                  className="hover:opacity-80 transition-opacity"
+                />
+                <span className="hidden md:block text-base font-bold tracking-widest uppercase text-gray-900 dark:text-white">
+                  TALINGCHAN
+                </span>
+              </Link>
+            )}
+
+            {(title !== "TALINGCHAN") && (
+              <div className="hidden md:block border-l border-gray-200 pl-4">
+                <Title level={5} className="!mb-0 !text-gray-800">
+                  {title}
+                </Title>
+                {subtitle && (
+                  <Text type="secondary" className="text-xs">
+                    {subtitle}
+                  </Text>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Menu — centered */}
+          <div className="flex-1 flex justify-center px-4">
+            <ConfigProvider
+              theme={{
+                components: {
+                  Menu: {
+                    itemHoverColor: "#DC143C",
+                    horizontalItemSelectedColor: "#DC143C",
+                    itemSelectedColor: "#DC143C",
+                    activeBarHeight: 2,
+                    activeBarBorderWidth: 2,
+                  },
+                },
+              }}
+            >
+              <Menu
+                mode="horizontal"
+                selectedKeys={[selectedKey]}
+                items={menuItems}
+                className="border-0 !bg-transparent min-w-0 w-full justify-center [&_.ant-menu-item]:px-3"
+              />
+            </ConfigProvider>
+          </div>
+
+          {/* Auth / Actions */}
+          <div className="flex items-center justify-end gap-1 md:gap-3 flex-shrink-0">
+            <ThemeSwitcher />
+            <LanguageSwitcher />
+            {isAuthenticated ? (
+              <div className="flex items-center gap-1 md:gap-3">
+                <NotificationBell />
+
+                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
+                  <Button
+                    type="text"
+                    className="flex items-center gap-2 px-2"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {(user?.username?.[0] ?? "U").toUpperCase()}
+                    </div>
+                    <span className="hidden md:inline text-sm font-medium">{user?.username}</span>
+                  </Button>
+                </Dropdown>
+
+                <Dropdown
+                  popupRender={() => cartDropdownContent}
+                  trigger={["click"]}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    className="flex items-center justify-center w-10 h-10 p-0 text-gray-700 hover:text-black"
+                  >
+                    <Badge count={cartItems.length} size="small" offset={[-2, 2]}>
+                      <ShoppingCartOutlined style={{ fontSize: "18px" }} />
+                    </Badge>
+                  </Button>
+                </Dropdown>
+              </div>
+            ) : (
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                className="!bg-black !border-black hover:!bg-gray-800 !rounded-none"
+                onClick={() => setModalVisible(true)}
+              >
+                {tNav("login")}
+              </Button>
             )}
           </div>
         </div>
-
-        {/* Navigation Menu */}
-        <div className="flex-1 flex justify-center px-4">
-          <ConfigProvider
-            theme={{
-              components: {
-                Menu: {
-                  itemHoverColor: "#DC143C",
-                  horizontalItemSelectedColor: "#DC143C",
-                  itemSelectedColor: "#DC143C",
-                  activeBarHeight: 0,
-                },
-              },
-            }}
-          >
-            <Menu
-              mode="horizontal"
-              selectedKeys={[selectedKey]}
-              items={menuItems}
-              className="border-0 !bg-transparent min-w-0 w-full justify-center [&_.ant-menu-item]:px-4"
-            />
-          </ConfigProvider>
-        </div>
-
-        {/* Auth / Actions */}
-        <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
-          <ThemeSwitcher />
-          <LanguageSwitcher />
-          {isAuthenticated ? (
-            <div className="flex items-center gap-2 md:gap-4">
-              <NotificationBell />
-              <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                <Button
-                  type="text"
-                  icon={<UserOutlined />}
-                  className="flex items-center px-1 md:px-4"
-                >
-                  <span className="hidden md:inline">{user?.username}</span>
-                </Button>
-              </Dropdown>
-
-              <Dropdown
-                popupRender={() => cartDropdownContent}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <Button
-                  type="text"
-                  icon={<ShoppingCartOutlined style={{ fontSize: "20px" }} />}
-                  className="flex items-center justify-center w-10 h-10 p-0 text-gray-600 hover:text-blue-600"
-                />
-              </Dropdown>
-            </div>
-          ) : (
-            <Button
-              type="primary"
-              icon={<LoginOutlined />}
-              onClick={() => setModalVisible(true)}
-            >
-              {tNav("login")}
-            </Button>
-          )}
-        </div>
-      </div>
+      </Header>
 
       <LoginModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
-    </Header>
+    </div>
   );
 }

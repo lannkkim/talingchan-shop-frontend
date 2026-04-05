@@ -38,6 +38,7 @@ interface CardBrowserProps extends Omit<CardSelectorProps, "filters"> {
   availableCards?: Card[] | null; // Optional filtered card list
   className?: string;
   headerActions?: React.ReactNode;
+  onCardClick?: (card: Card) => void;
 }
 
 export default function CardBrowser({
@@ -49,6 +50,7 @@ export default function CardBrowser({
   availableCards,
   className,
   headerActions,
+  onCardClick,
 }: CardBrowserProps) {
   // activeFilters: Applied to the query
   const [activeFilters, setActiveFilters] = useState<CardFilters>({});
@@ -301,6 +303,7 @@ export default function CardBrowser({
             renderCustomActions={renderCustomActions}
             filters={activeFilters}
             availableCards={availableCards}
+            onCardClick={onCardClick}
           />
         </div>
 

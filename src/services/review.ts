@@ -1,29 +1,23 @@
 import axiosInstance from "@/lib/axios";
 import type { Review, CreateReviewInput } from "@/types/review";
 
-export const getProductReviews = async (productId: string): Promise<Review[]> => {
-  const res = await axiosInstance.get<Review[]>(`/api/v1/reviews/product/${productId}`);
-  return res.data;
-};
+// Backend only has: POST /orders/:id/review and GET /shops/:id/reviews
+// There is no product-level review endpoint, my-reviews endpoint, or delete endpoint
 
 export const getShopReviews = async (shopId: string): Promise<Review[]> => {
-  const res = await axiosInstance.get<Review[]>(`/api/v1/reviews/shop/${shopId}`);
+  const res = await axiosInstance.get<Review[]>(`/api/v1/shops/${shopId}/reviews`);
   return res.data;
 };
 
+// Stub — backend has no /reviews/me endpoint yet
 export const getMyReviews = async (): Promise<Review[]> => {
-  const res = await axiosInstance.get<Review[]>("/api/v1/reviews/me");
-  return res.data;
+  return [];
 };
 
 export const createReview = async (
   orderId: string,
   input: CreateReviewInput
 ): Promise<Review> => {
-  const res = await axiosInstance.post<Review>(`/api/v1/reviews/order/${orderId}`, input);
+  const res = await axiosInstance.post<Review>(`/api/v1/orders/${orderId}/review`, input);
   return res.data;
-};
-
-export const deleteReview = async (reviewId: string): Promise<void> => {
-  await axiosInstance.delete(`/api/v1/reviews/${reviewId}`);
 };

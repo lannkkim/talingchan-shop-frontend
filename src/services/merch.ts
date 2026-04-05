@@ -18,3 +18,17 @@ export const getMerch = async (filter?: MerchFilter): Promise<Merch[]> => {
   });
   return data;
 };
+
+export interface BulkImportResult {
+  imported: number;
+  errors?: { row: number; message: string }[];
+}
+
+export const bulkImportMerch = async (file: File): Promise<BulkImportResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axiosInstance.post<BulkImportResult>("/api/v1/admin/merch/import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};

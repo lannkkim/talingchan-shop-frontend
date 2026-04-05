@@ -55,27 +55,44 @@ export default function HeroBanner() {
         priority
       />
 
-      {/* Overlay Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 z-10 pointer-events-none">
-        <div className="flex gap-4 pointer-events-auto">
+      {/* Gradient overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10" />
+
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 z-20">
+        <p className="text-white/80 text-sm tracking-widest uppercase mb-3 font-light">
+          ตลาดการ์ดเกม
+        </p>
+        <h1 className="text-4xl lg:text-6xl font-bold text-white tracking-tight mb-2 text-center drop-shadow-lg">
+          TALINGCHAN
+        </h1>
+        <p className="text-white/70 text-base mb-10 tracking-wide text-center">
+          ซื้อ · ขาย · แลกเปลี่ยน · ประมูล
+        </p>
+        <div className="flex gap-3 flex-wrap justify-center pointer-events-auto">
           <Button
             size="large"
-            className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
+            type="primary"
+            className="!bg-white !text-black !border-0 !font-semibold !px-8 hover:!bg-gray-100 !rounded-none !h-12"
             onClick={handleRegisterShopClick}
           >
             {t("registerShop")}
           </Button>
           <Button
             size="large"
-            className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
+            className="!bg-transparent !text-white !border-white !border !font-semibold !px-8 hover:!bg-white/10 !rounded-none !h-12"
           >
-            {t("buyProducts")}
+            <Link href="/market" className="text-white">
+              {t("buyProducts")}
+            </Link>
           </Button>
           <Button
             size="large"
-            className="bg-white !px-8 !h-auto !py-3 text-black border-gray-300 shadow-sm hover:!translate-y-[-2px] transition-transform font-medium"
+            className="!bg-transparent !text-white !border-white/40 !border !font-semibold !px-8 hover:!bg-white/10 !rounded-none !h-12"
           >
-            {t("exchange")}
+            <Link href="/market/trade" className="text-white">
+              {t("exchange")}
+            </Link>
           </Button>
         </div>
       </div>

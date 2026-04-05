@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "@/services/product";
 import { getCards } from "@/services/card";
+import { getAuctionProducts } from "@/services/auction";
 import { Product } from "@/types/product";
 import { getCardImageUrl, getProductImage } from "@/utils/image";
 
@@ -31,6 +32,13 @@ export function useMarketPage() {
       }),
   });
   const tradeProducts = tradeProductsRaw || [];
+
+  const { data: auctionProductsRaw, isLoading: isLoadingAuctions } = useQuery({
+    queryKey: ["auction", "products", "landing"],
+    queryFn: getAuctionProducts,
+    select: (data) => data ?? [],
+  });
+  const auctionProducts = auctionProductsRaw || [];
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -72,6 +80,8 @@ export function useMarketPage() {
     isLoadingCards,
     tradeProducts,
     isLoadingTrades,
+    auctionProducts,
+    isLoadingAuctions,
     carouselRef,
     canScrollLeft,
     canScrollRight,

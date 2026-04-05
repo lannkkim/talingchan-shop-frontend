@@ -31,6 +31,17 @@ export interface CreateProductInput {
     quantity: number;
   }[];
   trade_wants?: { stock_card_id: string; quantity: number }[][];
+  // Auction-specific fields
+  start_price?: number;
+  buy_now_price?: number;
+  min_bid_increment?: number;
+  bid_increment?: number;
+  auction_start_at?: string;
+  auction_end_at?: string;
+  is_auto_extend?: boolean;
+  auto_extend_trigger_min?: number;
+  auto_extend_duration_min?: number;
+  auto_extend_max_count?: number;
 }
 
 export interface ProductFilter {
@@ -90,11 +101,13 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
 export const createProduct = async (
   data: CreateProductInput,
-  transactionType: "sell" | "buy" = "sell",
+  transactionType: "sell" | "buy" | "auction" = "sell",
 ): Promise<Product> => {
   const endpoint =
     transactionType === "buy"
       ? "/api/v1/products/buy"
+      : transactionType === "auction"
+      ? "/api/v1/products/auction"
       : "/api/v1/products/sell";
   const response = await axiosInstance.post<Product>(endpoint, data);
   return response.data;
@@ -104,4 +117,14 @@ export const checkStock = async (
   cards: { stock_card_id: string; quantity: number }[],
 ): Promise<void> => {
   await axiosInstance.post("/api/v1/products/check-stock", { cards });
+};
+
+export const activateProduct = async (id: string): Promise<Product> => {
+  const res = await axiosInstance.post<Product>(`/api/v1/products/${id}/activate`);
+  return res.data;
+};
+
+export const deactivateProduct = async (id: string): Promise<Product> => {
+  const res = await axiosInstance.post<Product>(`/api/v1/products/${id}/deactivate`);
+  return res.data;
 };

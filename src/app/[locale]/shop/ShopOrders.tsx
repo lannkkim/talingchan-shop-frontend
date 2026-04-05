@@ -21,7 +21,8 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getShopOrders, shipOrder, getTransportations, cancelOrder, approveCancel, rejectCancel, reviewRefund, confirmReturn } from "@/services/order";
+import { getShopOrders, shipOrder, getTransportations, cancelOrder, approveCancel, rejectCancel, reviewRefund, confirmReturn, bulkShipOrders } from "@/services/order";
+import BulkImportModal from "@/components/shared/BulkImportModal";
 import { Order, OrderProduct } from "@/types/order";
 import { OrderStatusTag } from "@/components/Order/OrderStatusTag";
 import { OrderDetailsModal } from "./OrderDetailsModal";
@@ -45,6 +46,7 @@ export default function ShopOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [isBulkShipOpen, setIsBulkShipOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [transportationId, setTransportationId] = useState<string | undefined>(undefined);
 
@@ -190,10 +192,10 @@ export default function ShopOrders() {
                 {order.refund_images.map((img, i) => (
                   <div key={i} className="relative w-24 h-24 border rounded overflow-hidden bg-white shadow-sm">
                     <img 
-                      src={`http://localhost:8080/images/refunds/${img}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/refunds/${img}`}
                       alt={`Evidence ${i + 1}`}
                       className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => window.open(`http://localhost:8080/images/refunds/${img}`, "_blank")}
+                      onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/refunds/${img}`, "_blank")}
                     />
                   </div>
                 ))}
@@ -226,34 +228,30 @@ export default function ShopOrders() {
       title: t("columns.orderId") || "Order ID",
       dataIndex: "order_id",
       key: "order_id",
+      width: 100,
       render: (text: string, record: Order) => (
-        <Text strong>{record.order_code || text.substring(0, 8)}</Text>
+        <Text strong className="text-sm">{record.order_code || text.substring(0, 8)}</Text>
       ),
     },
     {
       title: t("columns.buyer") || "Buyer",
       key: "buyer",
+      width: 130,
       render: (_: any, record: Order) => (
-        <div className="flex flex-col">
-          <Text className="text-sm font-medium">{record.buyer?.username || "-"}</Text>
-          <Text type="secondary" className="text-xs">{record.buyer?.email}</Text>
-        </div>
+        <Tooltip title={record.buyer?.email}>
+          <Text className="text-sm">{record.buyer?.username || "-"}</Text>
+        </Tooltip>
       ),
     },
     {
       title: t("columns.items") || "Items",
       key: "items",
+      width: 220,
       render: (_: any, record: Order) => (
-        <div className="flex -space-x-2 overflow-hidden py-1">
-          {record.order_product?.map((item: OrderProduct, idx: number) => (
-            <Tooltip
-              key={item.order_product_id}
-              title={`${item.product?.name} x ${item.quantity}`}
-            >
-              <div 
-                className="relative w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm bg-gray-50 flex-shrink-0"
-                style={{ zIndex: 10 - idx }}
-              >
+        <div className="flex flex-col gap-1.5 py-1">
+          {record.order_product?.slice(0, 2).map((item: OrderProduct) => (
+            <div key={item.order_product_id} className="flex items-center gap-2">
+              <div className="relative w-10 h-10 rounded-md overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0 shadow-sm">
                 <Image
                   src={getProductImage(item.product)}
                   alt={item.product?.name || "Product"}
@@ -262,8 +260,19 @@ export default function ShopOrders() {
                   unoptimized
                 />
               </div>
-            </Tooltip>
+              <div className="min-w-0">
+                <Text className="text-xs block truncate" style={{ maxWidth: 140 }}>
+                  {item.product?.name}
+                </Text>
+                <Text type="secondary" className="text-[11px]">x{item.quantity}</Text>
+              </div>
+            </div>
           ))}
+          {(record.order_product?.length || 0) > 2 && (
+            <Text type="secondary" className="text-[11px]">
+              +{record.order_product!.length - 2} รายการ
+            </Text>
+          )}
         </div>
       ),
     },
@@ -272,92 +281,92 @@ export default function ShopOrders() {
       dataIndex: "total_price",
       key: "total_price",
       align: "right",
+      width: 110,
       render: (price: string) => (
-        <Text strong className="text-green-600">
-          {formatCurrency(price)}
-        </Text>
+        <Text strong className="text-green-600">{formatCurrency(price)}</Text>
       ),
     },
     {
       title: t("columns.status") || "Status",
       dataIndex: "status",
       key: "status",
+      width: 140,
       render: (status: string) => <OrderStatusTag status={status} t={ts} />,
     },
     {
       title: t("columns.date") || "Date",
       dataIndex: "created_at",
       key: "created_at",
-      render: (date: string) => formatDate(date, true),
+      width: 100,
+      render: (date: string) => <Text className="text-xs whitespace-nowrap">{formatDate(date)}</Text>,
     },
     {
       title: t("columns.tracking") || "Tracking",
       dataIndex: "tracking_no",
       key: "tracking_no",
-      render: (val: string) => val || <Text type="secondary" italic>{t("tracking.notSet") || "Not Set"}</Text>,
+      width: 130,
+      render: (val: string) => (
+        <Text className="text-xs">{val || <span className="text-gray-400 italic">{t("tracking.notSet") || "ยังไม่ระบุ"}</span>}</Text>
+      ),
     },
     {
       title: t("columns.actions") || "Actions",
       key: "actions",
-      align: "center",
+      fixed: "right" as const,
+      width: 160,
       render: (_: any, record: Order) => (
-        <Space wrap>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => handleViewDetails(record)}
-          >
-            {t("actions.view") || "View"}
-          </Button>
+        <Space size={4}>
+          <Tooltip title={t("actions.view") || "ดูรายละเอียด"}>
+            <Button
+              icon={<EyeOutlined />}
+              size="small"
+              onClick={() => handleViewDetails(record)}
+            />
+          </Tooltip>
 
           {record.payment_slip && (
-            <Button
-              icon={<FileTextOutlined />}
-              size="small"
-              className="text-blue-500"
-              onClick={() => {
-                modal.info({
-                  title: t("modals.slip.view") || "หลักฐานการชำระเงิน",
-                  width: 450,
-                  content: (
-                    <div className="mt-4 flex justify-center bg-gray-50 p-4 border rounded">
-                      <img 
-                        src={`http://localhost:8080/images/slips/${record.payment_slip}`} 
-                        alt="Slip" 
-                        className="max-w-full h-auto shadow-md"
-                      />
-                    </div>
-                  ),
-                  footer: null,
-                  closable: true,
-                  maskClosable: true
-                });
-              }}
-            >
-              {t("slip.view") || "ดูสลิป"}
-            </Button>
+            <Tooltip title={t("slip.view") || "ดูสลิป"}>
+              <Button
+                icon={<FileTextOutlined />}
+                size="small"
+                className="text-blue-500"
+                onClick={() => {
+                  modal.info({
+                    title: t("modals.slip.view") || "หลักฐานการชำระเงิน",
+                    width: 450,
+                    content: (
+                      <div className="mt-4 flex justify-center bg-gray-50 p-4 border rounded">
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/slips/${record.payment_slip}`}
+                          alt="Slip"
+                          className="max-w-full h-auto shadow-md"
+                        />
+                      </div>
+                    ),
+                    footer: null,
+                    closable: true,
+                    maskClosable: true,
+                  });
+                }}
+              />
+            </Tooltip>
+          )}
+
+          {record.status === "WS" && (
+            <Tooltip title={t("actions.tracking") || "จัดส่ง"}>
+              <Button
+                icon={<CarOutlined />}
+                size="small"
+                type="primary"
+                onClick={() => handleEditTracking(record)}
+              />
+            </Tooltip>
           )}
 
           {(record.status === "pending_approve" || record.status === "WS") && (
-            <>
-              {record.status === "WS" && (
-                <Button
-                  icon={<CarOutlined />}
-                  size="small"
-                  type="primary"
-                  onClick={() => handleEditTracking(record)}
-                >
-                  {t("actions.tracking") || "Ship"}
-                </Button>
-              )}
-              <Button
-                danger
-                size="small"
-                onClick={() => handleShopCancel(record)}
-              >
-                {t("actions.cancel") || "Cancel"}
-              </Button>
-            </>
+            <Button danger size="small" onClick={() => handleShopCancel(record)}>
+              {t("actions.cancel") || "ยกเลิก"}
+            </Button>
           )}
 
           {record.status === "CC_REQ" && (
@@ -368,7 +377,7 @@ export default function ShopOrders() {
                 className="bg-green-600 hover:!bg-green-700"
                 onClick={() => approveCancelMutation.mutate(record.order_id)}
               >
-                {t("actions.approveCancel") || "อนุมัติยกเลิก"}
+                {t("actions.approveCancel") || "อนุมัติ"}
               </Button>
               <Button
                 type="primary"
@@ -381,12 +390,8 @@ export default function ShopOrders() {
           )}
 
           {record.status === "RF_REQ" && (
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => handleReviewRefund(record)}
-            >
-              {t("actions.reviewRefund") || "พิจารณาคืนเงิน"}
+            <Button type="primary" size="small" onClick={() => handleReviewRefund(record)}>
+              {t("actions.reviewRefund") || "คืนเงิน"}
             </Button>
           )}
 
@@ -398,18 +403,14 @@ export default function ShopOrders() {
               onClick={() => confirmReturnMutation.mutate(record.order_id)}
               disabled={!record.return_tracking_no}
             >
-              {record.return_tracking_no ? t("actions.receivedReturn") : t("actions.waitingReturn")}
+              {record.return_tracking_no ? t("actions.receivedReturn") || "รับคืน" : t("actions.waitingReturn") || "รอคืน"}
             </Button>
           )}
 
           {!["pending_approve", "WS", "CC_REQ", "RF_REQ", "WAITING_FOR_RETURN", "WVP", "pending", "PD", "cancelled", "CC", "RJ", "RF"].includes(record.status) && (
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEditTracking(record)}
-            >
-              {t("actions.tracking") || "Tracking"}
-            </Button>
+            <Tooltip title={t("actions.tracking") || "Tracking"}>
+              <Button icon={<EditOutlined />} size="small" onClick={() => handleEditTracking(record)} />
+            </Tooltip>
           )}
         </Space>
       ),
@@ -420,9 +421,14 @@ export default function ShopOrders() {
     <ManagementPageLayout 
       title={t("title") || "Shop Orders"}
       extra={
-        <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-          {t("actions.refresh") || "Refresh"}
-        </Button>
+        <Space>
+          <Button icon={<FileTextOutlined />} onClick={() => setIsBulkShipOpen(true)}>
+            จัดส่งแบบกลุ่ม CSV
+          </Button>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
+            {t("actions.refresh") || "Refresh"}
+          </Button>
+        </Space>
       }
     >
       <Table
@@ -430,6 +436,8 @@ export default function ShopOrders() {
         dataSource={orders}
         rowKey="order_id"
         loading={isLoading}
+        size="small"
+        scroll={{ x: 1200 }}
         pagination={{ pageSize: 10 }}
       />
 
@@ -437,6 +445,17 @@ export default function ShopOrders() {
         order={selectedOrder}
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
+      />
+
+      <BulkImportModal
+        open={isBulkShipOpen}
+        onClose={() => { setIsBulkShipOpen(false); queryClient.invalidateQueries({ queryKey: ["shop", "orders"] }); }}
+        onImport={async (file) => {
+          const res = await bulkShipOrders(file);
+          return { imported: res.shipped, errors: res.errors?.map((e) => ({ row: 0, message: `[${e.order_id}] ${e.message}` })) };
+        }}
+        title="จัดส่งแบบกลุ่มจาก CSV"
+        csvDescription="CSV header: order_id,tracking_no,transportation_id"
       />
 
       <Modal

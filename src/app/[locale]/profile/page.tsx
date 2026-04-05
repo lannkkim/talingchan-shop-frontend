@@ -21,6 +21,9 @@ import {
   StarOutlined,
   ExclamationCircleOutlined,
   LockOutlined,
+  BankOutlined,
+  TrophyOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
@@ -31,6 +34,10 @@ import FavoritesList from "./FavoritesList";
 import ReviewsList from "./ReviewsList";
 import DisputesList from "./DisputesList";
 import PrivacySettings from "./PrivacySettings";
+import BankList from "./BankList";
+import AuctionBidsList from "./AuctionBidsList";
+import TradeOffersList from "./TradeOffersList";
+import TradeExecutionsList from "./TradeExecutionsList";
 import { useTranslations } from "next-intl";
 
 const { Content, Sider } = Layout;
@@ -102,6 +109,26 @@ export default function ProfilePage() {
       key: "disputes",
       icon: <ExclamationCircleOutlined />,
       label: "การร้องเรียน",
+    },
+    {
+      key: "auctions",
+      icon: <TrophyOutlined />,
+      label: "การประมูลของฉัน",
+    },
+    {
+      key: "trades",
+      icon: <SwapOutlined />,
+      label: "ข้อเสนอแลกเปลี่ยน",
+    },
+    {
+      key: "trade-executions",
+      icon: <SwapOutlined />,
+      label: "การแลกเปลี่ยนของฉัน",
+    },
+    {
+      key: "banks",
+      icon: <BankOutlined />,
+      label: "บัญชีธนาคาร",
     },
     {
       key: "privacy",
@@ -243,6 +270,46 @@ export default function ProfilePage() {
                     <Text type="secondary">รายการร้องเรียนที่คุณส่ง</Text>
                   </div>
                   <DisputesList />
+                </div>
+              )}
+
+              {selectedKey === "auctions" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">การประมูลของฉัน</Title>
+                    <Text type="secondary">ประวัติการเสนอราคาและการประมูลที่คุณเข้าร่วม</Text>
+                  </div>
+                  <AuctionBidsList />
+                </div>
+              )}
+
+              {selectedKey === "trades" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">ข้อเสนอแลกเปลี่ยน</Title>
+                    <Text type="secondary">ข้อเสนอที่คุณส่งไปยังรายการแลกเปลี่ยนต่างๆ</Text>
+                  </div>
+                  <TradeOffersList />
+                </div>
+              )}
+
+              {selectedKey === "trade-executions" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">การแลกเปลี่ยนของฉัน</Title>
+                    <Text type="secondary">ติดตามสถานะการแลกเปลี่ยนที่ตกลงแล้ว ส่งเลขพัสดุ และยืนยันรับสินค้า</Text>
+                  </div>
+                  <TradeExecutionsList />
+                </div>
+              )}
+
+              {selectedKey === "banks" && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="mb-6">
+                    <Title level={2} className="!mb-1">บัญชีธนาคาร</Title>
+                    <Text type="secondary">จัดการบัญชีธนาคารสำหรับรับเงิน (สูงสุด 3 บัญชี)</Text>
+                  </div>
+                  <BankList />
                 </div>
               )}
 

@@ -45,3 +45,56 @@ export const getCardById = async (id: string): Promise<Card> => {
   const response = await axiosInstance.get<Card>(`/api/v1/cards/${id}`);
   return response.data;
 };
+
+export interface CardAnalytics {
+  card_id: string;
+  active_listings: number;
+  min_price: number;
+  max_price: number;
+  avg_price: number;
+}
+
+export const getCardAnalytics = async (id: string): Promise<CardAnalytics> => {
+  const response = await axiosInstance.get<CardAnalytics>(`/api/v1/cards/${id}/analytics`);
+  return response.data;
+};
+
+export interface PriceHistoryPoint {
+  date: string;
+  price: number;
+  product_name: string;
+  product_type: string;
+  status: string;
+}
+
+export const getCardPriceHistory = async (id: string, limit = 50): Promise<PriceHistoryPoint[]> => {
+  const response = await axiosInstance.get<PriceHistoryPoint[]>(`/api/v1/cards/${id}/price-history?limit=${limit}`);
+  return response.data ?? [];
+};
+
+export interface SalesHistoryPoint {
+  date: string;
+  price: number;
+  quantity: number;
+  product_name: string;
+  order_status: string;
+}
+
+export const getCardSalesHistory = async (id: string, limit = 60): Promise<SalesHistoryPoint[]> => {
+  const response = await axiosInstance.get<SalesHistoryPoint[]>(`/api/v1/cards/${id}/sales-history?limit=${limit}`);
+  return response.data ?? [];
+};
+
+export interface BulkImportResult {
+  imported: number;
+  errors?: { row: number; message: string }[];
+}
+
+export const bulkImportCards = async (file: File): Promise<BulkImportResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axiosInstance.post<BulkImportResult>("/api/v1/admin/cards/import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};

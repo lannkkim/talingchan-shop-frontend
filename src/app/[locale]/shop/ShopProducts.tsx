@@ -52,9 +52,11 @@ export default function ShopProducts() {
     queryFn: () => getMyProducts(),
   });
 
-  // Filter only sell orders
+  // Filter sell and auction products
   const sellProducts = products.filter(
-    (p: Product) => p.transaction_type?.code === "sell",
+    (p: Product) =>
+      p.transaction_type?.code === "sell" ||
+      p.transaction_type?.code === "auction",
   );
 
   // Mutations

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Typography, Tabs, Rate, Tag, Empty, Spin, Avatar } from "antd";
 import { ShopOutlined, StarOutlined } from "@ant-design/icons";
 import { getShopReviews } from "@/services/review";
-import { getProductsByShop } from "@/services/shop";
+import { getProductsByShop, getShopById } from "@/services/shop";
 import type { Review } from "@/types/review";
 import { formatDate, formatCurrency } from "@/utils/format";
 import { getCardImageUrl } from "@/utils/image";
@@ -21,6 +21,12 @@ export default function PublicShopPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+
+  const { data: shop } = useQuery({
+    queryKey: ["shop", id, "profile"],
+    queryFn: () => getShopById(id),
+    enabled: !!id,
+  });
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ["shop", id, "products"],
@@ -142,13 +148,16 @@ export default function PublicShopPage({
       <div className="container mx-auto max-w-6xl py-8 px-4">
         {/* Shop Header */}
         <div className="flex items-center gap-4 mb-8 p-6 border border-gray-100">
-          <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-white flex-shrink-0">
-            <ShopOutlined className="text-2xl" />
+          <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+            {shop?.shop_profile?.shop_name?.charAt(0)?.toUpperCase() || <ShopOutlined />}
           </div>
           <div>
             <Title level={3} className="!mb-1">
-              ร้านค้า
+              {shop?.shop_profile?.shop_name || "ร้านค้า"}
             </Title>
+            {shop?.shop_profile?.shop_display && (
+              <Text type="secondary" className="text-sm block">{shop.shop_profile.shop_display}</Text>
+            )}
             {avgRating > 0 && (
               <div className="flex items-center gap-2">
                 <Rate disabled value={avgRating} className="text-sm" />

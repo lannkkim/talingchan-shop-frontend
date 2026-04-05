@@ -3,9 +3,12 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { App, Tag, Typography, Card, Badge, Empty, Skeleton, Space, Divider, Button, Modal, Form, Input, Upload } from "antd";
-import { getUserOrders, receiveOrder, cancelRequest, requestRefund, updateReturnTracking, uploadPaymentSlip, uploadRefundImages } from "@/services/order";
+import { getUserOrders, receiveOrder, cancelRequest, requestRefund, updateReturnTracking, uploadPaymentSlip, uploadRefundImages, resubmitPayment } from "@/services/order";
+import { getOrCreateThread } from "@/services/chat";
 import { Order } from "@/types/order";
-import { ShoppingOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined, UploadOutlined } from "@ant-design/icons";
+import { ShoppingOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined, UploadOutlined, MessageOutlined } from "@ant-design/icons";
+import { useRouter } from "@/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { getProductImage } from "@/utils/image";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -19,6 +22,16 @@ export default function OrderList() {
   const t = useTranslations("Orders.me");
   const ts = useTranslations("Shop.orders.status");
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const contactMutation = useMutation({
+    mutationFn: (sellerId: string) => getOrCreateThread({ participant_id: sellerId }),
+    onSuccess: (thread) => {
+      router.push(`/chat?thread=${thread.chat_thread_id}`);
+    },
+    onError: () => message.error("ไม่สามารถเปิดแชทได้"),
+  });
   const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ["orders", "me"],
     queryFn: getUserOrders,
@@ -62,7 +75,7 @@ export default function OrderList() {
   });
 
   const uploadSlipMutation = useMutation({
-    mutationFn: ({ orderId, file }: { orderId: string, file: File }) => 
+    mutationFn: ({ orderId, file }: { orderId: string, file: File }) =>
       uploadPaymentSlip(orderId, file),
     onSuccess: () => {
       message.success(t("messages.uploadSuccess"));
@@ -71,6 +84,18 @@ export default function OrderList() {
     onError: (err: any) => {
       message.error(err?.response?.data?.error || t("messages.uploadError"));
     }
+  });
+
+  const resubmitPaymentMutation = useMutation({
+    mutationFn: ({ orderId, file }: { orderId: string, file: File }) =>
+      resubmitPayment(orderId, file),
+    onSuccess: () => {
+      message.success("ส่งหลักฐานการชำระเงินใหม่สำเร็จ");
+      queryClient.invalidateQueries({ queryKey: ["orders", "me"] });
+    },
+    onError: (err: any) => {
+      message.error(err?.response?.data?.error || "ไม่สามารถส่งหลักฐานได้");
+    },
   });
 
   const showCancelModal = (orderId: string) => {
@@ -220,6 +245,41 @@ export default function OrderList() {
     });
   };
 
+  const showResubmitModal = (orderId: string) => {
+    let selectedFile: File | null = null;
+    modal.confirm({
+      title: "ส่งหลักฐานการชำระเงินใหม่",
+      icon: <UploadOutlined />,
+      content: (
+        <div className="mt-4">
+          <Text type="secondary">การชำระเงินครั้งก่อนถูกปฏิเสธ กรุณาอัปโหลดสลิปที่ถูกต้อง</Text>
+          <div className="mt-4">
+            <Upload
+              beforeUpload={(file) => {
+                selectedFile = file;
+                return false;
+              }}
+              maxCount={1}
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />}>เลือกไฟล์สลิป</Button>
+            </Upload>
+          </div>
+          <div className="mt-2 text-[10px] text-gray-400">ไฟล์ไม่เกิน 10MB</div>
+        </div>
+      ),
+      okText: "ส่งหลักฐาน",
+      okButtonProps: { danger: false },
+      onOk: async () => {
+        if (!selectedFile) {
+          message.warning("กรุณาเลือกไฟล์สลิป");
+          return Promise.reject();
+        }
+        await resubmitPaymentMutation.mutateAsync({ orderId, file: selectedFile });
+      },
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -277,6 +337,16 @@ export default function OrderList() {
             <Space>
               <ShoppingOutlined className="text-gray-400" />
               <Text strong className="text-sm">{order.shop?.shop_profile?.shop_name || t("shop")}</Text>
+              {isAuthenticated && order.shop?.user_id && (
+                <Button
+                  size="small"
+                  icon={<MessageOutlined />}
+                  loading={contactMutation.isPending && contactMutation.variables === order.shop.user_id}
+                  onClick={() => contactMutation.mutate(order.shop!.user_id)}
+                >
+                  ติดต่อร้านค้า
+                </Button>
+              )}
             </Space>
             {order.tracking_no && (
               <Badge status="processing" text={`Tracking: ${order.tracking_no}`} />
@@ -293,7 +363,7 @@ export default function OrderList() {
                     content: (
                       <div className="mt-4 flex justify-center bg-gray-100 p-2">
                         <img 
-                          src={`http://localhost:8080/images/slips/${order.payment_slip}`} 
+                          src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/images/slips/${order.payment_slip}`} 
                           alt="Slip" 
                           className="max-w-full h-auto shadow-sm"
                         />
@@ -373,6 +443,20 @@ export default function OrderList() {
                     loading={cancelRequestMutation.isPending}
                   >
                     {t("actions.cancel")}
+                  </Button>
+                )}
+
+                {order.status === "RJ" && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    danger
+                    className="text-[12px] h-8 px-4"
+                    icon={<UploadOutlined />}
+                    onClick={() => showResubmitModal(order.order_id)}
+                    loading={resubmitPaymentMutation.isPending && resubmitPaymentMutation.variables?.orderId === order.order_id}
+                  >
+                    ส่งหลักฐานใหม่
                   </Button>
                 )}
 

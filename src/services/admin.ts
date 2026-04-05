@@ -29,6 +29,23 @@ export interface Permission {
   description: string;
 }
 
+export interface AdminDashboard {
+  total_users: number;
+  total_shops: number;
+  total_orders: number;
+  pending_orders: number;
+  completed_orders: number;
+  total_gmv: number;
+}
+
+export interface AdminRevenue {
+  total_revenue: number;
+  total_fees: number;
+  total_net_revenue: number;
+  total_payouts: number;
+  order_count: number;
+}
+
 export const adminService = {
   getUsers: async (): Promise<AdminUser[]> => {
     const response = await axiosInstance.get("/api/v1/auth/admin/users");
@@ -65,5 +82,15 @@ export const adminService = {
     await axiosInstance.put(`/api/v1/auth/admin/roles/${roleId}/permissions`, {
       permissions,
     });
+  },
+
+  getDashboard: async (): Promise<AdminDashboard> => {
+    const response = await axiosInstance.get("/api/v1/admin/analytics/dashboard");
+    return response.data;
+  },
+
+  getRevenueSummary: async (): Promise<AdminRevenue> => {
+    const response = await axiosInstance.get("/api/v1/admin/analytics/revenue");
+    return response.data;
   },
 };

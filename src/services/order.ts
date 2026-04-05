@@ -142,6 +142,17 @@ export const uploadPaymentSlip = async (
   });
 };
 
+export const resubmitPayment = async (
+  orderId: string,
+  file: File,
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  await axiosInstance.post(`/api/v1/orders/${orderId}/resubmit-payment`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
 export const uploadRefundImages = async (
   orderId: string,
   files: File[],
@@ -161,3 +172,18 @@ export const uploadRefundImages = async (
   );
   return response.data.filenames;
 };
+
+export interface BulkShipResult {
+  shipped: number;
+  errors?: { order_id: string; message: string }[];
+}
+
+export const bulkShipOrders = async (file: File): Promise<BulkShipResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axiosInstance.post<BulkShipResult>("/api/v1/orders/shop/ship-bulk", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+

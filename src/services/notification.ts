@@ -24,3 +24,26 @@ export const markAllNotificationsAsRead = async () => {
   );
   return response.data;
 };
+
+export interface NotificationPreference {
+  type: string;
+  channel_email: boolean;
+  channel_in_app: boolean;
+}
+
+export const getNotificationPreferences = async (): Promise<NotificationPreference[]> => {
+  const response = await axios.get<NotificationPreference[]>(
+    "/api/v1/users/me/notification-preferences",
+  );
+  return response.data ?? [];
+};
+
+export const updateNotificationPreferences = async (
+  preferences: NotificationPreference[]
+): Promise<NotificationPreference[]> => {
+  const response = await axios.put<NotificationPreference[]>(
+    "/api/v1/users/me/notification-preferences",
+    preferences,
+  );
+  return response.data;
+};

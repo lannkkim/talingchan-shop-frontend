@@ -2,17 +2,23 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Product } from "@/types/product";
 import { getProducts } from "@/services/product";
+import { getAuctionProducts } from "@/services/auction";
 import { addToCart } from "@/services/cart";
 import { App, Card, Spin, Typography, Row, Col, Divider, ConfigProvider, Layout, Tag, Modal, Button, Space, InputNumber } from "antd";
-import { ShoppingOutlined, LineChartOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { ShoppingOutlined, LineChartOutlined, ShoppingCartOutlined, MessageOutlined } from "@ant-design/icons";
+import { getOrCreateThread } from "@/services/chat";
 import Link from "next/link";
+import { Link as NavLink } from "@/navigation";
 import PageHeader from "@/components/shared/PageHeader";
 import { getCardImageUrl } from "@/utils/image";
 import { useAuth } from "@/contexts/AuthContext";
 import TradeCarouselSection from "@/components/market/TradeCarouselSection";
+import AuctionCarouselSection from "@/components/market/AuctionCarouselSection";
+import FavoriteButton from "@/components/market/FavoriteButton";
+import BuyRequestModal from "@/components/market/BuyRequestModal";
 import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
@@ -21,10 +27,21 @@ const { Content } = Layout;
 export default function MarketPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { message: antMessage } = App.useApp();
+
+  const contactMutation = useMutation({
+    mutationFn: (sellerId: string) => getOrCreateThread({ participant_id: sellerId }),
+    onSuccess: (thread) => {
+      setIsModalOpen(false);
+      router.push(`/chat?thread=${thread.chat_thread_id}`);
+    },
+    onError: () => antMessage.error("ไม่สามารถเปิดแชทได้"),
+  });
 
   // Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [buyRequestProduct, setBuyRequestProduct] = useState<Product | null>(null);
   const { modal } = App.useApp();
   const queryClient = useQueryClient(); // Initialize QueryClient
 
@@ -97,11 +114,22 @@ export default function MarketPage() {
     }),
   });
 
+  const { data: auctionProducts = [], isLoading: loadingAuction } = useQuery({
+    queryKey: ["auction", "products", "market"],
+    queryFn: getAuctionProducts,
+    select: (data) => data ?? [],
+  });
+
   const loading = loadingAdmin || loadingSingle || loadingPlural || loadingDeck || loadingTrade || loadingBuy;
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
+    if (product.transaction_type?.code === "buy") {
+      setBuyRequestProduct(product);
+    } else {
+      setSelectedProduct(product);
+      setBuyQuantity(1);
+      setIsModalOpen(true);
+    }
   };
 
   const getProductImage = (product: Product) => {
@@ -154,6 +182,7 @@ export default function MarketPage() {
   const renderProductCard = (product: Product) => {
     const imageName = getProductImage(product);
     const imageUrl = getCardImageUrl(imageName, "thumb");
+    const isBuyRequest = product.transaction_type?.code === "buy";
 
     return (
       <Col key={product.product_id} xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -161,7 +190,7 @@ export default function MarketPage() {
           hoverable
           onClick={() => handleProductClick(product)}
           cover={
-            <div className="relative h-[240px] w-full bg-gray-50 flex items-center justify-center overflow-hidden">
+            <div className={`relative h-[240px] w-full flex items-center justify-center overflow-hidden ${isBuyRequest ? "bg-orange-50" : "bg-gray-50"}`}>
                <Image
                 src={imageUrl}
                 alt={product.name}
@@ -170,6 +199,14 @@ export default function MarketPage() {
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 20vw"
                 unoptimized
               />
+              {isBuyRequest && (
+                <div className="absolute top-2 left-2">
+                  <Tag color="orange" className="m-0 text-[10px] font-semibold">ต้องการซื้อ</Tag>
+                </div>
+              )}
+              <div className="absolute top-2 right-2">
+                <FavoriteButton productId={product.product_id} />
+              </div>
             </div>
           }
           className="h-full overflow-hidden"
@@ -179,27 +216,33 @@ export default function MarketPage() {
              <Text strong className="truncate text-base" title={product.name}>
                 {product.name}
              </Text>
-             
+
              <div className="flex flex-col mt-1">
                 <div className="flex justify-between items-baseline">
-                  <Text className="text-lg text-blue-600 font-semibold">
-                    {product.price ? `฿${Number(product.price).toLocaleString()}` : "No Price"}
-                  </Text>
+                  {isBuyRequest ? (
+                    <Text className="text-lg text-green-600 font-semibold">
+                      รับซื้อ ฿{Number(product.price).toLocaleString()}
+                    </Text>
+                  ) : (
+                    <Text className="text-lg text-blue-600 font-semibold">
+                      {product.price ? `฿${Number(product.price).toLocaleString()}` : "No Price"}
+                    </Text>
+                  )}
                   <div className="text-right">
-                    {product.quantity !== undefined && (
+                    {!isBuyRequest && product.quantity !== undefined && (
                       <Text strong className="text-xs block leading-tight">
-                        {product.quantity} {product.product_type?.code === "single" ? "ชุด" : "ชุด"}
+                        {product.quantity} ชุด
                       </Text>
                     )}
                     {product.product_stock_card && (
                       <Text type="secondary" className="text-[10px] block leading-tight">
-                        ({product.product_stock_card.reduce((sum, pc) => sum + pc.quantity, 0)} ใบ/ชุด)
+                        ({product.product_stock_card.reduce((sum, pc) => sum + pc.quantity, 0)} ใบ)
                       </Text>
                     )}
                   </div>
                 </div>
-                
-                {product.market_min_price !== undefined && product.market_min_price > 0 && (
+
+                {!isBuyRequest && product.market_min_price !== undefined && product.market_min_price > 0 && (
                    <Text type="secondary" className="text-[10px] leading-tight mt-0.5">
                      Market Starts at <span className="text-blue-500 font-medium">฿{product.market_min_price.toLocaleString()}</span>
                    </Text>
@@ -207,7 +250,7 @@ export default function MarketPage() {
              </div>
 
              <div className="flex gap-1 mt-3">
-               <Tag color="blue" className="mr-0 text-[10px] px-1.5 leading-relaxed">{product.product_type?.name}</Tag>
+               <Tag color={isBuyRequest ? "orange" : "blue"} className="mr-0 text-[10px] px-1.5 leading-relaxed">{product.product_type?.name}</Tag>
                {product.product_stock_card && product.product_stock_card.length > 1 && (
                  <Tag className="mr-0 text-[10px] px-1.5 leading-relaxed">+{product.product_stock_card.length - 1} cards</Tag>
                )}
@@ -256,6 +299,18 @@ export default function MarketPage() {
                 Community Market
               </Title>
             </div>
+
+            <div className="mb-10 -mx-4 md:-mx-8">
+              <AuctionCarouselSection
+                products={auctionProducts}
+                isLoading={loadingAuction}
+                title="ประมูลสินค้า"
+                viewAllLink="/market/auction"
+                showCoverCard={false}
+                showEmptyCard={false}
+              />
+            </div>
+
             <div className="mb-10">
               <div className="flex justify-between items-center">
                 <Title level={3}>แยกใบ</Title>
@@ -334,6 +389,13 @@ export default function MarketPage() {
                />
             </div>
 
+            {/* Buy Request Modal */}
+            <BuyRequestModal
+              product={buyRequestProduct}
+              isOpen={!!buyRequestProduct}
+              onClose={() => setBuyRequestProduct(null)}
+            />
+
             {/* Product Details Modal */}
             <Modal
               title={selectedProduct?.name}
@@ -378,7 +440,7 @@ export default function MarketPage() {
                                     ราคาเริ่มต้น: <span className="text-blue-500 font-medium">฿{pc.market_price.toLocaleString()}</span>
                                   </div>
                                 )}
-                                <Link href={`/market/cards/${card?.card_id}`}>
+                                <Link href={card?.card_id ? `/market/cards/${card.card_id}` : "#"}>
                                   <Button type="link" size="small" className="p-0 h-auto text-[10px]" icon={<LineChartOutlined />}>ข้อมูลตลาด</Button>
                                 </Link>
                               </div>
@@ -429,16 +491,31 @@ export default function MarketPage() {
                                </div>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">
-                                 {selectedProduct.users?.shop?.shop_profile?.shop_name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
-                               </div>
-                               <div>
-                                 <Text strong className="block">{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Community Member"}</Text>
-                                 <Text type="secondary" className="text-xs">
-                                   Seller: {selectedProduct.users?.first_name} {selectedProduct.users?.last_name}
-                                 </Text>
-                               </div>
+                            <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                               <NavLink href={selectedProduct.users?.shop?.shop_id ? `/shops/${selectedProduct.users.shop.shop_id}` : "#"} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg">
+                                   {selectedProduct.users?.shop?.shop_profile?.shop_name?.charAt(0) || selectedProduct.users?.username?.charAt(0) || "U"}
+                                 </div>
+                                 <div>
+                                   <Text strong className="block underline-offset-2 hover:underline">{selectedProduct.users?.shop?.shop_profile?.shop_name || selectedProduct.users?.username || "Community Member"}</Text>
+                                   <Text type="secondary" className="text-xs">
+                                     Seller: {selectedProduct.users?.first_name} {selectedProduct.users?.last_name}
+                                   </Text>
+                                 </div>
+                               </NavLink>
+                               {(() => {
+                                 const sellerUserId = selectedProduct.user_id ?? selectedProduct.users?.users_id;
+                                 return user && sellerUserId && user.users_id !== sellerUserId && (
+                                   <Button
+                                     size="small"
+                                     icon={<MessageOutlined />}
+                                     loading={contactMutation.isPending}
+                                     onClick={() => contactMutation.mutate(sellerUserId)}
+                                   >
+                                     ติดต่อร้านค้า
+                                   </Button>
+                                 );
+                               })()}
                             </div>
                           )}
                         </div>

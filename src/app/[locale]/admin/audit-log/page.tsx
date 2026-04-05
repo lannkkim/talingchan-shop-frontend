@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Table, Typography, DatePicker, Space, Input, Select, Button } from "antd";
+import { Table, Typography, DatePicker, Space, Input, Button } from "antd";
 import { useState } from "react";
 import { getAuditLogs } from "@/services/audit";
 import type { AuditLog } from "@/types/audit";
@@ -16,7 +16,7 @@ const { RangePicker } = DatePicker;
 export default function AdminAuditLogPage() {
   const [filters, setFilters] = useState<{
     action?: string;
-    resource_type?: string;
+    target_type?: string;
     from?: string;
     to?: string;
   }>({});
@@ -24,15 +24,15 @@ export default function AdminAuditLogPage() {
   const { data: logs = [], isLoading, refetch } = useQuery({
     queryKey: ["admin", "audit-logs", filters],
     queryFn: () => getAuditLogs(filters),
+    select: (data) => data ?? [],
   });
 
   const columns: ColumnsType<AuditLog> = [
     {
       title: "แอดมิน",
-      key: "admin",
-      render: (_: any, record: AuditLog) => (
-        <Text strong>{record.admin?.username || record.admin_id.substring(0, 8)}</Text>
-      ),
+      dataIndex: "admin_id",
+      key: "admin_id",
+      render: (v: string) => <Text strong>{v.substring(0, 8)}</Text>,
     },
     {
       title: "Action",
@@ -41,20 +41,14 @@ export default function AdminAuditLogPage() {
       render: (v: string) => <code className="text-xs bg-gray-100 px-1 py-0.5">{v}</code>,
     },
     {
-      title: "Resource",
-      key: "resource",
+      title: "Target",
+      key: "target",
       render: (_: any, record: AuditLog) => (
         <Text type="secondary" className="text-xs">
-          {record.resource_type}
-          {record.resource_id && ` / ${record.resource_id.substring(0, 8)}`}
+          {record.target_type}
+          {record.target_id && ` / ${record.target_id.substring(0, 8)}`}
         </Text>
       ),
-    },
-    {
-      title: "IP",
-      dataIndex: "ip_address",
-      key: "ip_address",
-      render: (v?: string) => v || "-",
     },
     {
       title: "เวลา",
@@ -80,12 +74,12 @@ export default function AdminAuditLogPage() {
             }
           />
           <Input
-            placeholder="Resource type..."
+            placeholder="Target type..."
             style={{ width: 160 }}
             onChange={(e) =>
               setFilters((f) => ({
                 ...f,
-                resource_type: e.target.value || undefined,
+                target_type: e.target.value || undefined,
               }))
             }
           />
@@ -109,7 +103,7 @@ export default function AdminAuditLogPage() {
       <Table
         columns={columns}
         dataSource={logs}
-        rowKey="admin_audit_log_id"
+        rowKey="audit_log_id"
         loading={isLoading}
         pagination={{ pageSize: 30 }}
         size="small"

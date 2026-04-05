@@ -20,6 +20,7 @@ export interface CardSelectorProps {
   renderCustomActions?: (card: CardType, isSelected: boolean) => React.ReactNode;
   filters?: CardFilters;
   availableCards?: CardType[] | null; // If provided, use this instead of fetching
+  onCardClick?: (card: CardType) => void; // Extra click handler (e.g. navigate to market page)
 }
 
 const CardSelector: React.FC<CardSelectorProps> = ({
@@ -30,6 +31,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   renderCustomActions,
   filters,
   availableCards,
+  onCardClick,
 }) => {
   const { ref, inView } = useInView();
 
@@ -116,12 +118,12 @@ const CardSelector: React.FC<CardSelectorProps> = ({
           return (
             <Col key={`${uniqueKey}-${index}`} xs={12} sm={8} md={6}>
               <div
-                className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${selectable ? "cursor-pointer" : ""
+                className={`relative transition-all duration-200 rounded-xl overflow-hidden group ${selectable || onCardClick ? "cursor-pointer" : ""
                   } ${selectable && isSelected
                     ? "ring-1 ring-primary ring-offset-1 scale-[1.02]"
                     : "hover:scale-[1.01]"
                   }`}
-                onClick={() => handleToggleSelect(card)}
+                onClick={() => { handleToggleSelect(card); onCardClick?.(card); }}
               >
                 <CardItem card={card} />
                 {selectable && (

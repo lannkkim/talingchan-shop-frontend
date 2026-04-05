@@ -2,8 +2,6 @@
 
 import { useMarketPage } from "@/components/market/useMarketPage";
 import MarketPageUI from "@/components/market/MarketPageUI";
-import { ConfigProvider } from "antd";
-import { Product } from "@/types/product";
 
 export default function LandingPage() {
   const {
@@ -13,6 +11,8 @@ export default function LandingPage() {
     isLoadingCards,
     tradeProducts,
     isLoadingTrades,
+    auctionProducts,
+    isLoadingAuctions,
     carouselRef,
     handleScroll,
     getCardImageUrl,
@@ -28,6 +28,8 @@ export default function LandingPage() {
       isLoadingCards={isLoadingCards}
       tradeProducts={tradeProducts}
       isLoadingTrades={isLoadingTrades}
+      auctionProducts={auctionProducts}
+      isLoadingAuctions={isLoadingAuctions}
       carouselRef={carouselRef}
       handleScroll={handleScroll}
       getCardImageUrl={getCardImageUrl}
